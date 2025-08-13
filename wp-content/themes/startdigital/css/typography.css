@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+html,
+body {
+	@apply font-body scroll-smooth;
+}
+
+body {
+	@apply leading-relaxed 3xl:text-lg 3xl:leading-normal;
+}
+
+strong {
+	@apply font-bold;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	@apply font-heading;
+}
+
+h1,
+.is-h1 {
+	@apply font-bold text-5xl md:text-6xl lg:text-7xl xl:text-8xl 3xl:text-9xl xl:leading-none;
+}
+
+h2,
+.is-h2 {
+	@apply font-bold text-4xl md:text-5xl lg:text-6xl xl:text-7xl 3xl:text-8xl xl:leading-tight;
+}
+
+h3,
+.is-h3 {
+	@apply leading-tight text-4xl md:text-5xl xl:text-6xl 3xl:text-7xl;
+}
+
+h4,
+.is-h4 {
+	@apply leading-tight text-2xl md:text-3xl lg:text-4xl xl:text-5xl 3xl:text-6xl;
+}
+
+h5,
+.is-h5 {
+	@apply leading-tight text-xl md:text-2xl lg:text-3xl xl:text-4xl 3xl:text-5xl;
+}
+
+h6,
+.is-h6 {
+	@apply leading-tight text-lg md:text-xl lg:text-2xl xl:text-3xl 3xl:text-4xl;
+}
+
+/* List styles inside WYSIWYG editors */
+.block-content {
+	@apply flex flex-col gap-4 md:gap-6;
+
+	ul {
+		@apply ml-4;
+
+		li {
+			@apply list-disc;
+		}
+	}
+
+	ol {
+		@apply ml-4;
+
+		li {
+			@apply list-decimal;
+		}
+	}
+
+	p {
+		a:not(.button, .is-button){
+			@apply font-bold underline;
+		}
+	}
+}
+
+
+
+.supertitle {
+	@apply text-base uppercase;
+}

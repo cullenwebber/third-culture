@@ -1,0 +1,25 @@
+.accordion-header {
+    @apply cursor-pointer pr-2 bg-transparent !text-[#000000] font-body font-bold text-lg py-4 md:py-6 flex gap-4 items-center justify-between hover:pl-2 duration-300;
+}
+
+.accordion-header svg {
+    @apply duration-300;
+}
+
+.accordion-header.active {
+    @apply bg-[#CBC9D4] pl-2;
+}
+
+.accordion-header.active svg {
+    @apply rotate-180;
+}
+
+.accordion-content {
+    transition: max-height 0.4s ease;
+    @apply overflow-hidden max-h-0 border-b;
+
+}
+
+.accordion-content > .accordion-inner {
+    @apply p-6;
+}

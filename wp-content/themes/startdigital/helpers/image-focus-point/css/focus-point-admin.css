@@ -1,0 +1,16 @@
+.focus-point-selector {
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.focus-point-selector.saving {
+    background: rgba(255, 165, 0, 0.5); /* Orange while saving */
+}
+
+.focus-point-selector.saved {
+    background: rgba(0, 255, 0, 0.5); /* Green on success */
+}
+
+.focus-point-selector.error {
+    background: rgba(255, 0, 0, 0.5); /* Red on error */
+}

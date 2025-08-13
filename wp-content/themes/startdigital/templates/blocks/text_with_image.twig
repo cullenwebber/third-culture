@@ -1,0 +1,19 @@
+<section class="relative">
+	<div class="container">
+		<div class="grid lg:grid-cols-2 gap-10 lg:gap-20">
+			<div class="block-content {{ block.image_on_left == true ? 'lg:order-2' }}">
+				{{ block.content }}
+			</div>
+			<div class="relative rounded-section overflow-hidden aspect-16/9 lg:aspect-4/3 w-full h-full {{
+									block.image_on_left == true
+										? 'lg:order-1'
+									}}">
+				{% include 'partials/image.twig' with {
+					image: get_image(block.image),
+					class: 'absolute top-0 left-0 w-full h-full object-cover object-center pointer-events-none',
+					alt: block.image.alt
+				} %}
+			</div>
+		</div>
+	</div>
+</section>

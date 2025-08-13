@@ -1,0 +1,71 @@
+:root {
+	--slider-slide-spacing: 1rem;
+	--slider-slide-width: 70%;
+	--slider-slide-height: 25rem;
+	--infinite-slide-spacing: 1rem;
+	--infinite-slide-width: 20%;
+}
+
+.embla {
+	@apply overflow-hidden;
+}
+
+.embla__slider {
+	.embla__container {
+		@apply flex cursor-grab;
+	}
+
+	.embla__slide {
+		@apply flex-[0_0_var(--slider-slide-width)] min-w-0 h-[var(--slider-slide-height)] pl-[var(--slider-slide-spacing)];
+
+		.embla__content {
+			@apply flex h-full w-full items-center justify-center bg-slate-200;
+		}
+	}
+
+	.embla__controls {
+		@apply grid grid-cols-[auto_1fr] justify-between gap-4 mt-6;
+	}
+
+	.embla__buttons {
+		@apply grid grid-cols-2 gap-2 items-center;
+	}
+
+	.embla__button {
+		@apply !bg-slate-200 inline-flex items-center justify-center rounded-full size-12 relative cursor-pointer appearance-none bg-transparent touch-manipulation border-0 p-0 m-0;
+
+		&:disabled {
+			@apply opacity-30;
+		}
+	}
+
+	.embla__button__svg {
+		@apply size-1/3;
+	}
+
+	.embla__dots {
+		@apply flex flex-wrap gap-2 justify-end items-center;
+	}
+
+	.embla__dot {
+		@apply bg-slate-200 touch-manipulation inline-flex items-center justify-center rounded-full size-4 cursor-pointer appearance-none;
+
+		&.embla__dot--selected {
+			@apply bg-black;
+		}
+	}
+}
+
+.embla__infinite {
+	.embla__container {
+		@apply flex cursor-grab;
+	}
+
+	.embla__slide {
+		@apply flex-[0_0_var(--infinite-slide-width)] min-w-0 h-20 pl-[var(--infinite-slide-spacing)];
+
+		.embla__content {
+			@apply flex h-full w-full items-center justify-center bg-slate-200;
+		}
+	}
+}

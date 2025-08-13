@@ -1,0 +1,31 @@
+# Ignore everything by default
+*
+
+# Don't ignore the .gitignore file itself
+!.gitignore
+!.github/workflows/deploy.yaml
+!README.md
+!composer.json
+!composer.lock
+!setup.sh
+!wp-config.php
+
+# Directories and files required for WordPress
+!wp-content/
+
+# Ignore everything inside wp-content
+wp-content/*
+!wp-content/themes/
+!wp-content/plugins/
+
+# Allow our custom theme and specific plugin file
+!wp-content/themes/index.php
+!wp-content/themes/startdigital
+!wp-content/themes/startdigital/**
+
+wp-content/plugins/*
+wp-content/plugins/plugins.zip
+!wp-content/plugins/readme.md
+
+# ENV
+!.env.sample

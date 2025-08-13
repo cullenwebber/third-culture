@@ -1,0 +1,7 @@
+<div class="relative aspect-16/9 w-full max-h-[800px] bg-white pointer-events-none">
+	{% include 'partials/image.twig' with {
+		image: get_image(block.image),
+		class: 'absolute top-0 left-0 w-full h-full object-cover object-center pointer-events-none',
+		alt: block.image.alt
+	} %}
+</div>

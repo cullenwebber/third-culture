@@ -1,0 +1,37 @@
+name: Deploy and Purge Cache
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v2
+
+      - name: 🔨 Build Project
+        run: |
+          composer install --no-scripts
+          cd wp-content/themes/startdigital
+          npm install
+          npm run build
+          composer install
+
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@4.3.0
+        with:
+          server: ftp.perth.agency
+          username: perthage
+          password: ${{ secrets.DEV_FTP_PASS }}
+          server-dir: server-folder-name/ # Make sure it ends in a trailing slash.
+          # protocol: ftps # Required for some hosts.
+
+      - name: 🧹 Purge Cache
+        run: |
+          curl -X POST \
+            -H "X-Purge-Token: ${{ secrets.PURGE_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            YOUR_DOMAIN_HERE/wp-json/cache-purge/v1/purge

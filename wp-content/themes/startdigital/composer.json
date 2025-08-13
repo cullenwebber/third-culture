@@ -1,0 +1,34 @@
+{
+  "name": "startdigital/boilerroom",
+  "description": "StarterKit for building Start Digital websites",
+  "type": "wordpress-theme",
+  "minimum-stability": "stable",
+  "authors": [
+    {
+      "email": "jmgrant1995@gmail.com",
+      "name": "Joe Grant"
+    },
+    {
+      "email": "hello@tomdotcom.au",
+      "name": "Tom Brennan"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://wpackagist.org"
+    }
+  ],
+  "require": {
+    "timber/timber": "2.0.0-rc.1",
+    "thestart/startle": "*"
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
+    }
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^6.3"
+  }
+}

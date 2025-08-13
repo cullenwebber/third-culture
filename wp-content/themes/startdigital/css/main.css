@@ -1,0 +1,70 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import './typography.css';
+@import './animations.css';
+@import './buttons.css';
+@import './sliders.css';
+@import './accordion.css';
+@import './forms.css';
+
+@layer components {
+	.container {
+		@apply max-w-[1600px] w-full px-6 md:px-8 mx-auto;
+	}
+}
+
+header {
+	&.header-scrolling {
+		@apply bg-slate-100;
+	}
+}
+
+body.menu-open {
+	[data-menu] {
+		@apply translate-x-0;
+	}
+}
+
+[data-menu] {
+	@apply translate-x-full;
+}
+
+main {
+	section {
+		@apply relative py-10 lg:py-20 3xl:py-32;
+	}
+}
+
+.rounded-top {
+	@apply rounded-t-3xl lg:rounded-t-[100px] 3xl:rounded-t-[200px];
+}
+
+.rounded-bottom {
+	@apply rounded-b-3xl lg:rounded-b-[100px] 3xl:rounded-b-[200px];
+}
+
+.section-padding {
+	@apply relative py-10 lg:py-20 3xl:py-32;
+}
+
+.section-padding-top {
+	@apply relative pt-10 lg:pt-20 3xl:pt-32;
+}
+
+.section-padding-bottom {
+	@apply relative pb-10 lg:pb-20 3xl:pb-32;
+}
+
+.remove-section-padding {
+	@apply !py-0;
+}
+
+.banner {
+	@apply relative !pt-24 sm:!pt-44 3xl:!pt-52;
+}
+
+/* REMOVE LOOM EXTENSION PADDING */
+section#shadow-host-companion {
+	@apply !py-0;
+}

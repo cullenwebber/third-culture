@@ -1,0 +1,4 @@
+/* Makes animated elements hidden by default on page load */
+[data-fade], [data-stagger]{
+    @apply hidden;
+}

@@ -1,0 +1,8 @@
+vendor
+wp-content
+composer.lock
+node_modules
+uploads
+static/site.js
+static/editor.css
+static/style.css

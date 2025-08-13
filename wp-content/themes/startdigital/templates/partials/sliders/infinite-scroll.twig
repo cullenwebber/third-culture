@@ -1,0 +1,13 @@
+<div class="embla__infinite overflow-hidden">
+	<div class="embla__viewport">
+		<div class="embla__container">
+			{% for item in 0..20 %}
+				<div class="embla__slide">
+					<div class="embla__content">
+						Slide {{ loop.index }}
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+</div>

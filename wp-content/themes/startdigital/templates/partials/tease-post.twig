@@ -1,0 +1,11 @@
+<article class="tease tease-{{ post.post_type }}" id="tease-{{ post.ID }}">
+	<h2>
+		<a href="{{ post.link }}">{{ post.title }}</a>
+	</h2>
+
+	<p>{{ post.excerpt }}</p>
+
+	{% if post.thumbnail %}
+		{% include 'partials/image.twig' with { image: get_image(post.thumbnail).src, alt: post.thumbnail.alt } %}
+	{% endif %}
+</article>

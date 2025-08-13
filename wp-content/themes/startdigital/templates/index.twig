@@ -1,0 +1,14 @@
+{% extends "base.twig" %}
+
+{% block content %}
+
+	<div class="space-y-6">
+		<div class="space-y-6 md:space-y-2">
+			{% for post in posts %}
+				{% include "partials/tease-post.twig" %}
+			{% endfor %}
+		</div>
+
+		{% include "partials/pagination.twig" %}
+	</div>
+{% endblock %}
