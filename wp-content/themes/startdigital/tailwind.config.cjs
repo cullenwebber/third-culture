@@ -10,15 +10,15 @@ module.exports = {
 				'1/1': '1/1',
 			},
 			colors: {
-				white: '#FFFFFF',
-				black: '#000000',
-				// brand:
-				// brandLight:
-				// brandDark:
+				white: '#F7F7F7',
+				black: '#1E1E1E',
 			},
 			fontFamily: {
 				heading: ['Roboto', 'sans-serif'],
 				body: ['Inter', 'sans-serif'],
+			},
+			borderRadius: {
+				4: '4px',
 			},
 			screens: {
 				sm: '640px',

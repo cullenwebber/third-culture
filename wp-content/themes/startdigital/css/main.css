@@ -10,13 +10,7 @@
 
 @layer components {
 	.container {
-		@apply max-w-[1600px] w-full px-6 md:px-8 mx-auto;
-	}
-}
-
-header {
-	&.header-scrolling {
-		@apply bg-slate-100;
+		@apply max-w-[100%] w-full px-6 md:px-8 mx-auto;
 	}
 }
 

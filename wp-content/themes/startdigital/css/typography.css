@@ -9,10 +9,6 @@ body {
 	@apply leading-relaxed 3xl:text-lg 3xl:leading-normal;
 }
 
-strong {
-	@apply font-bold;
-}
-
 h1,
 h2,
 h3,
@@ -24,7 +20,7 @@ h6 {
 
 h1,
 .is-h1 {
-	@apply font-bold text-5xl md:text-6xl lg:text-7xl xl:text-8xl 3xl:text-9xl xl:leading-none;
+	@apply text-5xl md:text-6xl lg:text-7xl xl:text-8xl 3xl:text-9xl xl:leading-none;
 }
 
 h2,
@@ -52,6 +48,10 @@ h6,
 	@apply leading-tight text-lg md:text-xl lg:text-2xl xl:text-3xl 3xl:text-4xl;
 }
 
+.is-h7 {
+	@apply text-2xl;
+}
+
 /* List styles inside WYSIWYG editors */
 .block-content {
 	@apply flex flex-col gap-4 md:gap-6;
@@ -73,13 +73,11 @@ h6,
 	}
 
 	p {
-		a:not(.button, .is-button){
+		a:not(.button, .is-button) {
 			@apply font-bold underline;
 		}
 	}
 }
-
-
 
 .supertitle {
 	@apply text-base uppercase;

@@ -1,15 +1,11 @@
 import initMenus from './components/menus'
-import initSliders from './components/sliders/sliders'
-import initAccordions from './components/accordions'
-import animateOnScroll from './utils/animate-on-scroll'
-import initRemoveLinks from './utils/removeLink'
 import initHeaderOnScroll from './utils/headerOnScroll'
+import initHomeThree from './three/home/three-home'
+import initSmoothScrolling from './utils/smooth-scroll'
 
 document.addEventListener('DOMContentLoaded', () => {
-	animateOnScroll()
+	initSmoothScrolling()
 	initMenus()
-	initSliders()
-	initAccordions()
-	initRemoveLinks()
 	initHeaderOnScroll()
+	initHomeThree()
 })
