@@ -1,0 +1,9 @@
+<a href="{{ link }}" target="{{ target }}" class=" flex flex-row items-center justify-start gap-2 text-black w-fit {{ class }}">
+    {% include "icons/button-arrow.twig" with { class: 'h-3' } %}
+    <div class="relative capitalize flex justify-start text-left">
+        <span class="indent-0">
+            {{ title }}
+        </span>
+        <div class="w-full h-[1.5px] left-0 bottom-0 absolute {{ class == 'text-white' ? 'bg-white' : 'bg-black' }}"></div>
+    </div>
+</a>

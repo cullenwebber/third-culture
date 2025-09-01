@@ -10,7 +10,7 @@
 
 @layer components {
 	.container {
-		@apply max-w-[100%] w-full px-6 md:px-8 mx-auto;
+		@apply max-w-[100%] w-full px-4 md:px-8 mx-auto;
 	}
 }
 
@@ -61,4 +61,9 @@ main {
 /* REMOVE LOOM EXTENSION PADDING */
 section#shadow-host-companion {
 	@apply !py-0;
+}
+
+#home-projects {
+	transform: translateZ(0); /* Force hardware acceleration */
+	backface-visibility: hidden;
 }

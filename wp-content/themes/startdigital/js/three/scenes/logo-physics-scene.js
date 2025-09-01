@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
 import BaseScene from '../base-scene'
-import ConcreteShaderMaterial from '../materials/white-concrete'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { getStaticPath } from '../utils'
 import HomePhysicsTrigger from '../animate/home-physics-trigger'
+import StoneMaterial from '../materials/stone'
 
 class LogoPhysicsScene extends BaseScene {
 	constructor(id, container) {
@@ -27,6 +27,15 @@ class LogoPhysicsScene extends BaseScene {
 	adjustCamera() {
 		this.camera.position.z = this.cameraDistance
 		this.camera.position.y = -4
+	}
+
+	createLights() {
+		this.spotLight = new THREE.SpotLight(0xffffff, 5.0)
+		this.spotLight.position.set(0.0, 0.0, 3.0)
+		this.scene.add(this.spotLight)
+
+		this.ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
+		this.scene.add(this.ambientLight)
 	}
 
 	setupPhysics() {
@@ -59,7 +68,8 @@ class LogoPhysicsScene extends BaseScene {
 	}
 
 	createMaterials() {
-		this.concreteMaterial = new ConcreteShaderMaterial()
+		this.material = new StoneMaterial()
+
 		this.defaultMaterial = new CANNON.Material('default')
 		this.mouseRepelMaterial = new CANNON.Material('mouseRepel')
 
@@ -110,7 +120,7 @@ class LogoPhysicsScene extends BaseScene {
 					if (!child.isMesh) return
 
 					child.castShadow = true
-					child.material = this.concreteMaterial.getMaterial()
+					child.material = this.material.getMaterial()
 
 					// Create physics body
 					const body = new CANNON.Body({

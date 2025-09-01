@@ -24,6 +24,8 @@ if (file_exists($composer_autoload)) {
 }
 
 include 'php/tiny-mce-extend.php';
+include 'php/get-posts.php';
+
 
 /**
  * Include helpers
@@ -92,13 +94,9 @@ class StartDigital extends Site
 		parent::__construct();
 	}
 	/** This is where you can register custom post types. */
-	public function register_post_types()
-	{
-	}
+	public function register_post_types() {}
 	/** This is where you can register custom taxonomies. */
-	public function register_taxonomies()
-	{
-	}
+	public function register_taxonomies() {}
 
 	/** This is where you can register custom CSS & JS files. */
 	public function register_assets()
@@ -118,7 +116,7 @@ class StartDigital extends Site
 	 */
 	public function add_to_context($context)
 	{
-		if(function_exists('get_fields')){
+		if (function_exists('get_fields')) {
 			$context['options'] = get_fields('options');
 		}
 		$context['menu']  = Timber::get_menu();
@@ -160,3 +158,5 @@ class StartDigital extends Site
 }
 
 new StartDigital();
+
+add_filter('timber/meta/transform_value', '__return_true');

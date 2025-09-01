@@ -1,0 +1,31 @@
+<section class="flex flex-col overflow-hidden">
+    <div class="container flex flex-col gap-8 lg:gap-16 xl:gap-24">
+        <div class="flex flex-col lg:flex-row justify-between sm:items-end relative z-40 gap-8">
+            <div class="flex flex-col gap-4 sm:gap-8 xl:gap-16">
+                <div class="block-content">
+                    {{ post.news.title }}
+                </div>
+                <div class="flex flex-row xl:ml-[10%]">
+                    {% include "partials/supertitle.twig" with { title: 'News', class: 'max-sm:hidden' } %}
+                    <div class="block-content max-w-[700px] indent-16 sm:-ml-12">
+                        {{ post.news.content }}
+                    </div>
+                </div>
+            </div>
+            {% include "partials/button.twig" with { title: 'All Articles' , link: '/news' } %}
+        </div>
+        <div class="w-full 4xl:w-3/4 self-end relative z-40">
+            <div class="flex w-full">
+                <div id="news-swiper-container" class="swiper !overflow-visible w-full">
+                    <div class="swiper-wrapper">
+                        {% for news in fn('get_news_posts', 6) %}
+                            <div class="swiper-slide">
+                                {% include "partials/posts/post-tease.twig" with { post: news } %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

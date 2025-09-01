@@ -1,0 +1,19 @@
+<section	id="home-hero"	class="fixed top-0 left-0 h-lvh w-full"></section>
+<section	id="home-hero-trigger"	class="relative !pt-24 text-black h-lvh z-40">
+	<div	class="container flex flex-col gap-48 lg:gap-32">
+		<div	class="flex flex-row max-lg:mt-8">
+			{% include "partials/supertitle.twig" with { title: 'TCK' } %}
+			<h1	class="is-h7 indent-12 max-w-[300px] -ml-8">
+				Maximizing impact in an interconnected world
+			</h1>
+		</div>
+		<div	class="flex flex-col items-end gap-2 self-end">
+			{% include "icons/logo.twig" with { class: 'h-4'} %}
+			<h2	class="is-h7 indent-12 max-w-[300px] -ml-8 text-right">
+				Full Service
+			</br>
+			Creative Consultancy
+		</h2>
+		{% include "partials/button.twig" with { title: 'Learn More', link: '/about', class: 'mt-2' } %}
+	</div>
+</div></section>

@@ -9,6 +9,7 @@ class BaseScene {
 		this.camera = null
 		this.isVisible = false
 		this.isInitialized = false
+		this.time = 0
 	}
 
 	init() {
@@ -21,6 +22,7 @@ class BaseScene {
 		this.createLights()
 		this.createScrollTriggers()
 		this.createMouseListeners()
+		this.updateVisibility()
 		this.isInitialized = true
 		return this
 	}
@@ -31,7 +33,7 @@ class BaseScene {
 			75,
 			rect.width / rect.height,
 			0.1,
-			1000
+			2000
 		)
 		this.camera.position.z = 5
 	}
@@ -98,6 +100,10 @@ class BaseScene {
 		// Override in subsclasses
 	}
 
+	animate(deltaTime) {
+		// Override in subclasses
+	}
+
 	onResize(width, height) {
 		this.updateCameraAspect()
 	}
@@ -116,12 +122,7 @@ class BaseScene {
 		}
 	}
 
-	animate(deltaTime) {
-		// Override in subclasses
-	}
-
 	dispose() {
-		// Dispose of Three.js objects
 		this.scene.traverse((object) => {
 			if (object.geometry) object.geometry.dispose()
 			if (object.material) {

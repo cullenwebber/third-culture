@@ -11,6 +11,7 @@ class WebGLManager {
 		this.scenes = new Map()
 		this.visibleScenes = new Set()
 		this.canvasRect = null
+		this.postProcessing = new Map()
 
 		WebGLManager.instance = this
 	}
@@ -26,7 +27,7 @@ class WebGLManager {
 		})
 
 		this.renderer.setSize(window.innerWidth, window.innerHeight)
-		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+		this.renderer.setPixelRatio(Math.min(1.4))
 		this.renderer.outputEncoding = THREE.sRGBEncoding
 		this.renderer.toneMapping = THREE.ACESFilmicToneMapping
 		this.renderer.shadowMap.enabled = true
@@ -51,8 +52,28 @@ class WebGLManager {
 	}
 
 	unregisterScene(id) {
+		const postProcessor = this.postProcessing.get(id)
+		if (postProcessor) {
+			postProcessor.dispose()
+			this.postProcessing.delete(id)
+		}
+
 		this.scenes.delete(id)
 		this.visibleScenes.delete(id)
+	}
+
+	addPostProcessing(sceneId, postProcessor) {
+		if (this.scenes.has(sceneId)) {
+			this.postProcessing.set(sceneId, postProcessor)
+		}
+	}
+
+	removePostProcessing(sceneId) {
+		const postProcessor = this.postProcessing.get(sceneId)
+		if (postProcessor) {
+			postProcessor.dispose()
+			this.postProcessing.delete(sceneId)
+		}
 	}
 
 	addVisibleScene(id) {
@@ -63,19 +84,19 @@ class WebGLManager {
 		this.visibleScenes.delete(id)
 	}
 
-	render() {
+	render(deltaTime = 0) {
 		this.renderer.clear()
 		this.updateCanvasRect()
 
 		this.visibleScenes.forEach((sceneId) => {
 			const scene = this.scenes.get(sceneId)
 			if (scene && scene.isVisible) {
-				this.renderSceneInViewport(scene)
+				this.renderSceneInViewport(scene, sceneId, deltaTime)
 			}
 		})
 	}
 
-	renderSceneInViewport(scene) {
+	renderSceneInViewport(scene, sceneId, deltaTime) {
 		const containerRect = scene.container.getBoundingClientRect()
 		const viewport = this.calculateViewport(containerRect)
 
@@ -83,6 +104,7 @@ class WebGLManager {
 			return
 		}
 
+		// Set viewport and scissor
 		this.renderer.setViewport(
 			containerRect.left - this.canvasRect.left,
 			this.canvasRect.height - (containerRect.bottom - this.canvasRect.top),
@@ -97,7 +119,14 @@ class WebGLManager {
 			viewport.height
 		)
 
-		this.renderer.render(scene.scene, scene.camera)
+		const postProcessor = this.postProcessing.get(sceneId)
+
+		if (postProcessor) {
+			this.renderer.clear(true, true, true)
+			postProcessor.render(deltaTime)
+		} else {
+			this.renderer.render(scene.scene, scene.camera)
+		}
 	}
 
 	calculateViewport(containerRect) {
@@ -128,14 +157,21 @@ class WebGLManager {
 	resize(width, height) {
 		this.renderer.setSize(width, height)
 		this.updateCanvasRect()
+
 		this.scenes.forEach((scene) => {
 			const rect = scene.container.getBoundingClientRect()
 			scene.updateCameraForViewport(rect.width, rect.height)
-			scene.onResize?.(width, height)
+			scene.onResize?.()
+		})
+
+		this.postProcessing.forEach((postProcessor) => {
+			postProcessor.resize(width, height)
 		})
 	}
 
 	dispose() {
+		this.postProcessing.forEach((postProcessor) => postProcessor.dispose())
+		this.postProcessing.clear()
 		this.scenes.forEach((scene) => scene.dispose?.())
 		this.scenes.clear()
 		this.visibleScenes.clear()

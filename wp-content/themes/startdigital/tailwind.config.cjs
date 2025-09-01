@@ -14,8 +14,9 @@ module.exports = {
 				black: '#1E1E1E',
 			},
 			fontFamily: {
-				heading: ['Roboto', 'sans-serif'],
-				body: ['Inter', 'sans-serif'],
+				heading: ['Montreal', 'sans-serif'],
+				body: ['Montreal', 'sans-serif'],
+				supertitle: ['Montreal Semibold', 'sans-serif'],
 			},
 			borderRadius: {
 				4: '4px',

@@ -50,7 +50,6 @@ class SceneManager {
 
 		const deltaTime = this.clock.getDelta()
 
-		// Update all visible scenes
 		this.scenes.forEach((scene) => {
 			if (scene.isVisible) {
 				scene.animate(deltaTime)
@@ -64,15 +63,12 @@ class SceneManager {
 
 	bindEvents() {
 		const handleResize = () => {
-			const canvas = this.webglManager.canvas
 			this.webglManager.resize(window.innerWidth, window.innerHeight)
-
-			// Update visibility for all scenes after resize
-			this.scenes.forEach((scene) => scene.updateVisibility?.())
 		}
 
 		const handleScroll = () => {
 			this.webglManager.updateCanvasRect()
+			this.scenes.forEach((scene) => scene.updateVisibility?.())
 		}
 
 		window.addEventListener('resize', handleResize)

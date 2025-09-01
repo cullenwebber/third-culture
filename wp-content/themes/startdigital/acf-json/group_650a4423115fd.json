@@ -322,6 +322,11 @@
                 "param": "post_type",
                 "operator": "==",
                 "value": "page"
+            },
+            {
+                "param": "page_type",
+                "operator": "!=",
+                "value": "front_page"
             }
         ]
     ],
@@ -334,12 +339,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "acfe_display_title": "",
-    "acfe_autosync": [
-        "json"
-    ],
-    "acfe_form": 0,
-    "acfe_meta": "",
-    "acfe_note": "",
-    "modified": 1737618555
+    "modified": 1755432627
 }

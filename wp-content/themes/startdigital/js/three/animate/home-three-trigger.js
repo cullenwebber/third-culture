@@ -34,6 +34,16 @@ class HeroScrollTrigger {
 				scrub: true,
 			},
 		})
+
+		this.footerTl = gsap.timeline({
+			scrollTrigger: {
+				trigger: 'footer',
+				start: 'top bottom',
+				end: 'bottom bottom',
+				pin: false,
+				scrub: true,
+			},
+		})
 	}
 
 	registerAnimations() {
@@ -46,6 +56,21 @@ class HeroScrollTrigger {
 					that.scene.logo.position.y =
 						that.initialState.logoPosition.y +
 						that.frustrumDimensions.height * progress
+				},
+			}
+		)
+
+		this.footerTl.to(
+			{},
+			{
+				onUpdate: function () {
+					const progress = this.progress()
+					that.scene.logo.position.y =
+						that.initialState.logoPosition.y -
+						that.frustrumDimensions.height +
+						(that.frustrumDimensions.height +
+							that.frustrumDimensions.height * 0.07) *
+							progress
 				},
 			}
 		)
