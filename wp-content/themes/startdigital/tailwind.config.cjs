@@ -14,9 +14,10 @@ module.exports = {
 				black: '#1E1E1E',
 			},
 			fontFamily: {
-				heading: ['Montreal', 'sans-serif'],
-				body: ['Montreal', 'sans-serif'],
-				supertitle: ['Montreal Semibold', 'sans-serif'],
+				heading: ['Bagoss', 'sans-serif'],
+				body: ['Bagoss', 'sans-serif'],
+				supertitle: ['Bagoss', 'sans-serif'],
+				alt: ['Burgess', 'serif'],
 			},
 			borderRadius: {
 				4: '4px',

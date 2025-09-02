@@ -12,6 +12,7 @@ class WebGLManager {
 		this.visibleScenes = new Set()
 		this.canvasRect = null
 		this.postProcessing = new Map()
+		this.fullScreenDimensions = { width: 0, height: 0 }
 
 		WebGLManager.instance = this
 	}
@@ -26,7 +27,12 @@ class WebGLManager {
 			...options,
 		})
 
-		this.renderer.setSize(window.innerWidth, window.innerHeight)
+		this.updateFullScreenDimensions()
+
+		this.renderer.setSize(
+			this.fullScreenDimensions.width,
+			this.fullScreenDimensions.height
+		)
 		this.renderer.setPixelRatio(Math.min(1.4))
 		this.renderer.outputEncoding = THREE.sRGBEncoding
 		this.renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -39,6 +45,26 @@ class WebGLManager {
 		this.updateCanvasRect()
 
 		return this
+	}
+
+	getFullScreenDimensions() {
+		const tempElement = document.createElement('div')
+		tempElement.style.height = '100lvh'
+		tempElement.style.width = '100lvw'
+		tempElement.style.position = 'absolute'
+		tempElement.style.visibility = 'hidden'
+		document.body.appendChild(tempElement)
+
+		const width = tempElement.offsetWidth
+		const height = tempElement.offsetHeight
+
+		document.body.removeChild(tempElement)
+
+		return { width, height }
+	}
+
+	updateFullScreenDimensions() {
+		this.fullScreenDimensions = this.getFullScreenDimensions()
 	}
 
 	updateCanvasRect() {
@@ -104,10 +130,11 @@ class WebGLManager {
 			return
 		}
 
-		// Set viewport and scissor
+		// Set viewport and scissor using full screen dimensions
 		this.renderer.setViewport(
 			containerRect.left - this.canvasRect.left,
-			this.canvasRect.height - (containerRect.bottom - this.canvasRect.top),
+			this.fullScreenDimensions.height -
+				(containerRect.bottom - this.canvasRect.top),
 			containerRect.width,
 			containerRect.height
 		)
@@ -136,15 +163,15 @@ class WebGLManager {
 		const left = Math.max(0, containerRect.left - canvasLeft)
 		const top = Math.max(0, containerRect.top - canvasTop)
 		const right = Math.min(
-			this.canvasRect.width,
+			this.fullScreenDimensions.width,
 			containerRect.right - canvasLeft
 		)
 		const bottom = Math.min(
-			this.canvasRect.height,
+			this.fullScreenDimensions.height,
 			containerRect.bottom - canvasTop
 		)
 
-		const glY = this.canvasRect.height - bottom
+		const glY = this.fullScreenDimensions.height - bottom
 
 		return {
 			x: Math.round(left),
@@ -154,8 +181,12 @@ class WebGLManager {
 		}
 	}
 
-	resize(width, height) {
-		this.renderer.setSize(width, height)
+	resize() {
+		this.updateFullScreenDimensions()
+		this.renderer.setSize(
+			this.fullScreenDimensions.width,
+			this.fullScreenDimensions.height
+		)
 		this.updateCanvasRect()
 
 		this.scenes.forEach((scene) => {
@@ -165,7 +196,10 @@ class WebGLManager {
 		})
 
 		this.postProcessing.forEach((postProcessor) => {
-			postProcessor.resize(width, height)
+			postProcessor.resize(
+				this.fullScreenDimensions.width,
+				this.fullScreenDimensions.height
+			)
 		})
 	}
 

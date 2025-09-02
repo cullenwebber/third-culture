@@ -3,6 +3,7 @@ import WebGLManager from './context-manager'
 
 class SceneManager {
 	constructor(canvas) {
+		this.canvas = canvas
 		this.webglManager = new WebGLManager().init(canvas)
 		this.scenes = new Map()
 		this.clock = new THREE.Clock()
@@ -63,7 +64,7 @@ class SceneManager {
 
 	bindEvents() {
 		const handleResize = () => {
-			this.webglManager.resize(window.innerWidth, window.innerHeight)
+			this.webglManager.resize()
 		}
 
 		const handleScroll = () => {
@@ -71,12 +72,13 @@ class SceneManager {
 			this.scenes.forEach((scene) => scene.updateVisibility?.())
 		}
 
-		window.addEventListener('resize', handleResize)
+		this.resizeObserver = new ResizeObserver(handleResize)
+		this.resizeObserver.observe(document.body)
+
 		window.addEventListener('scroll', handleScroll, { passive: true })
 
-		// Store references for cleanup
 		this.eventCleanup = () => {
-			window.removeEventListener('resize', handleResize)
+			this.resizeObserver?.disconnect()
 			window.removeEventListener('scroll', handleScroll)
 		}
 	}

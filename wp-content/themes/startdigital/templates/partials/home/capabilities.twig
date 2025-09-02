@@ -1,10 +1,10 @@
-<section class="">
+<section id="home-capabilities-trigger" class="">
     <div class="container flex flex-col gap-8 lg:gap-16 xl:gap-32 max-lg:pt-32">
         <div class="flex flex-col gap-4 sm:gap-8 xl:gap-16 relative z-40">
-            <div class="block-content">
+            <div split-type="chars" class="block-content">
                 {{ post.capabilities.title }}
             </div>
-            <div class="flex flex-row xl:ml-[10%]">
+            <div class="flex flex-row self-end">
                 {% include "partials/supertitle.twig" with { title: post.capabilities.supertitle, class: 'max-sm:hidden' } %}
                 <div class="block-content max-w-[700px] xl:max-w-[1150px] indent-16 sm:indent-32 sm:-ml-28 lg:-mt-4 xl:-mt-6">
                     {{ post.capabilities.content }}
@@ -26,10 +26,10 @@
             <div class="flex flex-col w-full lg:pb-32 xl:pb-64">
                 {% for service in post.capabilities.services %}
                     <div class="flex flex-col gap-6 lg:gap-8 py-8 lg:py-12 xl:py-16 justify-center xl:min-h-[61lvh] {{ loop.last ? 'max-lg:pb-0' : 'border-b border-black/50 border-dashed' }} {{ loop.first ? 'max-lg:border-t' : '' }}">
-                        <div class="block-content">
+                        <div split-type="chars" class="block-content">
                             {{ service.title }}
                         </div>
-                        <div class="flex flex-col gap-2.5">
+                        <div class="flex flex-col gap-2.5 block-content">
                             {% for subservice in service.subservice %}
                                 <h4 class="is-h7 flex flex-row items-center gap-3">
                                     {{ subservice.title }}

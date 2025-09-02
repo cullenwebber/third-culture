@@ -4,6 +4,16 @@
 }
 
 @font-face {
+	font-family: 'Bagoss';
+	src: url('/wp-content/themes/startdigital/static/fonts/bagoss.woff2');
+}
+
+@font-face {
+	font-family: 'Burgesss';
+	src: url('/wp-content/themes/startdigital/static/fonts/burgesss.woff2');
+}
+
+@font-face {
 	font-family: 'Montreal Semibold';
 	src: url('/wp-content/themes/startdigital/static/fonts/montreal-semibold.woff2');
 }

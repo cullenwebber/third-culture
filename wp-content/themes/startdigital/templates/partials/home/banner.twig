@@ -2,18 +2,20 @@
 <section	id="home-hero-trigger"	class="relative !pt-24 text-black h-lvh z-40">
 	<div	class="container flex flex-col gap-48 lg:gap-32">
 		<div	class="flex flex-row max-lg:mt-8">
-			{% include "partials/supertitle.twig" with { title: 'TCK' } %}
-			<h1	class="is-h7 indent-12 max-w-[300px] -ml-8">
+			{% include "partials/supertitle.twig" with { title: 'TCK', class: 'supertitle' } %}
+			<h1	class="is-h7 max-w-[300px] -ml-8 opacity-0">
 				Maximizing impact in an interconnected world
 			</h1>
 		</div>
 		<div	class="flex flex-col items-end gap-2 self-end">
-			{% include "icons/logo.twig" with { class: 'h-4'} %}
-			<h2	class="is-h7 indent-12 max-w-[300px] -ml-8 text-right">
+			{% include "icons/logo.twig" with { class: 'h-4 icons'} %}
+			<h2	class="is-h7 max-w-[300px] -ml-8 text-right opacity-0">
 				Full Service
 			</br>
 			Creative Consultancy
 		</h2>
-		{% include "partials/button.twig" with { title: 'Learn More', link: '/about', class: 'mt-2' } %}
+		<div	class="btn-container">
+			{% include "partials/button.twig" with { title: 'Learn More', link: '/about', class: 'mt-2' } %}
+		</div>
 	</div>
 </div></section>
