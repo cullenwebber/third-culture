@@ -46,7 +46,7 @@ class CtaScene extends BaseScene {
 	}
 
 	createText() {
-		const material = new THREE.MeshBasicMaterial({ color: 0x1e1e1e })
+		const material = new THREE.MeshBasicMaterial({ color: 0xffffff })
 		const fontSize = this.getResponsiveFontSize()
 
 		this.text1 = new Text()

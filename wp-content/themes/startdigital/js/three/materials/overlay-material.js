@@ -11,6 +11,8 @@ class OverlayShaderMaterial {
 			mouseVelocity: 0.0,
 			time: 0.0,
 			aspectRatio: window.innerWidth / window.innerHeight,
+			fadeHeight: 0.075, // 1/8 of the height for bottom fade zone
+			topFadeHeight: 0.075, // 1/8 of the height for top fade zone
 		}
 		this.targetMousePosition = new THREE.Vector2(0.0, 0.0)
 		this.currentMousePosition = this.targetMousePosition.clone()
@@ -51,6 +53,8 @@ class OverlayShaderMaterial {
            uniform float mouseVelocity;
            uniform float time;
            uniform float aspectRatio;
+           uniform float fadeHeight;
+           uniform float topFadeHeight;
 
            varying vec2 vUv;
    		varying vec3 vNormal;
@@ -100,7 +104,7 @@ class OverlayShaderMaterial {
                    vec3 lightDir = normalize(lightPosition);
                    float NdotL = max(dot(vNormal, lightDir), 0.0);
                    
-                   vec3 ambient = concreteColor * 0.24;
+                   vec3 ambient = concreteColor * 0.23;
                    vec3 diffuse = concreteColor * NdotL * 0.6;
 
                    float edge = abs(dFdx(strength)) + abs(dFdy(strength));
@@ -136,7 +140,22 @@ class OverlayShaderMaterial {
 					prismaticEdge += vec3(spectral * 0.1, spectral * 0.1, spectral * 0.3) * edge;
 
 					vec3 finalColor = mix(ambient + diffuse, prismaticEdge, edge);
-					gl_FragColor = vec4(finalColor, strength * 1.0);
+
+					// Calculate alpha fade from bottom and top
+					// Bottom fade: vUv.y goes from 0 (bottom) to 1 (top)
+					// We want alpha 0 at bottom, alpha 1 at fadeHeight
+					float bottomAlphaFade = smoothstep(0.0, fadeHeight, vUv.y);
+					
+					// Top fade: we want alpha 1 at (1.0 - topFadeHeight), alpha 0 at 1.0 (top)
+					float topAlphaFade = smoothstep(1.0, 1.0 - topFadeHeight, vUv.y);
+					
+					// Combine both fades by multiplying them
+					float alphaFade = bottomAlphaFade * topAlphaFade;
+					
+					// Multiply the existing alpha by the fade
+					float finalAlpha = strength * alphaFade;
+
+					gl_FragColor = vec4(finalColor, finalAlpha);
            }
        `
 
@@ -148,6 +167,8 @@ class OverlayShaderMaterial {
 				mouseVelocity: { value: this.options.mouseVelocity },
 				time: { value: this.options.time },
 				aspectRatio: { value: this.options.aspectRatio },
+				fadeHeight: { value: this.options.fadeHeight },
+				topFadeHeight: { value: this.options.topFadeHeight },
 			},
 			vertexShader,
 			fragmentShader,
@@ -180,6 +201,15 @@ class OverlayShaderMaterial {
 
 	updateAspectRatio(aspectRatio) {
 		this.material.uniforms.aspectRatio.value = aspectRatio
+	}
+
+	// Method to update the fade heights
+	updateFadeHeight(fadeHeight) {
+		this.material.uniforms.fadeHeight.value = fadeHeight
+	}
+
+	updateTopFadeHeight(topFadeHeight) {
+		this.material.uniforms.topFadeHeight.value = topFadeHeight
 	}
 
 	animate() {

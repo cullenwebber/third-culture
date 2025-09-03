@@ -5,10 +5,6 @@ import { getLenis } from '../../utils/smooth-scroll'
 import ProjectsScrollTrigger from '../animate/home-projects-trigger'
 
 class ProjectsScene extends BaseScene {
-	setupScene() {
-		this.scene.background = new THREE.Color(0x1e1e1e)
-	}
-
 	createMaterials() {
 		this.imageMaterials = []
 	}

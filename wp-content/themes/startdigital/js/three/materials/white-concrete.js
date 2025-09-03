@@ -11,7 +11,6 @@ class ConcreteShaderMaterial {
 			metalness: 0.02,
 			time: 0.0,
 			lightPosition: this.targetLightPosition.clone(),
-			scrollOffset: new THREE.Vector2(0.0, 0.0), // New scroll uniform
 		}
 
 		this.options = { ...defaults, ...options }
@@ -21,63 +20,73 @@ class ConcreteShaderMaterial {
 
 	createMaterial() {
 		const vertexShader = /* glsl */ `
-			varying vec2 vUv;
-			varying vec3 vNormal;
-			varying vec3 vPosition;
-			varying vec3 vWorldPosition;
+		#include <fog_pars_vertex>
+		
+		varying vec2 vUv;
+		varying vec3 vNormal;
+		varying vec3 vPosition;
+		varying vec3 vWorldPosition;
 
-			void main() {
-				vUv = uv;
-				vNormal = normalize(normalMatrix * normal);
-				vPosition = position;
-				vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-				
-				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-			}
-		`
+		void main() {
+			vUv = uv;
+			vNormal = normalize(normalMatrix * normal);
+			vPosition = position;
+			vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+			
+			vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+			gl_Position = projectionMatrix * mvPosition;
+			
+			#include <fog_vertex>
+		}
+	`
 
 		const fragmentShader = /* glsl */ `
-			uniform vec3 baseColor;
-			uniform float roughness;
-			uniform float metalness;
-			uniform float time;
-			uniform vec3 lightPosition;
-			uniform vec2 scrollOffset;
+		#include <fog_pars_fragment>
+		
+		uniform vec3 baseColor;
+		uniform float roughness;
+		uniform float metalness;
+		uniform float time;
+		uniform vec3 lightPosition;
+		
+		varying vec2 vUv;
+		varying vec3 vNormal;
+		varying vec3 vPosition;
+		varying vec3 vWorldPosition;
+
+		// Function to create concrete
+		${concreteFragment}
+
+		void main() {
+			vec2 scaledUv = vUv * 8.0;
+			vec3 concreteColor = generateConcreteTexture(baseColor, scaledUv);
 			
-			varying vec2 vUv;
-			varying vec3 vNormal;
-			varying vec3 vPosition;
-			varying vec3 vWorldPosition;
-
-			// Function to create concrete
-			${concreteFragment}
-
-			void main() {
-
-				vec2 scaledUv = vUv * 8.0;				
-				vec3 concreteColor = generateConcreteTexture(baseColor, scaledUv, scrollOffset);
-				
-				vec3 lightDir = normalize(lightPosition);
-				float NdotL = max(dot(vNormal, lightDir), 0.0);
-				
-				vec3 ambient = concreteColor * 0.25;
-				vec3 diffuse = concreteColor * NdotL * 0.6;
-				
-				gl_FragColor = vec4(ambient + diffuse, 1.0);
-			}
-		`
+			vec3 lightDir = normalize(lightPosition);
+			float NdotL = max(dot(vNormal, lightDir), 0.0);
+			
+			vec3 ambient = concreteColor * 0.25;
+			vec3 diffuse = concreteColor * NdotL * 0.6;
+			
+			gl_FragColor = vec4(ambient + diffuse, 1.0);
+			
+			#include <fog_fragment>
+		}
+	`
 
 		return new THREE.ShaderMaterial({
-			uniforms: {
-				baseColor: { value: new THREE.Color(this.options.baseColor) },
-				roughness: { value: this.options.roughness },
-				metalness: { value: this.options.metalness },
-				time: { value: this.options.time },
-				lightPosition: { value: this.options.lightPosition },
-				scrollOffset: { value: this.options.scrollOffset }, // New uniform
-			},
+			uniforms: THREE.UniformsUtils.merge([
+				THREE.UniformsLib.fog, // This adds all fog uniforms automatically
+				{
+					baseColor: { value: new THREE.Color(this.options.baseColor) },
+					roughness: { value: this.options.roughness },
+					metalness: { value: this.options.metalness },
+					time: { value: this.options.time },
+					lightPosition: { value: this.options.lightPosition },
+				},
+			]),
 			vertexShader,
 			fragmentShader,
+			fog: true, // Enable fog for this material
 		})
 	}
 
@@ -87,14 +96,6 @@ class ConcreteShaderMaterial {
 
 	setTime(value) {
 		this.material.uniforms.time.value = value
-	}
-
-	setScrollOffset(x, y) {
-		this.material.uniforms.scrollOffset.value.set(x, y)
-	}
-
-	updateFromScroll(scrollX, scrollY, sensitivity = 0.001) {
-		this.setScrollOffset(scrollX * sensitivity, scrollY * sensitivity)
 	}
 
 	animateLight(targetPosition) {
@@ -117,7 +118,6 @@ class ConcreteShaderMaterial {
 		if (distance > 0.001) {
 			requestAnimationFrame(() => this.updateLightPosition())
 		} else {
-			// Snap to final position and stop animating
 			this.currentLightPosition.copy(this.targetLightPosition)
 			this.material.uniforms.lightPosition.value.copy(this.currentLightPosition)
 			this.isAnimating = false

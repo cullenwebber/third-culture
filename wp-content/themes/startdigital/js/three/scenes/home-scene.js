@@ -14,29 +14,38 @@ class HomeScene extends BaseScene {
 		this.lastMousePosition = null
 		this.lastMouseTime = null
 		this.currentMousePosition = { x: 0, y: 0 }
+		this.originalStoneDimensions = null
 	}
+
+	setupScene() {
+		this.scene.background = new THREE.Color(0x1e1e1e)
+		// this.scene.fog = new THREE.Fog(0x1e1e1e, 5.2, 6.5)
+	}
+
 	createMaterials() {
 		this.concreteMaterial = new ConcreteShaderMaterial()
 		this.overlayMaterial = new OverlayShaderMaterial()
 	}
 
 	createObjects() {
-		this.createFullScreenPlane()
+		this.configureLoader()
 		this.createFullScreenPlaneOverlay()
+		this.loadStone()
 		this.loadLogo()
 	}
 
-	loadLogo() {
-		const glbPath = getStaticPath('/logo-less-sharp.glb')
+	configureLoader() {
 		const dracoLoader = new DRACOLoader()
 		dracoLoader.setDecoderPath(
 			'https://www.gstatic.com/draco/versioned/decoders/1.5.6/'
 		)
+		this.gltfLoader = new GLTFLoader()
+		this.gltfLoader.setDRACOLoader(dracoLoader)
+	}
 
-		const gltfLoader = new GLTFLoader()
-		gltfLoader.setDRACOLoader(dracoLoader)
-
-		gltfLoader.load(
+	loadLogo() {
+		const glbPath = getStaticPath('/logo-less-sharp.glb')
+		this.gltfLoader.load(
 			glbPath,
 			(gltf) => {
 				this.logo = gltf.scene
@@ -62,6 +71,87 @@ class HomeScene extends BaseScene {
 		)
 	}
 
+	loadStone() {
+		const glbPath = getStaticPath('/stone.glb')
+		this.gltfLoader.load(
+			glbPath,
+			(gltf) => {
+				this.stone = gltf.scene
+				this.originalStoneDimensions = this.getStoneBoundingBox()
+
+				this.stone.traverse((child) => {
+					if (child.isMesh) {
+						child.castShadow = true
+						child.material = this.concreteMaterial.getMaterial()
+					}
+				})
+
+				this.updateStoneScale()
+				this.updateStonePosition()
+				this.scene.add(this.stone)
+			},
+			undefined,
+			undefined
+		)
+	}
+
+	getStoneBoundingBox() {
+		if (!this.stone) return { width: 1, height: 1 }
+
+		const box = new THREE.Box3().setFromObject(this.stone)
+		return {
+			width: box.max.x - box.min.x,
+			height: box.max.y - box.min.y,
+		}
+	}
+
+	updateStoneScale() {
+		if (!this.stone || !this.originalStoneDimensions) return
+
+		const { width, height } = this.getFrustumDimensions()
+		const aspect = width / height
+
+		let scale
+
+		if (aspect > 1) {
+			// Landscape: scale to width
+			const targetStoneWidth = width * 1.3
+			const stoneActualWidth = this.originalStoneDimensions.width
+			scale = targetStoneWidth / stoneActualWidth
+		} else {
+			// Portrait: scale to height
+			const targetStoneHeight = height * 1.3
+			const stoneActualHeight = this.originalStoneDimensions.height
+			scale = targetStoneHeight / stoneActualHeight
+		}
+
+		this.stone.scale.setScalar(scale)
+	}
+
+	updateStonePosition() {
+		if (!this.stone) return
+
+		const { width, height } = this.getFrustumDimensions()
+		if (!this.stone || !this.originalStoneDimensions) return 0
+
+		const currentScale = this.stone.scale.x
+		const stoneHeight = this.originalStoneDimensions.height * currentScale
+
+		const stoneY = -height / 2 + stoneHeight / 2
+
+		const aspect = width / height
+
+		let scale
+
+		if (aspect > 1) {
+			scale = 0.7
+		} else {
+			scale = 0.5
+		}
+
+		this.stone.position.set(0, stoneY * scale, -1.0)
+	}
+
 	updateLogoScale() {
 		if (!this.logo || !this.originalLogoDimensions) return
 
@@ -82,16 +172,6 @@ class HomeScene extends BaseScene {
 			width: box.max.x - box.min.x,
 			height: box.max.y - box.min.y,
 		}
-	}
-
-	createFullScreenPlane() {
-		const { width, height } = this.getFrustumDimensions()
-		const plane = new THREE.PlaneGeometry(width, height, 1, 1)
-		const mesh = new THREE.Mesh(plane, this.concreteMaterial.getMaterial())
-		mesh.receiveShadow = true
-
-		this.backgroundPlane = mesh
-		this.scene.add(mesh)
 	}
 
 	createFullScreenPlaneOverlay() {
@@ -154,8 +234,6 @@ class HomeScene extends BaseScene {
 
 	getWorldSizeFromPixels(options) {
 		const containerRect = this.container.getBoundingClientRect()
-
-		// Calculate actual distance from camera to the z-plane
 		const distance = Math.abs(this.camera.position.z)
 		const frustum = this.getFrustumDimensions(distance)
 
@@ -180,33 +258,33 @@ class HomeScene extends BaseScene {
 	}
 
 	onResize() {
-		const { width, height } = this.getFrustumDimensions(0)
 		const { width: overlayWidth, height: overlayHeight } =
 			this.getFrustumDimensions(1)
 
-		this.backgroundPlane.geometry.dispose()
-		this.backgroundPlane.geometry = new THREE.PlaneGeometry(width, height, 1, 1)
-
-		this.overlayPlane.geometry.dispose()
-		this.overlayPlane.geometry = new THREE.PlaneGeometry(
-			overlayWidth,
-			overlayHeight,
-			1,
-			1
-		)
+		if (this.overlayPlane) {
+			this.overlayPlane.geometry.dispose()
+			this.overlayPlane.geometry = new THREE.PlaneGeometry(
+				overlayWidth,
+				overlayHeight,
+				1,
+				1
+			)
+		}
 
 		if (this.logo) {
 			this.updateLogoScale()
 			// const bottomY = this.getBottomPosition(0.6)
 			// this.logo.position.setY(bottomY)
 		}
+
+		if (this.stone) {
+			this.updateStoneScale()
+			this.updateStonePosition()
+		}
 	}
 
 	animate(deltaTime) {
 		this.time += deltaTime
-		this.lenis = getLenis()
-		const progress = this.lenis.progress
-		this.concreteMaterial.updateFromScroll(0, -progress, 2.0)
 
 		this.handleMouseVelocity()
 		this.overlayMaterial.updateTime(this.time)

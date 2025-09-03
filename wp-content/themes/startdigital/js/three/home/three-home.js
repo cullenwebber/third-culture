@@ -11,7 +11,7 @@ function initHomeThree() {
 	const logoContainer = document.querySelector('#home-about')
 	const capabilitiesContainer = document.querySelector('#home-capabilities')
 	const projectsContainer = document.querySelector('#home-projects')
-	const ctaContainer = document.querySelector('#cta')
+	const ctaContainer = document.querySelector('#cta-center')
 
 	if (
 		!heroContainer ||

@@ -48,38 +48,37 @@ float concretePatches(vec2 p) {
 	return combined;
 }
 
-// Generate concrete texture color
-// Parameters:
-// - baseColor: base color of the concrete
-// - uv: UV coordinates (should be pre-scaled, typically * 8.0)
-// - scrollOffset: offset for scrolling effect (optional, default vec2(0.0))
 vec3 generateConcreteTexture(vec3 baseColor, vec2 uv, vec2 scrollOffset) {
-	// Apply scroll offset to UV coordinates
-	vec2 scrolledUv = uv + scrollOffset;
+	// Use original UV coordinates for noise sampling to keep texture fixed to object
+	// The scrollOffset can be used for other effects but not for the main texture noise
 	
 	// Start with base color
 	vec3 color = baseColor;
 	
-	float veryFineNoise = fbm(scrolledUv);
-	float veryFineNoise2 = fbm(scrolledUv * 9.5 + vec2(100.0, 50.0));
+	float veryFineNoise = fbm(uv);
+	float veryFineNoise2 = fbm(uv * 9.5 + vec2(100.0, 50.0));
 	
 	color = mix(color, color * 0.95, veryFineNoise * 0.3);
 	color = mix(color, color * 1.05, veryFineNoise2 * 0.9);
 	color = mix(color, vec3(0.97), veryFineNoise * 0.2);
 	
 	// Medium scale blobs
-	float mediumBlobs = fbm(scrolledUv * 0.2);
+	float mediumBlobs = fbm(uv * 0.2);
 	float blobVariation = (mediumBlobs - 0.2) * 0.1;
 	color = color * (1.0 + blobVariation);
 
 	// Add subtle static noise
-	float staticValue = staticNoise(scrolledUv);
+	float staticValue = staticNoise(uv);
 	color += staticValue * 0.1; // Very subtle static overlay
 	
 	// Large concrete patches - this is the important part
-	float patches = concretePatches(scrolledUv * 0.3);
+	float patches = concretePatches(uv * 0.3);
 	float patchVariation = (patches - 0.2) * 0.3;
 	color = color * (1.0 + patchVariation);
+	
+	// Optional: If you want some scroll-based effects, you can add them here
+	// For example, a subtle color shift based on scroll:
+	// color += scrollOffset.y * 0.01; // Very subtle scroll-based tint
 	
 	return color;
 }
