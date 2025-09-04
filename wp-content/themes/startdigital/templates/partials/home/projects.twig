@@ -35,14 +35,12 @@
                         </div>
                     </div>
                     {% include "icons/straight-arrow.twig" with { class: 'size-4' } %}
-                    <div data-project-number-container class="flex flex-col gap-6 overflow-hidden relative">
-                        <div class="bg-gradient-to-b from-black to-black/0 w-full h-8 absolute top-0 left-0 z-10"></div>
+                    <div data-project-number-container class="flex flex-col gap-6 relative overflow-hidden [mask:linear-gradient(to_bottom,transparent_0%,black_64px,black_calc(100%-64px),transparent_100%)] [-webkit-mask:linear-gradient(to_bottom,transparent_0%,black_64px,black_calc(100%-64px),transparent_100%)]">
                         {% for _ in post.projects.projects %}
                             <span data-project-number class="is-supertitle {{ loop.index0 == 0 ? 'opacity-100' : 'opacity-25' }}">
                                 {{ 0 ~ loop.index }}
                             </span>
                         {% endfor %}
-                        <div class="bg-gradient-to-t from-black to-black/0 w-full h-8 absolute bottom-0 left-0 z-10"></div>
                     </div>
                 </div>
                 <div class="col-span-1 lg:col-start-3 relative max-lg:absolute max-lg:bottom-0 max-lg:left-0 max-lg:bg-gradient-to-t max-lg:from-black max-lg:to-black/0 w-full z-40 h-full">

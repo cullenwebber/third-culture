@@ -5,7 +5,6 @@ let lenis = null
 export default function initSmoothScrolling() {
 	lenis = new Lenis({
 		autoRaf: true,
-		syncTouch: true,
 	})
 }
 

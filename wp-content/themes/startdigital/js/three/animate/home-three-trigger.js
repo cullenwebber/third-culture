@@ -45,7 +45,7 @@ class HeroScrollTrigger {
 			scrollTrigger: {
 				trigger: '#home-projects-container',
 				start: 'top bottom',
-				end: '+=190%',
+				end: '+=140%',
 				pin: false,
 				scrub: true,
 				ease: 'none',
@@ -56,7 +56,7 @@ class HeroScrollTrigger {
 			scrollTrigger: {
 				trigger: '#home-projects-container',
 				start: 'bottom bottom',
-				end: '+=150%',
+				end: '+=140%',
 				pin: false,
 				scrub: true,
 				ease: 'none',
@@ -67,7 +67,7 @@ class HeroScrollTrigger {
 			scrollTrigger: {
 				trigger: '#cta',
 				start: 'top bottom',
-				end: '+=190%',
+				end: '+=140%',
 				pin: false,
 				scrub: true,
 				ease: 'none',
@@ -78,7 +78,7 @@ class HeroScrollTrigger {
 			scrollTrigger: {
 				trigger: '#cta',
 				start: 'bottom bottom',
-				end: '+=150%',
+				end: '+=140%',
 				pin: false,
 				scrub: true,
 				ease: 'none',
@@ -117,17 +117,17 @@ class HeroScrollTrigger {
 				onUpdate: function () {
 					const progress = this.progress()
 					const stoneHeight = that.getStoneHeight()
-					const frustrumHeight = that.frustrumDimensions.height
+					const frustrumHeight = that.frustrumDimensions.height * 1.5
 
-					const targetY = frustrumHeight / 2 + stoneHeight / 2
-					const totalDistance = targetY - that.initialState.stonePosition.y
+					const targetY = frustrumHeight
+					const totalDistance = targetY
 
 					that.scene.stone.position.y =
-						that.initialState.stonePosition.y + totalDistance * progress * 2.0
+						that.initialState.stonePosition.y + totalDistance * progress
 
 					that.scene.overlayPlane.position.y =
 						that.initialState.planePosition.y +
-						that.frustrumDimensions.height * progress * 1.75
+						that.frustrumDimensions.height * progress
 				},
 			}
 		)
@@ -138,14 +138,15 @@ class HeroScrollTrigger {
 				onUpdate: function () {
 					const progress = this.progress()
 					const stoneHeight = that.getStoneHeight()
-					const frustrumHeight = that.frustrumDimensions.height
+					const frustrumHeight = that.frustrumDimensions.height * 1.5
 
-					const startY = (-frustrumHeight / 2 - stoneHeight / 2) * 1.1
-					const targetY = 0
+					const startY = -frustrumHeight / 2 - stoneHeight / 2
 
-					const totalDistance = targetY - startY
+					const targetY = frustrumHeight
 
-					that.scene.stone.position.y = startY + totalDistance * progress
+					const totalDistance = targetY
+
+					that.scene.stone.position.y = startY * 1.0 + totalDistance * progress
 
 					that.scene.overlayPlane.position.y =
 						that.initialState.planePosition.y -
@@ -161,17 +162,17 @@ class HeroScrollTrigger {
 				onUpdate: function () {
 					const progress = this.progress()
 					const stoneHeight = that.getStoneHeight()
-					const frustrumHeight = that.frustrumDimensions.height
+					const frustrumHeight = that.frustrumDimensions.height * 1.5
 
-					const targetY = frustrumHeight / 2 + stoneHeight / 2
-					const totalDistance = targetY - that.initialState.stonePosition.y
+					const targetY = frustrumHeight
+					const totalDistance = targetY
 
 					that.scene.stone.position.y =
-						that.initialState.stonePosition.y + totalDistance * progress * 2.0
+						that.initialState.stonePosition.y + totalDistance * progress
 
 					that.scene.overlayPlane.position.y =
 						that.initialState.planePosition.y +
-						that.frustrumDimensions.height * progress * 1.75
+						that.frustrumDimensions.height * progress
 				},
 			}
 		)
@@ -182,14 +183,15 @@ class HeroScrollTrigger {
 				onUpdate: function () {
 					const progress = this.progress()
 					const stoneHeight = that.getStoneHeight()
-					const frustrumHeight = that.frustrumDimensions.height
+					const frustrumHeight = that.frustrumDimensions.height * 1.5
 
-					const startY = (-frustrumHeight / 2 - stoneHeight / 2) * 1.1
-					const targetY = 0
+					const startY = -frustrumHeight / 2 - stoneHeight / 2
 
-					const totalDistance = targetY - startY
+					const targetY = frustrumHeight
 
-					that.scene.stone.position.y = startY + totalDistance * progress
+					const totalDistance = targetY
+
+					that.scene.stone.position.y = startY * 1.0 + totalDistance * progress
 
 					that.scene.overlayPlane.position.y =
 						that.initialState.planePosition.y -

@@ -3,10 +3,10 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import BaseScene from '../base-scene'
 import { getStaticPath } from '../utils'
-import { getLenis } from '../../utils/smooth-scroll'
 import ConcreteShaderMaterial from '../materials/white-concrete'
 import OverlayShaderMaterial from '../materials/overlay-material'
 import HeroScrollTrigger from '../animate/home-three-trigger'
+import BackgroundShaderMaterial from '../materials/background-material'
 
 class HomeScene extends BaseScene {
 	constructor(id, container) {
@@ -19,17 +19,18 @@ class HomeScene extends BaseScene {
 
 	setupScene() {
 		this.scene.background = new THREE.Color(0x1e1e1e)
-		// this.scene.fog = new THREE.Fog(0x1e1e1e, 5.2, 6.5)
 	}
 
 	createMaterials() {
 		this.concreteMaterial = new ConcreteShaderMaterial()
 		this.overlayMaterial = new OverlayShaderMaterial()
+		this.backgroundMaterial = new BackgroundShaderMaterial()
 	}
 
 	createObjects() {
 		this.configureLoader()
 		this.createFullScreenPlaneOverlay()
+		this.createBackgroundPlane()
 		this.loadStone()
 		this.loadLogo()
 	}
@@ -185,6 +186,17 @@ class HomeScene extends BaseScene {
 		this.scene.add(mesh)
 	}
 
+	createBackgroundPlane() {
+		const { width, height } = this.getFrustumDimensions(-5)
+		const plane = new THREE.PlaneGeometry(width, height, 1, 1)
+		const mesh = new THREE.Mesh(plane, this.backgroundMaterial.getMaterial())
+		mesh.receiveShadow = true
+		mesh.position.z = -5
+
+		this.backgroundPlane = mesh
+		this.scene.add(mesh)
+	}
+
 	createMouseListeners() {
 		this.handleMouseMove = this.handleMouseMove.bind(this)
 		window.addEventListener('mousemove', this.handleMouseMove)
@@ -288,6 +300,7 @@ class HomeScene extends BaseScene {
 
 		this.handleMouseVelocity()
 		this.overlayMaterial.updateTime(this.time)
+		this.backgroundMaterial.updateTime(this.time)
 	}
 }
 
