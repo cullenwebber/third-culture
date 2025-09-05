@@ -178,7 +178,11 @@ class HomeScene extends BaseScene {
 	createFullScreenPlaneOverlay() {
 		const { width, height } = this.getFrustumDimensions(1)
 		const plane = new THREE.PlaneGeometry(width, height, 1, 1)
-		const mesh = new THREE.Mesh(plane, this.overlayMaterial.getMaterial())
+		const tempMaterial = new THREE.MeshStandardMaterial({
+			opacity: 0,
+			transparent: true,
+		})
+		const mesh = new THREE.Mesh(plane, tempMaterial)
 		mesh.receiveShadow = true
 		mesh.position.z = 1
 

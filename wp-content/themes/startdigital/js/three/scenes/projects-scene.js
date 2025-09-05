@@ -17,12 +17,63 @@ class ProjectsScene extends BaseScene {
 		this.imagePlanes = []
 		const images = document.querySelectorAll('.three-project-images')
 		if (!images) return
+
 		images.forEach((image, i) => {
 			this.imagePlanes[i] = this.createImagePlane(image.src, i)
-			const box = new THREE.Box3().setFromObject(this.imagePlanes[i])
-			this.imagePlanes[i].position.y = i * -(box.max.y - box.min.y + 0.25)
 			this.scene.add(this.imagePlanes[i])
 		})
+
+		const radius = this.calculateDynamicRadius(images.length)
+		this.radius = radius
+		const totalAngle = Math.PI * 0.35 // Same as ScrollTrigger
+		const angleStep = totalAngle / Math.max(1, images.length - 1)
+		const startAngle = -totalAngle // Same as ScrollTrigger
+
+		// Position the planes using the same calculation as ScrollTrigger
+		this.imagePlanes.forEach((plane, i) => {
+			const angle = startAngle + i * angleStep
+			plane.position.y = Math.sin(angle) * radius
+			plane.position.z = Math.cos(angle) * radius - radius
+			plane.position.x = 0
+
+			plane.rotation.x = -angle
+		})
+	}
+
+	calculateDynamicRadius(imageLength) {
+		if (!imageLength || !this.imagePlanes.length) return 12
+
+		let maxWidth = 0
+		let maxHeight = 0
+		let maxDiagonal = 0
+
+		// Now we can properly measure the created planes
+		this.imagePlanes.forEach((plane) => {
+			const box = new THREE.Box3().setFromObject(plane)
+			const height = box.max.y - box.min.y
+			const width = box.max.x - box.min.x
+			const diagonal = Math.sqrt(width * width + height * height)
+
+			maxWidth = Math.max(maxWidth, width)
+			maxHeight = Math.max(maxHeight, height)
+			maxDiagonal = Math.max(maxDiagonal, diagonal)
+		})
+
+		const numPlanes = imageLength
+		const totalAngle = Math.PI * 0.54 // Keep consistent with your usage
+		const angleStep = totalAngle / Math.max(1, numPlanes - 1)
+
+		const minChordLength = maxDiagonal * 1.1
+
+		const minRadiusFromChord = minChordLength / (2 * Math.sin(angleStep / 2))
+		const minRadiusFromDimensions = Math.max(maxWidth, maxHeight) * 0.8
+
+		let baseRadius = Math.max(minRadiusFromChord, minRadiusFromDimensions)
+
+		const screenFactor = 1.1
+		const finalRadius = baseRadius * screenFactor
+
+		return Math.max(finalRadius, 8)
 	}
 
 	createScrollTriggers() {
@@ -36,7 +87,7 @@ class ProjectsScene extends BaseScene {
 		width = width * this.getImagePlaneWidth()
 		height = width * (5 / 4)
 
-		const geo = new THREE.PlaneGeometry(width, height, 8, 8)
+		const geo = new THREE.PlaneGeometry(width, height, 16, 16)
 		this.imageMaterials[i] = new ImageMaterial({
 			uTexture: new THREE.Texture(),
 			uTextureSize: new THREE.Vector2(1024, 1024),
@@ -84,10 +135,12 @@ class ProjectsScene extends BaseScene {
 	}
 
 	animate(deltaTime) {
+		this.time += deltaTime
 		this.lenis = getLenis()
 		const lenisVelocity = this.lenis.velocity
 		this.imageMaterials.forEach((material) => {
 			material.setScrollVelocity(lenisVelocity)
+			material.updateTime(this.time)
 		})
 	}
 }

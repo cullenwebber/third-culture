@@ -17,7 +17,7 @@
             </div>
         </div>
     </section>
-    <div id="home-projects-scroller" style="--height:{{ post.projects.projects|length * 100 }}lvh;" class="w-full h-[--height]">
+    <div id="home-projects-scroller" style="--height:{{ (post.projects.projects|length - 1) * 100 }}lvh;" class="w-full h-[--height]">
         <div id="home-projects" class="min-h-lvh w-full z-40 will-change-transform sticky top-0 left-0">
             <div class="container grid grid-cols-1 lg:grid-cols-3 gap-8 absolute top-0 left-0 w-full h-full overflow-hidden">
                 <div class="col-span-1 flex justify-end items-center gap-6 max-lg:hidden">
@@ -43,7 +43,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div class="col-span-1 lg:col-start-3 relative max-lg:absolute max-lg:bottom-0 max-lg:left-0 max-lg:bg-gradient-to-t max-lg:from-black max-lg:to-black/0 w-full z-40 h-full">
+                <div class="col-span-1 lg:col-start-3 relative max-lg:absolute max-lg:bottom-0 max-lg:left-0 w-full z-40 h-full">
                     {% for project in post.projects.projects %}
                         <div class="project-text flex flex-col gap-4 absolute max-lg:bottom-16 lg:top-1/2 lg:-translate-y-1/2 left-4 md:left-8 lg:left-0 max-w-[calc(100vw-4rem)] {{ loop.index0 == 0 ? 'pointer-events-auto' : 'pointer-events-none' }}" data-project="{{ loop.index0 }}">
                             <h4 data-project-title class="is-h6">

@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { getStaticPath } from '../utils'
 import HomePhysicsTrigger from '../animate/home-physics-trigger'
 import StoneMaterial from '../materials/stone'
+import BackgroundShaderMaterial from '../materials/background-material'
 
 class LogoPhysicsScene extends BaseScene {
 	constructor(id, container) {
@@ -69,9 +70,11 @@ class LogoPhysicsScene extends BaseScene {
 
 	createMaterials() {
 		this.material = new StoneMaterial()
+		this.backgroundMaterial = new BackgroundShaderMaterial()
 
 		this.defaultMaterial = new CANNON.Material('default')
 		this.mouseRepelMaterial = new CANNON.Material('mouseRepel')
+		this.wallMaterial = new CANNON.Material('wall')
 
 		// Contact material for mouse repulsion
 		const mouseContact = new CANNON.ContactMaterial(
@@ -94,10 +97,45 @@ class LogoPhysicsScene extends BaseScene {
 			}
 		)
 		this.world.addContactMaterial(objectContact)
+
+		// Contact material for wall collisions
+		const wallContact = new CANNON.ContactMaterial(
+			this.defaultMaterial,
+			this.wallMaterial,
+			{
+				friction: 0.2,
+				restitution: 0.6, // Objects bounce off walls
+			}
+		)
+		this.world.addContactMaterial(wallContact)
 	}
 
 	createObjects() {
+		this.createBackgroundPlane()
+		this.createPhysicsWalls()
 		this.loadIcons()
+	}
+
+	createPhysicsWalls() {
+		const { width, height } = this.getFrustumDimensions(-1)
+		const wallThickness = 0.1
+
+		// Back wall (where the background plane is)
+		const backWall = new CANNON.Body({
+			mass: 0, // Static body
+			material: this.wallMaterial,
+			type: CANNON.Body.KINEMATIC,
+		})
+		backWall.addShape(
+			new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, wallThickness / 2))
+		)
+		backWall.position.set(0, 0, -1 - wallThickness / 2) // Just behind the background plane
+		this.world.addBody(backWall)
+
+		// Store wall references if you need to update them on resize
+		this.physicsWalls = {
+			back: backWall,
+		}
 	}
 
 	loadIcons() {
@@ -278,11 +316,34 @@ class LogoPhysicsScene extends BaseScene {
 		})
 	}
 
+	createBackgroundPlane() {
+		const { width, height } = this.getFrustumDimensions(-1)
+		const plane = new THREE.PlaneGeometry(width, height, 1, 1)
+		const mesh = new THREE.Mesh(plane, this.backgroundMaterial.getMaterial())
+		mesh.receiveShadow = true
+		mesh.position.z = -1
+
+		this.backgroundPlane = mesh
+		this.scene.add(mesh)
+	}
+
+	getFrustumDimensions(zDifference = 0) {
+		const distance = this.camera.position.z - zDifference
+		const fov = this.camera.fov * (Math.PI / 180)
+		const aspect = this.camera.aspect
+		const height = 2 * Math.tan(fov / 2) * distance
+		const width = height * aspect
+
+		return { width, height }
+	}
+
 	animate(deltaTime) {
 		super.animate(deltaTime)
+		this.time += deltaTime
 		if (this.physicsObjects.length > 0) {
 			this.updatePhysics(deltaTime)
 		}
+		this.backgroundMaterial.updateTime(this.time)
 	}
 
 	// Clean up on destroy

@@ -4,7 +4,8 @@ import uvCoverVert from './shaders/uv-cover-vert'
 class ImageMaterial {
 	constructor(options = {}) {
 		const defaults = {
-			uScrollVelocity: 0.0,
+			uTime: 0.0,
+			uRadius: 1.7, // Control the curvature radius
 			uTexture: new THREE.Texture(),
 			uTextureSize: new THREE.Vector2(0.0, 0.0),
 			uQuadSize: new THREE.Vector2(0.0, 0.0),
@@ -19,7 +20,9 @@ class ImageMaterial {
 
             float PI = 3.141592653589793;
 
-            uniform float uScrollVelocity;
+            uniform float uTime;
+			uniform float uScrollVelocity;
+            uniform float uRadius;
             uniform vec2 uTextureSize;
             uniform vec2 uQuadSize;
 
@@ -28,10 +31,18 @@ class ImageMaterial {
 
             ${uvCoverVert}
 
-            vec3 deformationCurve(vec3 position, vec2 uv) {
-                position.y = position.y - (sin(uv.x * PI) * uScrollVelocity * -0.01);
-                return position;
-            }
+          vec3 deformationCurve(vec3 position, vec2 uv) {
+				
+				
+				
+				position.y = position.y - sin(uv.x * PI) * uScrollVelocity * -0.015;
+			
+				
+				float angle = (uv.y - 0.5);
+				position.z = position.z + (cos(angle) - 1.0) * uRadius;
+				
+				return position;
+			}
 
             void main() {
                 vUv = uv;
@@ -43,27 +54,69 @@ class ImageMaterial {
             }
         `
 		const fragmentShader = /* glsl */ `
+    uniform sampler2D uTexture;
+    uniform float uTime;
+    float PI = 3.141592653589793;
+    varying vec2 vUv;
+    varying vec2 vUvCover;
+
+    float random(vec2 st) {
+        return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+    }
+
+    float noise(vec2 st) {
+        vec2 i = floor(st);
+        vec2 f = fract(st);
         
-            uniform sampler2D uTexture;
+        float a = random(i);
+        float b = random(i + vec2(1.0, 0.0));
+        float c = random(i + vec2(0.0, 1.0));
+        float d = random(i + vec2(1.0, 1.0));
+        
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        
+        return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+    }
 
-            varying vec2 vUv; // 0 (left) 0 (bottom) - 1 (right) 1 (top)
-            varying vec2 vUvCover;
+    float fbm(vec2 st) {
+        float value = 0.0;
+        float amplitude = 0.5;
+        float frequency = 0.0;
+        
+        for (int i = 0; i < 4; i++) {
+            value += amplitude * noise(st);
+            st *= 2.0;
+            amplitude *= 0.5;
+        }
+        return value;
+    }
 
-            void main() {
-                vec3 texture = vec3(texture(uTexture, vUvCover));
-                gl_FragColor = vec4(texture, 1.0);
-            }
-        `
+		void main() {
+			vec3 texture = vec3(texture(uTexture, vUvCover));
+			
+			float alpha = sin(vUv.y * PI);
+			float noiseValue = fbm(vUv * 7.0 + uTime * 0.15) * 0.5 - 0.4;
+			alpha += noiseValue;
+			alpha = clamp(alpha, 0.0, 1.0);
+			
+			gl_FragColor = vec4(texture, alpha);
+		}
+`
 
 		return new THREE.ShaderMaterial({
 			uniforms: {
-				uScrollVelocity: { value: this.options.uScrollVelocity },
+				uTime: { value: this.options.uTime },
+				uWaveAmplitude: { value: this.options.uWaveAmplitude },
+				uWaveFrequency: { value: this.options.uWaveFrequency },
+				uRadius: { value: this.options.uRadius },
 				uTexture: { value: this.options.uTexture },
 				uTextureSize: { value: this.options.uTextureSize },
 				uQuadSize: { value: this.options.uQuadSize },
+				uScrollVelocity: { value: 0.0 },
 			},
 			vertexShader,
 			fragmentShader,
+			transparent: true,
 		})
 	}
 
@@ -71,8 +124,54 @@ class ImageMaterial {
 		return this.material
 	}
 
+	updateTime(time) {
+		if (
+			this.material &&
+			this.material.uniforms &&
+			this.material.uniforms.uTime
+		) {
+			this.material.uniforms.uTime.value = time
+		}
+	}
+
 	setScrollVelocity(value) {
-		this.material.uniforms.uScrollVelocity.value = value
+		if (
+			this.material &&
+			this.material.uniforms &&
+			this.material.uniforms.uScrollVelocity
+		) {
+			this.material.uniforms.uScrollVelocity.value = value
+		}
+	}
+
+	setWaveAmplitude(value) {
+		if (
+			this.material &&
+			this.material.uniforms &&
+			this.material.uniforms.uWaveAmplitude
+		) {
+			this.material.uniforms.uWaveAmplitude.value = value
+		}
+	}
+
+	setWaveFrequency(value) {
+		if (
+			this.material &&
+			this.material.uniforms &&
+			this.material.uniforms.uWaveFrequency
+		) {
+			this.material.uniforms.uWaveFrequency.value = value
+		}
+	}
+
+	setRadius(value) {
+		if (
+			this.material &&
+			this.material.uniforms &&
+			this.material.uniforms.uRadius
+		) {
+			this.material.uniforms.uRadius.value = value
+		}
 	}
 }
 

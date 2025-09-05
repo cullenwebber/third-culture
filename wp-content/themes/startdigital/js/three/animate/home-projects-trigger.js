@@ -47,15 +47,31 @@ class ProjectsScrollTrigger {
 	}
 
 	registerInitialStates() {
+		const radius = this.scene.radius
+		const totalAngle = Math.PI * 0.35
+		const angleStep =
+			totalAngle / Math.max(1, this.scene.imagePlanes.length - 1)
+		const startAngle = -totalAngle
+
 		this.initialState = {
-			imagePlanesData: this.scene.imagePlanes.map((imagePlane) => {
+			imagePlanesData: this.scene.imagePlanes.map((imagePlane, i) => {
 				const box = new THREE.Box3().setFromObject(imagePlane)
+				const angle = startAngle + i * angleStep
+
 				return {
 					positionY: imagePlane.position.y,
+					positionZ: imagePlane.position.z,
+					rotationX: imagePlane.rotation.x,
 					height: box.max.y - box.min.y,
 					width: box.max.x - box.min.x,
+					initialAngle: angle,
+					radius: radius,
 				}
 			}),
+			radius,
+			totalAngle,
+			angleStep,
+			startAngle,
 		}
 	}
 
@@ -80,16 +96,20 @@ class ProjectsScrollTrigger {
 			{
 				onUpdate: function () {
 					const progress = this.progress()
+					const totalPlanes = that.scene.imagePlanes.length
 
 					let mostVisibleIndex = 0
 					let minDistance = Infinity
 
 					that.scene.imagePlanes.forEach((imagePlane, i) => {
-						imagePlane.position.y =
-							that.initialState.imagePlanesData[i].positionY +
-							(that.scene.imagePlanes.length - 1) *
-								(that.initialState.imagePlanesData[i].height + 0.25) *
-								progress
+						const data = that.initialState.imagePlanesData[i]
+						const rotationAmount = progress * Math.PI * 0.35
+						const currentAngle = data.initialAngle + rotationAmount
+
+						imagePlane.position.y = Math.sin(currentAngle) * data.radius
+						imagePlane.position.z =
+							Math.cos(currentAngle) * data.radius - data.radius
+						imagePlane.rotation.x = -currentAngle
 
 						const distanceFromCenter = Math.abs(imagePlane.position.y)
 						if (distanceFromCenter < minDistance) {
@@ -109,6 +129,7 @@ class ProjectsScrollTrigger {
 			}
 		)
 
+		// Rest of your existing animation code...
 		this.projectsTl.fromTo(
 			'[data-project-number]',
 			{
@@ -121,7 +142,6 @@ class ProjectsScrollTrigger {
 			'<='
 		)
 
-		// Set's the initial state
 		gsap.set('[data-project-type-container]', {
 			width: document.querySelector('[data-project-type]').offsetWidth,
 			height: document.querySelector('[data-project-type]').offsetHeight,

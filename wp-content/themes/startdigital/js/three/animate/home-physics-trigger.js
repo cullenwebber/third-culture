@@ -46,15 +46,19 @@ class HomePhysicsTrigger {
 
 					const angle = Math.PI * progress
 
-					const radius = Math.sqrt(
-						that.initialState.cameraPosition.x ** 2 +
-							that.initialState.cameraPosition.z ** 2
-					)
+					// const radius = Math.sqrt(
+					// 	that.initialState.cameraPosition.x ** 2 +
+					// 		that.initialState.cameraPosition.z ** 2
+					// )
 
-					that.scene.camera.position.x = Math.cos(angle) * radius
-					that.scene.camera.position.z = Math.sin(angle) * radius
+					// that.scene.camera.position.x = Math.cos(angle) * radius
+					// that.scene.camera.position.z = Math.sin(angle) * radius
 
 					that.scene.camera.position.y =
+						that.initialState.cameraPosition.y -
+						2 * that.initialState.cameraPosition.y * progress
+
+					that.scene.backgroundPlane.position.y =
 						that.initialState.cameraPosition.y -
 						2 * that.initialState.cameraPosition.y * progress
 

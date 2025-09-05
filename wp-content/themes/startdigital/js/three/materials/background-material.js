@@ -6,8 +6,8 @@ class BackgroundShaderMaterial {
 			color: new THREE.Color(0x1e1e1e),
 			time: 0.0,
 			aspectRatio: window.innerWidth / window.innerHeight,
-			gridSize: 30.0,
-			gridOpacity: 0.15,
+			gridSize: 35.0,
+			gridOpacity: 0.1,
 			vignetteStrength: 1.0,
 		}
 
@@ -72,31 +72,37 @@ class BackgroundShaderMaterial {
 			}
 			
 
-            float grid(vec2 uv, float size) {
+           float grid(vec2 uv, float size) {
+                // Calculate aspect ratio from UV derivatives
+                vec2 ddx_uv = dFdx(uv);
+                vec2 ddy_uv = dFdy(uv);
+                float aspectRatio = length(ddx_uv) / length(ddy_uv);
+                
                 // Adjust UV coordinates to maintain square grid
                 vec2 adjustedUv;
                 
                 if (aspectRatio < 1.0) {
-                    // Wide screen (width > height): scale Y dimension UP
                     adjustedUv = vec2(uv.x, uv.y * aspectRatio);
                 } else {
-                    // Tall screen (height > width): scale X dimension UP  
-                    adjustedUv = vec2(uv.x * aspectRatio, uv.y);
+                    adjustedUv = vec2(uv.x / aspectRatio, uv.y);
                 }
                 
                 // Scale by grid size
                 adjustedUv *= size;
                 
-                // Create grid lines
-                vec2 gridUv = fract(adjustedUv);
-                vec2 gridLines = abs(gridUv - 0.5);
+                // Calculate derivatives for adaptive line width (prevents aliasing)
+                vec2 grid_uv = fract(adjustedUv);
+                vec2 ddx = dFdx(adjustedUv);
+                vec2 ddy = dFdy(adjustedUv);
                 
-                // Grid line thickness
-                float lineWidth = 0.01;
-                float gridX = step(0.5 - lineWidth, gridLines.x);
-                float gridY = step(0.5 - lineWidth, gridLines.y);
+                // Adaptive line width based on screen resolution
+                vec2 lineWidth = max(abs(ddx), abs(ddy)) * 0.75;
                 
-                return max(gridX, gridY);
+                // Create anti-aliased grid lines
+                vec2 gridLines = abs(grid_uv - 0.5);
+                vec2 grid_aa = smoothstep(0.5 - lineWidth, 0.5 - lineWidth * 0.5, gridLines);
+                
+                return max(grid_aa.x, grid_aa.y);
             }
 
 			// Vignette function
