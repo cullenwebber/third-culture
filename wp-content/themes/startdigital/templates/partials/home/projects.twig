@@ -1,22 +1,20 @@
-<section id="home-projects-container" class="text-white !pb-0">
-    <section id="home-projects-trigger" class="relative z-40 -mb-8 max-sm:pb-8 max-lg:pb-24 max-xl:pb-0">
+<section id="home-projects-container" class="text-white">
+    <div id="home-projects-trigger" class="relative z-40 -mb-8 max-sm:pb-8 max-lg:pb-24 max-xl:pb-0">
         <div class="container project-text-container flex flex-col lg:items-center relative z-40">
             <div class="flex flex-col lg:items-center gap-4 sm:gap-8 lg:gap-16 relative z-40 w-fit">
                 <div split-type="chars" class="block-content lg:text-center">
                     {{ post.projects.title }}
                 </div>
-                <div class="flex flex-row lg:ml-[10%] max-w-[475px] self-end">
-                    <div class="max-sm:hidden">
-                        {% include "partials/supertitle.twig" with { title: 'Work', class: 'text-white' } %}
-                    </div>
-                    <div class="block-content max-w-[1150px] indent-16 sm:-ml-12 ">
-                        {{ post.projects.content }}
-                        {% include "partials/button.twig" with { title: post.projects.link.title , link: post.projects.link.url, class: 'text-white' } %}
-                    </div>
+            {# <div class="flex flex-row lg:ml-[10%] max-w-[705px] self-end">
+                
+                <div class="block-content max-w-[1150px] indent-16">
+                {{ post.projects.content }}
+                {% include "partials/button.twig" with { title: post.projects.link.title , link: post.projects.link.url, class: 'text-white' } %}
                 </div>
+            </div> #}
             </div>
         </div>
-    </section>
+    </div>
     <div id="home-projects-scroller" style="--height:{{ (post.projects.projects|length - 1) * 100 }}lvh;" class="w-full h-[--height]">
         <div id="home-projects" class="min-h-lvh w-full z-40 will-change-transform sticky top-0 left-0">
             <div class="container grid grid-cols-1 lg:grid-cols-3 gap-8 absolute top-0 left-0 w-full h-full overflow-hidden">
@@ -50,7 +48,7 @@
                                 {{ project.title }}
                             </h4>
 
-                            <div data-project-content class="block-content max-w-[400px] mb-2">
+                            <div data-project-content class="block-content max-w-[420px] mb-2">
                                 {{ project.introduction }}
                             </div>
                             <div class="overflow-hidden">

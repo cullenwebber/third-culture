@@ -21,7 +21,8 @@ class ConcreteShaderMaterial {
 	createMaterial() {
 		const vertexShader = /* glsl */ `
 		#include <fog_pars_vertex>
-		
+		#include <clipping_planes_pars_vertex>
+
 		varying vec2 vUv;
 		varying vec3 vNormal;
 		varying vec3 vPosition;
@@ -37,12 +38,13 @@ class ConcreteShaderMaterial {
 			gl_Position = projectionMatrix * mvPosition;
 			
 			#include <fog_vertex>
+			#include <clipping_planes_vertex>
 		}
 	`
 
 		const fragmentShader = /* glsl */ `
 		#include <fog_pars_fragment>
-		
+		#include <clipping_planes_pars_fragment>
 		uniform vec3 baseColor;
 		uniform float roughness;
 		uniform float metalness;
@@ -58,6 +60,8 @@ class ConcreteShaderMaterial {
 		${concreteFragment}
 
 		void main() {
+			#include <clipping_planes_fragment>
+
 			vec2 scaledUv = vUv * 8.0;
 			vec3 concreteColor = generateConcreteTexture(baseColor, scaledUv);
 			
@@ -86,7 +90,7 @@ class ConcreteShaderMaterial {
 			]),
 			vertexShader,
 			fragmentShader,
-			fog: true, // Enable fog for this material
+			fog: true,
 		})
 	}
 
@@ -96,6 +100,11 @@ class ConcreteShaderMaterial {
 
 	setTime(value) {
 		this.material.uniforms.time.value = value
+	}
+
+	setClippingPlane(planes) {
+		this.material.clipping = true
+		this.material.clippingPlanes = planes
 	}
 
 	animateLight(targetPosition) {

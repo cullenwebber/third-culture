@@ -5,10 +5,12 @@ class ImageMaterial {
 	constructor(options = {}) {
 		const defaults = {
 			uTime: 0.0,
-			uRadius: 1.7, // Control the curvature radius
 			uTexture: new THREE.Texture(),
 			uTextureSize: new THREE.Vector2(0.0, 0.0),
 			uQuadSize: new THREE.Vector2(0.0, 0.0),
+			uViewportSize: new THREE.Vector2(window.innerWidth, window.innerHeight),
+			uPerspectiveStrength: 1.0, // Control the strength of the perspective effect
+			uViewportPosition: 0.0, // Element's position in viewport (0 = top, 1 = bottom)
 		}
 
 		this.options = { ...defaults, ...options }
@@ -17,102 +19,86 @@ class ImageMaterial {
 
 	createMaterial() {
 		const vertexShader = /* glsl */ `
-
             float PI = 3.141592653589793;
 
             uniform float uTime;
 			uniform float uScrollVelocity;
-            uniform float uRadius;
             uniform vec2 uTextureSize;
             uniform vec2 uQuadSize;
+            uniform vec2 uViewportSize;
+            uniform float uPerspectiveStrength;
+            uniform float uViewportPosition;
 
             varying vec2 vUv; 
             varying vec2 vUvCover;
+            varying vec2 vScreenPosition;
 
             ${uvCoverVert}
-
-          vec3 deformationCurve(vec3 position, vec2 uv) {
-				
-				
-				
-				position.y = position.y - sin(uv.x * PI) * uScrollVelocity * -0.015;
-			
-				
-				float angle = (uv.y - 0.5);
-				position.z = position.z + (cos(angle) - 1.0) * uRadius;
-				
-				return position;
-			}
-
+vec3 deformationCurve(vec3 position, vec2 uv) {
+    // Calculate distance from bottom of viewport
+    float imageTop = uViewportPosition - 0.5; 
+    float imageBottom = uViewportPosition + 0.5; 
+    
+    // Map UV.y to actual viewport position
+    float pixelViewportPosition = mix(imageBottom, imageTop, uv.y);
+    
+    // Distance from bottom of viewport - curve completes when bottom hits bottom
+    float distanceFromBottom = max(0.0, pixelViewportPosition - 0.5);
+    distanceFromBottom = smoothstep(0.0, 1.0, distanceFromBottom);
+    
+    // Exponential curve
+    float exponent = 1.5;
+    float curveFactor = pow(distanceFromBottom, exponent);
+    
+    float zDisplacement = curveFactor * uPerspectiveStrength * 0.5;
+    float xPerspective = (uv.x - 0.5) * curveFactor * uPerspectiveStrength * 0.5;
+    
+    position.x += xPerspective;
+    position.z += zDisplacement;
+    
+    return position;
+}
             void main() {
                 vUv = uv;
                 vUvCover = getCoverUvVert(uv, uTextureSize, uQuadSize);
 
                 vec3 deformedPosition = deformationCurve(position, vUvCover);
+                
+                // Pass screen position to fragment shader for additional effects
+                vec4 screenPos = projectionMatrix * modelViewMatrix * vec4(deformedPosition, 1.0);
+                vScreenPosition = screenPos.xy / screenPos.w;
 
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(deformedPosition, 1.0);
+                gl_Position = screenPos;
             }
         `
+
 		const fragmentShader = /* glsl */ `
-    uniform sampler2D uTexture;
-    uniform float uTime;
-    float PI = 3.141592653589793;
-    varying vec2 vUv;
-    varying vec2 vUvCover;
+			uniform sampler2D uTexture;
+			uniform float uTime;
+			uniform float uViewportPosition;
+			varying vec2 vUv;
+			varying vec2 vUvCover;
+			varying vec2 vScreenPosition;
 
-    float random(vec2 st) {
-        return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
-    }
-
-    float noise(vec2 st) {
-        vec2 i = floor(st);
-        vec2 f = fract(st);
-        
-        float a = random(i);
-        float b = random(i + vec2(1.0, 0.0));
-        float c = random(i + vec2(0.0, 1.0));
-        float d = random(i + vec2(1.0, 1.0));
-        
-        vec2 u = f * f * (3.0 - 2.0 * f);
-        
-        return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-    }
-
-    float fbm(vec2 st) {
-        float value = 0.0;
-        float amplitude = 0.5;
-        float frequency = 0.0;
-        
-        for (int i = 0; i < 4; i++) {
-            value += amplitude * noise(st);
-            st *= 2.0;
-            amplitude *= 0.5;
-        }
-        return value;
-    }
-
-		void main() {
-			vec3 texture = vec3(texture(uTexture, vUvCover));
-			
-			float alpha = sin(vUv.y * PI);
-			float noiseValue = fbm(vUv * 7.0 + uTime * 0.15) * 0.5 - 0.4;
-			alpha += noiseValue;
-			alpha = clamp(alpha, 0.0, 1.0);
-			
-			gl_FragColor = vec4(texture, alpha);
-		}
-`
+			void main() {
+				vec3 texture = texture2D(uTexture, vUvCover).rgb;
+				
+				// Use viewport position for depth-based darkening
+				float depthDarkening = mix(1.0, 0.8, uViewportPosition);
+				
+				gl_FragColor = vec4(texture * depthDarkening, 1.0);
+			}
+		`
 
 		return new THREE.ShaderMaterial({
 			uniforms: {
 				uTime: { value: this.options.uTime },
-				uWaveAmplitude: { value: this.options.uWaveAmplitude },
-				uWaveFrequency: { value: this.options.uWaveFrequency },
-				uRadius: { value: this.options.uRadius },
 				uTexture: { value: this.options.uTexture },
 				uTextureSize: { value: this.options.uTextureSize },
 				uQuadSize: { value: this.options.uQuadSize },
 				uScrollVelocity: { value: 0.0 },
+				uPerspectiveStrength: { value: this.options.uPerspectiveStrength },
+				uViewportPosition: { value: this.options.uViewportPosition },
 			},
 			vertexShader,
 			fragmentShader,
@@ -144,33 +130,33 @@ class ImageMaterial {
 		}
 	}
 
-	setWaveAmplitude(value) {
+	setPerspectiveStrength(value) {
 		if (
 			this.material &&
 			this.material.uniforms &&
-			this.material.uniforms.uWaveAmplitude
+			this.material.uniforms.uPerspectiveStrength
 		) {
-			this.material.uniforms.uWaveAmplitude.value = value
+			this.material.uniforms.uPerspectiveStrength.value = value
 		}
 	}
 
-	setWaveFrequency(value) {
+	setViewportPosition(value) {
 		if (
 			this.material &&
 			this.material.uniforms &&
-			this.material.uniforms.uWaveFrequency
+			this.material.uniforms.uViewportPosition
 		) {
-			this.material.uniforms.uWaveFrequency.value = value
+			this.material.uniforms.uViewportPosition.value = value
 		}
 	}
 
-	setRadius(value) {
+	updateViewportSize(width, height) {
 		if (
 			this.material &&
 			this.material.uniforms &&
-			this.material.uniforms.uRadius
+			this.material.uniforms.uViewportSize
 		) {
-			this.material.uniforms.uRadius.value = value
+			this.material.uniforms.uViewportSize.value.set(width, height)
 		}
 	}
 }

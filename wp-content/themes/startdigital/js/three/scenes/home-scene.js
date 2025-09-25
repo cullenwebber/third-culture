@@ -4,9 +4,10 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import BaseScene from '../base-scene'
 import { getStaticPath } from '../utils'
 import ConcreteShaderMaterial from '../materials/white-concrete'
-import OverlayShaderMaterial from '../materials/overlay-material'
 import HeroScrollTrigger from '../animate/home-three-trigger'
 import BackgroundShaderMaterial from '../materials/background-material'
+import ContainerTracker from '../utils/container-tracker'
+import TrackedRoundedBoxGeometry from '../utils/tracked-box-geometry'
 
 class HomeScene extends BaseScene {
 	constructor(id, container) {
@@ -15,24 +16,38 @@ class HomeScene extends BaseScene {
 		this.lastMouseTime = null
 		this.currentMousePosition = { x: 0, y: 0 }
 		this.originalStoneDimensions = null
+		this.logoContainer = null
+		this.footerLogoContainer = null
 	}
 
 	setupScene() {
 		this.scene.background = new THREE.Color(0x1e1e1e)
 	}
 
+	setupContainerTracking() {
+		this.containerTracker = new ContainerTracker(
+			this.scene,
+			this.camera,
+			this.container
+		)
+	}
+
 	createMaterials() {
 		this.concreteMaterial = new ConcreteShaderMaterial()
-		this.overlayMaterial = new OverlayShaderMaterial()
 		this.backgroundMaterial = new BackgroundShaderMaterial()
 	}
 
-	createObjects() {
+	async createObjects() {
 		this.configureLoader()
-		this.createFullScreenPlaneOverlay()
 		this.createBackgroundPlane()
+		this.setupLogoContainers()
 		this.loadStone()
-		this.loadLogo()
+		await Promise.all([this.loadCorners(), this.loadLogo()])
+	}
+
+	setupLogoContainers() {
+		this.logoContainer = document.getElementById('hero-logo-container')
+		this.footerLogoContainer = document.getElementById('footer-logo-container')
 	}
 
 	configureLoader() {
@@ -44,125 +59,170 @@ class HomeScene extends BaseScene {
 		this.gltfLoader.setDRACOLoader(dracoLoader)
 	}
 
-	loadLogo() {
+	async loadLogo() {
 		const glbPath = getStaticPath('/logo-less-sharp.glb')
-		this.gltfLoader.load(
-			glbPath,
-			(gltf) => {
-				this.logo = gltf.scene
-				this.originalLogoDimensions = this.getLogoBoundingBox()
 
-				this.updateLogoScale()
+		return new Promise((resolve, reject) => {
+			this.gltfLoader.load(
+				glbPath,
+				(gltf) => {
+					// Main logo
+					this.logo = gltf.scene
+					this.originalLogoDimensions = this.getLogoBoundingBox()
 
-				const bottomY = this.getBottomPosition(0.6)
-				this.logo.position.set(0, bottomY, 0.05)
+					this.logo.traverse((child) => {
+						if (child.isMesh) {
+							child.castShadow = true
+							child.material = this.concreteMaterial.getMaterial()
+						}
+					})
 
-				this.logo.traverse((child) => {
-					if (child.isMesh) {
-						child.castShadow = true
-						child.material = this.concreteMaterial.getMaterial()
-					}
-				})
+					this.scene.add(this.logo)
 
-				this.animationTriggers = new HeroScrollTrigger(this)
-				this.scene.add(this.logo)
-			},
-			undefined,
-			undefined
-		)
+					// Clone for footer
+					this.footerLogo = this.logo.clone()
+					this.footerLogo.traverse((child) => {
+						if (child.isMesh) {
+							child.castShadow = true
+							child.material = this.concreteMaterial.getMaterial()
+						}
+					})
+					this.scene.add(this.footerLogo)
+
+					// Setup tracking for both logos
+					this.setupLogoTracking()
+
+					resolve(gltf)
+				},
+				undefined,
+				(error) => {
+					console.error('Error loading logo:', error)
+					reject(error)
+				}
+			)
+		})
+	}
+
+	setupLogoTracking() {
+		if (this.logoContainer) {
+			this.containerTracker.addTrackedObject('hero-logo', {
+				object3D: this.logo,
+				htmlContainer: this.logoContainer,
+				originalDimensions: this.originalLogoDimensions,
+				scalingMode: 'width',
+				scaleMultiplier: 1.0,
+				offsetZ: 0.05,
+			})
+		}
+
+		if (this.footerLogoContainer) {
+			this.containerTracker.addTrackedObject('footer-logo', {
+				object3D: this.footerLogo,
+				htmlContainer: this.footerLogoContainer,
+				originalDimensions: this.originalLogoDimensions,
+				scalingMode: 'width',
+				scaleMultiplier: 1.0,
+				offsetZ: 0.05,
+			})
+		}
 	}
 
 	loadStone() {
-		const glbPath = getStaticPath('/stone.glb')
-		this.gltfLoader.load(
-			glbPath,
-			(gltf) => {
-				this.stone = gltf.scene
-				this.originalStoneDimensions = this.getStoneBoundingBox()
+		const heroBox = new TrackedRoundedBoxGeometry(this.scene, this.camera, {
+			startElement: document.querySelector('#home-hero-trigger'),
+			endElement: document.querySelector('#home-about-trigger'),
+			depth: 0.6,
+			radius: 0.2,
+			segments: 1,
+			material: this.concreteMaterial.getMaterial(),
+			padding: 32,
+			offsetX: 0,
+			offsetY: 0,
+			offsetZ: -0.3,
+		})
 
-				this.stone.traverse((child) => {
-					if (child.isMesh) {
-						child.castShadow = true
-						child.material = this.concreteMaterial.getMaterial()
-					}
-				})
+		const servicesBox = new TrackedRoundedBoxGeometry(this.scene, this.camera, {
+			startElement: document.querySelector('#home-news-trigger'),
+			endElement: document.querySelector('#home-news-trigger'),
+			depth: 0.6,
+			radius: 0.2,
+			segments: 1,
+			material: this.concreteMaterial.getMaterial(),
+			padding: 32,
+			offsetX: 0,
+			offsetY: 0,
+			offsetZ: -0.3,
+		})
 
-				this.updateStoneScale()
-				this.updateStonePosition()
-				this.scene.add(this.stone)
-			},
-			undefined,
-			undefined
-		)
+		const footerBox = new TrackedRoundedBoxGeometry(this.scene, this.camera, {
+			startElement: document.querySelector('#footer-container'),
+			endElement: document.querySelector('#footer-container'),
+			depth: 0.6,
+			radius: 0.2,
+			segments: 1,
+			material: this.concreteMaterial.getMaterial(),
+			padding: 32,
+			offsetX: 0,
+			offsetY: 0,
+			offsetZ: -0.3,
+		})
 	}
 
-	getStoneBoundingBox() {
-		if (!this.stone) return { width: 1, height: 1 }
+	async loadCorners() {
+		const glbPath = getStaticPath('/corner.glb')
 
-		const box = new THREE.Box3().setFromObject(this.stone)
-		return {
-			width: box.max.x - box.min.x,
-			height: box.max.y - box.min.y,
-		}
+		return new Promise((resolve, reject) => {
+			this.gltfLoader.load(
+				glbPath,
+				(gltf) => {
+					this.corners = []
+					const scale = 13.0
+
+					const cornerConfigs = [
+						[-1, 1, 0],
+						[1, 1, -Math.PI / 2],
+					]
+
+					cornerConfigs.forEach(([xDir, yDir, rotation]) => {
+						const corner = gltf.scene.clone()
+						corner.scale.set(scale, scale, scale)
+						corner.rotation.z = rotation
+
+						corner.traverse((child) => {
+							if (child.isMesh) {
+								child.castShadow = true
+								child.material = this.concreteMaterial.getMaterial()
+							}
+						})
+
+						this.corners.push({ mesh: corner, xDir, yDir })
+						this.scene.add(corner)
+					})
+
+					this.positionCorners()
+					resolve(gltf)
+				},
+				undefined,
+				(error) => {
+					console.error('Error loading corners:', error)
+					reject(error)
+				}
+			)
+		})
 	}
 
-	updateStoneScale() {
-		if (!this.stone || !this.originalStoneDimensions) return
+	positionCorners() {
+		if (!this.corners) return
 
-		const { width, height } = this.getFrustumDimensions()
-		const aspect = width / height
+		const { width, height } = this.getFrustumDimensions(-0.33)
 
-		let scale
-
-		if (aspect > 1) {
-			// Landscape: scale to width
-			const targetStoneWidth = width * 1.3
-			const stoneActualWidth = this.originalStoneDimensions.width
-			scale = targetStoneWidth / stoneActualWidth
-		} else {
-			// Portrait: scale to height
-			const targetStoneHeight = height * 1.3
-			const stoneActualHeight = this.originalStoneDimensions.height
-			scale = targetStoneHeight / stoneActualHeight
-		}
-
-		this.stone.scale.setScalar(scale)
-	}
-
-	updateStonePosition() {
-		if (!this.stone) return
-
-		const { width, height } = this.getFrustumDimensions()
-		if (!this.stone || !this.originalStoneDimensions) return 0
-
-		const currentScale = this.stone.scale.x
-		const stoneHeight = this.originalStoneDimensions.height * currentScale
-
-		const stoneY = -height / 2 + stoneHeight / 2
-
-		const aspect = width / height
-
-		let scale
-
-		if (aspect > 1) {
-			scale = 0.7
-		} else {
-			scale = 0.5
-		}
-
-		this.stone.position.set(0, stoneY * scale, -1.0)
-	}
-
-	updateLogoScale() {
-		if (!this.logo || !this.originalLogoDimensions) return
-
-		const { width, height } = this.getFrustumDimensions()
-		const targetLogoWidth = width * 0.95
-
-		const logoActualWidth = this.originalLogoDimensions.width
-		const scale = targetLogoWidth / logoActualWidth
-
-		this.logo.scale.setScalar(scale)
+		this.corners.forEach(({ mesh, xDir, yDir }) => {
+			mesh.position.set(
+				(width / 2 - 0.35) * xDir,
+				(height / 2 - 0.35) * yDir,
+				0
+			)
+		})
 	}
 
 	getLogoBoundingBox() {
@@ -173,21 +233,6 @@ class HomeScene extends BaseScene {
 			width: box.max.x - box.min.x,
 			height: box.max.y - box.min.y,
 		}
-	}
-
-	createFullScreenPlaneOverlay() {
-		const { width, height } = this.getFrustumDimensions(1)
-		const plane = new THREE.PlaneGeometry(width, height, 1, 1)
-		const tempMaterial = new THREE.MeshStandardMaterial({
-			opacity: 0,
-			transparent: true,
-		})
-		const mesh = new THREE.Mesh(plane, tempMaterial)
-		mesh.receiveShadow = true
-		mesh.position.z = 1
-
-		this.overlayPlane = mesh
-		this.scene.add(mesh)
 	}
 
 	createBackgroundPlane() {
@@ -206,6 +251,20 @@ class HomeScene extends BaseScene {
 		window.addEventListener('mousemove', this.handleMouseMove)
 	}
 
+	dispose() {
+		if (this._throttledScrollListener) {
+			window.removeEventListener('scroll', this._throttledScrollListener)
+			window.removeEventListener('resize', this._throttledScrollListener)
+		}
+		if (this.handleMouseMove) {
+			window.removeEventListener('mousemove', this.handleMouseMove)
+		}
+		if (this.containerTracker) {
+			this.containerTracker.dispose()
+		}
+		super.dispose()
+	}
+
 	handleMouseMove(event) {
 		const x = event.clientX / window.innerWidth
 		const y = 1 - event.clientY / window.innerHeight
@@ -218,24 +277,6 @@ class HomeScene extends BaseScene {
 		this.concreteMaterial.animateLight(
 			new THREE.Vector3(lightX, lightY, lightZ)
 		)
-
-		this.overlayMaterial.updateMousePosition(new THREE.Vector2(x, y))
-	}
-
-	handleMouseVelocity() {
-		const currentTime = performance.now()
-		const deltaTime = currentTime - (this.lastMouseTime || currentTime)
-
-		if (this.lastMousePosition && deltaTime > 0) {
-			const deltaX = this.currentMousePosition.x - this.lastMousePosition.x
-			const deltaY = this.currentMousePosition.y - this.lastMousePosition.y
-			const velocity =
-				(Math.sqrt(deltaX * deltaX + deltaY * deltaY) / deltaTime) * 1000
-			this.overlayMaterial.updateMouseVelocity(velocity)
-		}
-
-		this.lastMousePosition = { ...this.currentMousePosition }
-		this.lastMouseTime = currentTime
 	}
 
 	getFrustumDimensions(zDifference = 0) {
@@ -248,62 +289,28 @@ class HomeScene extends BaseScene {
 		return { width, height }
 	}
 
-	getWorldSizeFromPixels(options) {
-		const containerRect = this.container.getBoundingClientRect()
-		const distance = Math.abs(this.camera.position.z)
-		const frustum = this.getFrustumDimensions(distance)
-
-		const result = {}
-
-		if (options.width !== undefined) {
-			const worldUnitsPerPixel = frustum.width / containerRect.width
-			result.width = options.width * worldUnitsPerPixel
-		}
-
-		if (options.height !== undefined) {
-			const worldUnitsPerPixel = frustum.height / containerRect.height
-			result.height = options.height * worldUnitsPerPixel
-		}
-
-		return result
-	}
-
-	getBottomPosition(offsetMultiplier = 1) {
-		const { height } = this.getFrustumDimensions()
-		return (-height / 2) * offsetMultiplier
+	createScrollTriggers() {
+		this.animationTriggers = new HeroScrollTrigger(this)
 	}
 
 	onResize() {
 		const { width: overlayWidth, height: overlayHeight } =
 			this.getFrustumDimensions(1)
 
-		if (this.overlayPlane) {
-			this.overlayPlane.geometry.dispose()
-			this.overlayPlane.geometry = new THREE.PlaneGeometry(
-				overlayWidth,
-				overlayHeight,
-				1,
-				1
-			)
-		}
-
-		if (this.logo) {
-			this.updateLogoScale()
-			// const bottomY = this.getBottomPosition(0.6)
-			// this.logo.position.setY(bottomY)
+		if (this.containerTracker) {
+			this.containerTracker.updateAllPositions()
 		}
 
 		if (this.stone) {
 			this.updateStoneScale()
 			this.updateStonePosition()
 		}
+
+		this.positionCorners()
 	}
 
 	animate(deltaTime) {
 		this.time += deltaTime
-
-		this.handleMouseVelocity()
-		this.overlayMaterial.updateTime(this.time)
 		this.backgroundMaterial.updateTime(this.time)
 	}
 }

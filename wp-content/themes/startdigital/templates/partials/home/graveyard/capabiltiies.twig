@@ -1,0 +1,45 @@
+<section id="home-capabilities-trigger" class="">
+    <div class="container flex flex-col gap-8 lg:gap-16 xl:gap-32">
+        <div class="flex flex-col gap-4 sm:gap-8 xl:gap-16 relative z-40">
+            <div split-type="chars" class="block-content">
+                {{ post.capabilities.title }}
+            </div>
+            <div class="flex flex-row self-end">
+                {% include "partials/supertitle.twig" with { title: post.capabilities.supertitle, class: 'max-sm:hidden' } %}
+                <div class="block-content max-w-[700px] xl:max-w-[1150px] indent-16 sm:indent-32 sm:-ml-28 lg:-mt-4 xl:-mt-6">
+                    {{ post.capabilities.content }}
+                </div>
+            </div>
+        </div>
+        <div class="flex flex-col lg:flex-row gap-16 xl:gap-28 relative z-40">
+            <div id="home-capabilities-scroller" class="w-full flex">
+                <div id="home-capabilities-wrapper" class="w-full lg:max-h-[calc(100lvh-120px-32px)] flex flex-col gap-6">
+                    <div id="home-capabilities" class="w-full max-lg:aspect-3/4 h-full lg:max-h-[calc(50vw*0.6)] flex relative">
+                        {% include "partials/number.twig" with { number: '02' } %}
+                    </div>
+                    <div class="block-content max-w-[600px] indent-16">
+                        {{ post.capabilities.service_content }}
+                    </div>
+                    {% include "partials/button.twig" with { title: post.capabilities.link.title , link: post.capabilities.link.url } %}
+                </div>
+            </div>
+            <div class="flex flex-col w-full lg:pb-32 xl:pb-64">
+                {% for service in post.capabilities.services %}
+                    <div class="flex flex-col gap-6 lg:gap-8 py-8 lg:py-12 xl:py-16 justify-center xl:min-h-[61lvh] {{ loop.last ? 'max-lg:pb-0' : 'border-b border-black/50 border-dashed' }} {{ loop.first ? 'max-lg:border-t' : '' }}">
+                        <div split-type="chars" class="block-content">
+                            {{ service.title }}
+                        </div>
+                        <div class="flex flex-col gap-2.5 block-content">
+                            {% for subservice in service.subservice %}
+                                <h4 class="is-h7 flex flex-row items-center gap-3">
+                                    {{ subservice.title }}
+                                </h4>
+                            {% endfor %}
+                        </div>
+                        {% include "partials/button.twig" with { title: 'Learn More', link: service.link.url, class: 'sm:mt-4 max-lg:mb-4' } %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>

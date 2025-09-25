@@ -25,11 +25,10 @@ class ProjectsScene extends BaseScene {
 
 		const radius = this.calculateDynamicRadius(images.length)
 		this.radius = radius
-		const totalAngle = Math.PI * 0.35 // Same as ScrollTrigger
+		const totalAngle = Math.PI * 0.35
 		const angleStep = totalAngle / Math.max(1, images.length - 1)
-		const startAngle = -totalAngle // Same as ScrollTrigger
+		const startAngle = -totalAngle
 
-		// Position the planes using the same calculation as ScrollTrigger
 		this.imagePlanes.forEach((plane, i) => {
 			const angle = startAngle + i * angleStep
 			plane.position.y = Math.sin(angle) * radius

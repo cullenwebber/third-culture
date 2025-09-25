@@ -12,13 +12,14 @@ class BaseScene {
 		this.time = 0
 	}
 
-	init() {
+	async init() {
 		this.setupScene()
 		this.show()
 		this.createCamera()
+		this.setupContainerTracking()
 		this.adjustCamera()
 		this.createMaterials()
-		this.createObjects()
+		await this.createObjects()
 		this.createLights()
 		this.createScrollTriggers()
 		this.createMouseListeners()
@@ -72,6 +73,10 @@ class BaseScene {
 		// Override in subclasses
 	}
 
+	setupContainerTracking() {
+		// Override in subclasses
+	}
+
 	onShow() {
 		// Override in subclasses
 	}
@@ -80,7 +85,7 @@ class BaseScene {
 		// Override in subclasses
 	}
 
-	createObjects() {
+	async createObjects() {
 		// Override in subclasses
 	}
 

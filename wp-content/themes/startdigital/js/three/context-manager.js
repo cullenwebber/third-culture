@@ -41,6 +41,7 @@ class WebGLManager {
 		this.renderer.outputColorSpace = THREE.SRGBColorSpace
 		this.renderer.setScissorTest(true)
 		this.renderer.autoClear = false
+		this.renderer.localClippingEnabled = true
 
 		this.updateCanvasRect()
 
@@ -71,8 +72,8 @@ class WebGLManager {
 		this.canvasRect = this.canvas.getBoundingClientRect()
 	}
 
-	registerScene(id, scene) {
-		this.scenes.set(id, scene)
+	registerScene(id, scene, priority = 0) {
+		this.scenes.set(id, { scene, priority })
 		const rect = scene.container.getBoundingClientRect()
 		scene.updateCameraForViewport(rect.width, rect.height)
 	}
@@ -114,11 +115,16 @@ class WebGLManager {
 		this.renderer.clear()
 		this.updateCanvasRect()
 
-		this.visibleScenes.forEach((sceneId) => {
-			const scene = this.scenes.get(sceneId)
-			if (scene && scene.isVisible) {
-				this.renderSceneInViewport(scene, sceneId, deltaTime)
-			}
+		const sortedScenes = Array.from(this.visibleScenes)
+			.map((sceneId) => ({
+				id: sceneId,
+				...this.scenes.get(sceneId),
+			}))
+			.filter((item) => item.scene && item.scene.isVisible)
+			.sort((a, b) => a.priority - b.priority)
+
+		sortedScenes.forEach(({ id, scene }) => {
+			this.renderSceneInViewport(scene, id, deltaTime)
 		})
 	}
 
@@ -189,7 +195,7 @@ class WebGLManager {
 		)
 		this.updateCanvasRect()
 
-		this.scenes.forEach((scene) => {
+		this.scenes.forEach(({ scene }) => {
 			const rect = scene.container.getBoundingClientRect()
 			scene.updateCameraForViewport(rect.width, rect.height)
 			scene.onResize?.()

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import WebGLManager from './context-manager'
+import { getLenis } from '../utils/smooth-scroll'
 
 class SceneManager {
 	constructor(canvas) {
@@ -8,16 +9,16 @@ class SceneManager {
 		this.scenes = new Map()
 		this.clock = new THREE.Clock()
 		this.isRunning = false
-
+		this.lenis = getLenis()
 		this.bindEvents()
 	}
 
-	addScene(sceneClass, id, container, options = {}) {
+	addScene(sceneClass, id, container, priority = 0, options = {}) {
 		const scene = new sceneClass(id, container, options)
 		scene.init()
 
 		this.scenes.set(id, scene)
-		this.webglManager.registerScene(id, scene)
+		this.webglManager.registerScene(id, scene, priority)
 
 		return scene
 	}
@@ -62,25 +63,23 @@ class SceneManager {
 		requestAnimationFrame(() => this.animate())
 	}
 
+	handleScroll() {
+		this.webglManager.updateCanvasRect()
+		this.scenes.forEach((scene) => scene.updateVisibility?.())
+	}
+
+	handleResize() {
+		this.webglManager.resize()
+	}
+
 	bindEvents() {
-		const handleResize = () => {
-			this.webglManager.resize()
-		}
-
-		const handleScroll = () => {
-			this.webglManager.updateCanvasRect()
-			this.scenes.forEach((scene) => scene.updateVisibility?.())
-		}
-
-		this.resizeObserver = new ResizeObserver(handleResize)
+		this.lenis.on('scroll', this.handleScroll.bind(this))
+		this.resizeObserver = new ResizeObserver(this.handleResize)
 		this.resizeObserver.observe(document.body)
+	}
 
-		window.addEventListener('scroll', handleScroll, { passive: true })
-
-		this.eventCleanup = () => {
-			this.resizeObserver?.disconnect()
-			window.removeEventListener('scroll', handleScroll)
-		}
+	eventCleanup() {
+		this.resizeObserver?.disconnect()
 	}
 
 	dispose() {

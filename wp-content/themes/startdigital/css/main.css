@@ -67,3 +67,19 @@ section#shadow-host-companion {
 	transform: translateZ(0); /* Force hardware acceleration */
 	backface-visibility: hidden;
 }
+
+.project-container:nth-of-type(2n) {
+	@apply self-end;
+}
+
+.project-container:nth-of-type(3n-1) {
+	@apply w-[40%] mr-[4%];
+
+	.image-container {
+		@apply aspect-square;
+	}
+}
+
+.project-container:nth-of-type(4n-1) {
+	@apply w-[30%] ml-[8%];
+}

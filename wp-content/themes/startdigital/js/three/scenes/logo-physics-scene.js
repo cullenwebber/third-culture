@@ -17,12 +17,14 @@ class LogoPhysicsScene extends BaseScene {
 		this.raycaster = new THREE.Raycaster()
 		this.mouseBody = null
 		this.cameraDistance = 3
+		this.logoGroup = new THREE.Group()
 	}
 
 	setupScene() {
 		this.scene.background = new THREE.Color(0x1e1e1e)
 		this.setupPhysics()
 		this.setupMouseEvents()
+		this.scene.add(this.logoGroup)
 	}
 
 	adjustCamera() {
@@ -65,6 +67,11 @@ class LogoPhysicsScene extends BaseScene {
 		worldPos.multiplyScalar(distance)
 		worldPos.add(this.raycaster.ray.origin)
 
+		// Transform mouse position to account for logo group rotation
+		const groupMatrix = new THREE.Matrix4()
+		groupMatrix.copy(this.logoGroup.matrixWorld).invert()
+		worldPos.applyMatrix4(groupMatrix)
+
 		this.mouseBody.position.set(worldPos.x, worldPos.y, worldPos.z)
 	}
 
@@ -104,7 +111,7 @@ class LogoPhysicsScene extends BaseScene {
 			this.wallMaterial,
 			{
 				friction: 0.2,
-				restitution: 0.6, // Objects bounce off walls
+				restitution: 0.6,
 			}
 		)
 		this.world.addContactMaterial(wallContact)
@@ -190,10 +197,11 @@ class LogoPhysicsScene extends BaseScene {
 					index++
 				})
 
-				// This is only here because it requires the logo to be loaded in first
 				this.animationTriggers = new HomePhysicsTrigger(this)
 				this.mouseBody.material = this.mouseRepelMaterial
-				this.scene.add(this.logo)
+
+				// Add the logo to the logo group instead of directly to the scene
+				this.logoGroup.add(this.logo)
 			},
 			undefined,
 			undefined

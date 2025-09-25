@@ -11,13 +11,15 @@ module.exports = {
 			},
 			colors: {
 				white: '#F7F7F7',
-				black: '#1E1E1E',
+				black: '#232323',
 			},
 			fontFamily: {
 				heading: ['Bagoss', 'sans-serif'],
 				body: ['Bagoss', 'sans-serif'],
 				supertitle: ['Bagoss', 'sans-serif'],
 				alt: ['Burgess', 'serif'],
+				palace: ['Palace', 'serif'],
+				palaceItalic: ['PalaceItalic', 'serif'],
 			},
 			borderRadius: {
 				4: '4px',

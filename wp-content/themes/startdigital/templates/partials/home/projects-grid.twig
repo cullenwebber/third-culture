@@ -1,0 +1,32 @@
+{% set length = post.projects.projects|length %}
+
+<section id="project-grid" class="text-white">
+    <div class="sticky top-0 left-0 w-full h-lvh flex flex-col justify-center z-50 pointer-events-none">
+        <div class="container project-text-container flex flex-col lg:items-center relative z-40">
+            <div class="flex flex-col lg:items-center gap-4 sm:gap-8 lg:gap-16 relative z-40 w-fit">
+                <div split-type="chars" class="project-title lg:text-center relative">
+                    {{ post.projects.title }}
+                    <h6 class="text-3xl absolute left-full top-1/4 w-fit whitespace-nowrap">
+                        (
+                        {{ length }}
+                        )
+                    </h6>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container w-[80%] flex flex-col relative z-40 gap-16">
+        {% for project in post.projects.projects %}
+            <div id="project-container-{{ loop.index }}" class="w-1/3 project-container flex flex-col gap-4 -mt-[0%]">
+                <div class="image-container w-full aspect-3/4 relative">
+                    <img src="{{ get_image(project.project_thumbnail) }}" alt="Image of the project {{ project.title }}" class="sr-only" />
+                </div>
+                <div class="">
+                    <h4 data-project-title class="is-h7">
+                        {{ project.title }}
+                    </h4>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>

@@ -43,17 +43,12 @@ class HomePhysicsTrigger {
 			{
 				onUpdate: function () {
 					const progress = this.progress()
-
 					const angle = Math.PI * progress
 
-					// const radius = Math.sqrt(
-					// 	that.initialState.cameraPosition.x ** 2 +
-					// 		that.initialState.cameraPosition.z ** 2
-					// )
+					// Rotate the logo group instead of the camera
+					that.scene.logoGroup.rotation.y = Math.PI * 1.5 + angle
 
-					// that.scene.camera.position.x = Math.cos(angle) * radius
-					// that.scene.camera.position.z = Math.sin(angle) * radius
-
+					// Keep the camera Y movement as before
 					that.scene.camera.position.y =
 						that.initialState.cameraPosition.y -
 						2 * that.initialState.cameraPosition.y * progress

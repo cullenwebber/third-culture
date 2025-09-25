@@ -160,6 +160,13 @@ class ProjectsScrollTrigger {
 			? currentProjectType.offsetHeight
 			: 0
 
+		const reversedCurrentIndex =
+			this.projectsTextContainer.length - 1 - currentIndex
+		const reversedPreviousIndex =
+			previousIndex !== -1
+				? this.projectsTextContainer.length - 1 - previousIndex
+				: -1
+
 		// Animate container width
 		gsap.to(container, {
 			width: targetWidth,
@@ -221,11 +228,6 @@ class ProjectsScrollTrigger {
 						rotate: 2.5,
 					}
 				)
-
-				gsap.to(numberContainer, {
-					opacity: 0.25,
-					duration: 0.25,
-				})
 			}
 
 			if (i === currentIndex) {
@@ -250,7 +252,16 @@ class ProjectsScrollTrigger {
 						rotate: 0,
 					}
 				)
+			}
 
+			if (i === reversedPreviousIndex && reversedPreviousIndex !== -1) {
+				gsap.to(numberContainer, {
+					opacity: 0.25,
+					duration: 0.25,
+				})
+			}
+
+			if (i === reversedCurrentIndex) {
 				gsap.to(numberContainer, {
 					opacity: 1,
 					duration: 0.25,

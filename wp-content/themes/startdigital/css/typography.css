@@ -1,6 +1,11 @@
 @font-face {
-	font-family: 'Montreal';
-	src: url('/wp-content/themes/startdigital/static/fonts/montreal.woff2');
+	font-family: 'Palace';
+	src: url('/wp-content/themes/startdigital/static/fonts/PalaceRegular.woff2');
+}
+
+@font-face {
+	font-family: 'PalaceItalic';
+	src: url('/wp-content/themes/startdigital/static/fonts/PalaceItalic.woff2');
 }
 
 @font-face {
@@ -13,9 +18,18 @@
 	src: url('/wp-content/themes/startdigital/static/fonts/burgesss.woff2');
 }
 
+/* @font-face {
+	font-family: 'Montreal';
+	src: url('/wp-content/themes/startdigital/static/fonts/montreal.woff2');
+} */
+
 @font-face {
 	font-family: 'Montreal Semibold';
 	src: url('/wp-content/themes/startdigital/static/fonts/montreal-semibold.woff2');
+}
+
+*::selection {
+	@apply bg-black text-white;
 }
 
 html,
@@ -24,7 +38,7 @@ body {
 }
 
 body {
-	@apply leading-relaxed text-base 2xl:text-lg 3xl:leading-normal;
+	@apply leading-relaxed text-base 2xl:text-2xl 3xl:leading-normal;
 }
 
 h1,
@@ -49,7 +63,7 @@ h2,
 
 h3,
 .is-h3 {
-	@apply text-[36px] sm:text-[48px] lg:text-[64px] xl:text-[80px] 2xl:text-[140px];
+	@apply text-[36px] sm:text-[48px] lg:text-[64px] xl:text-[80px] 2xl:text-[120px];
 }
 
 h4,

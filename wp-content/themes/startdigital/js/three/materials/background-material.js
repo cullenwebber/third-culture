@@ -119,12 +119,22 @@ class BackgroundShaderMaterial {
 			void main() {
 				vec2 uv = vUv;
 				
-				// Adjust UV for aspect ratio to prevent stretching
-				vec2 adjustedUv = vec2(uv.x * aspectRatio, uv.y);
+				// Calculate aspect ratio for noise correction (same logic as grid)
+				vec2 ddx_uv = dFdx(uv);
+				vec2 ddy_uv = dFdy(uv);
+				float derivedAspectRatio = length(ddx_uv) / length(ddy_uv);
 				
-				// Center the coordinates
-				vec2 center = vec2(0.5 * aspectRatio, 0.5);
-				vec2 pos = adjustedUv - center;
+				// Adjust UV coordinates for noise to prevent stretching
+				vec2 noiseUv;
+				if (derivedAspectRatio < 1.0) {
+					noiseUv = vec2(uv.x, uv.y * derivedAspectRatio);
+				} else {
+					noiseUv = vec2(uv.x / derivedAspectRatio, uv.y);
+				}
+				
+				// Center the noise coordinates
+				vec2 center = vec2(0.5);
+				vec2 pos = noiseUv - center;
 				
 				// Distance from center for radial effects
 				float dist = length(pos);
@@ -133,7 +143,7 @@ class BackgroundShaderMaterial {
 				// Time-based animation
 				float t = time * 0.3;
 				
-				// Create multiple layers of animated noise
+				// Create multiple layers of animated noise with corrected coordinates
 				vec2 noisePos1 = pos * 3.0 + vec2(t * 0.5, t * 0.3);
 				vec2 noisePos2 = pos * 5.0 + vec2(-t * 0.7, t * 0.4);
 				vec2 noisePos3 = pos * 8.0 + vec2(t * 0.2, -t * 0.6);
@@ -146,10 +156,10 @@ class BackgroundShaderMaterial {
 				// Combine noise layers
 				float smokeNoise = noise1 + noise2 + noise3;
 				
-				// Generate grid
+				// Generate grid (uses original uv)
 				float gridPattern = grid(uv, gridSize);
 				
-				// Generate vignette
+				// Generate vignette (uses original uv)
 				float vignetteEffect = vignette(uv);
 				
 				// Combine all elements
