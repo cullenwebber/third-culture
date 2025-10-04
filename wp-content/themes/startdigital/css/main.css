@@ -14,16 +14,6 @@
 	}
 }
 
-body.menu-open {
-	[data-menu] {
-		@apply translate-x-0;
-	}
-}
-
-[data-menu] {
-	@apply translate-x-full;
-}
-
 main {
 	section {
 		@apply relative py-10 lg:py-20 3xl:py-32;
@@ -72,8 +62,12 @@ section#shadow-host-companion {
 	@apply self-end;
 }
 
+.project-container {
+	@apply w-[75%] md:w-1/3;
+}
+
 .project-container:nth-of-type(3n-1) {
-	@apply w-[40%] mr-[4%];
+	@apply w-[80%] md:w-[40%] mr-[4%];
 
 	.image-container {
 		@apply aspect-square;
@@ -81,5 +75,9 @@ section#shadow-host-companion {
 }
 
 .project-container:nth-of-type(4n-1) {
-	@apply w-[30%] ml-[8%];
+	@apply w-[65%] md:w-[30%] ml-[8%];
+}
+
+.post-teases .post-tease:not(:last-of-type) {
+	@apply border-b border-black border-dashed;
 }

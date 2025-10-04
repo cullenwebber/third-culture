@@ -1,15 +1,15 @@
-<a href="{{ link }}" target="{{ target }}" class="button__small flex flex-row items-center justify-start gap-2 text-black w-fit {{ class }}">
-    {% include "icons/button-arrow.twig" with { class: 'h-3' } %}
+<a href="{{ link }}" target="{{ target }}" class="button__large flex flex-row items-center justify-start gap-2 text-black w-fit {{ class }}">
+    {% include "icons/button-arrow.twig" with { class: 'h-4 lg:h-6' } %}
     <div class="relative flex justify-start text-left">
         <div class="relative w-fit overflow-hidden">
-            <div class="button__text indent-0">
+            <div class="button__text indent-0 is-h3">
                 {{ title }}
             </div>
-            <div class="button__text indent-0 absolute top-full left-0 w-full">
+            <div class="button__text indent-0 is-h3 absolute top-full left-0 w-full">
                 {{ title }}
             </div>
         </div>
-        <div class="button__lines absolute left-0 bottom-0 w-full h-[1.5px] overflow-hidden">
+        <div class="button__lines absolute left-0 bottom-0 w-full h-[2px] lg:h-[3px] overflow-hidden">
             <div class="w-full h-full left-0 bottom-0 absolute {{ class == 'text-white' ? 'bg-white' : 'bg-black' }}"></div>
             <div class="w-full h-full -left-full bottom-0 absolute {{ class == 'text-white' ? 'bg-white' : 'bg-black' }}"></div>
         </div>

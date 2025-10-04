@@ -48,22 +48,72 @@ export default function newsAnimation() {
 		})
 	})
 
-	const newsTl = gsap.timeline({
-		scrollTrigger: {
-			trigger: '#home-swiper-trigger',
-			start: 'top bottom',
-			toggleActions: 'play none none reverse',
-		},
-		defaults: {
-			delay: 0.15,
-			duration: 0.65,
-			stagger: 0.15,
-			ease: 'power2.out',
-		},
-	})
+	const newsContent = homeNewsTrigger.querySelectorAll('.news-content')
 
-	newsTl.from('#home-swiper-trigger .post-tease > *', {
-		y: 100,
-		opacity: 0,
+	newsContent.forEach((blockContent) => {
+		const p = blockContent.querySelectorAll(
+			':scope > *:is(h1,h2,h3,h4,h5,h6, .is-h7, p)'
+		)
+
+		p.forEach((p1) => {
+			convertIndentToSpan(p1)
+		})
+
+		const splitType = blockContent.getAttribute('split-type') ?? 'lines'
+
+		let paragraphSplit = SplitText.create(p, {
+			type: splitType,
+			mask: splitType,
+			autoSplit: true,
+			onSplit: (self) => {
+				const tl = gsap.timeline({
+					scrollTrigger: {
+						trigger: p,
+						start: 'top bottom',
+						toggleActions: 'play none none reverse',
+					},
+					defaults: {
+						delay: 0.15,
+						duration: 0.65,
+						stagger: splitType == 'chars' ? 0.025 : 0.1,
+						ease: 'power2.out',
+					},
+				})
+
+				tl.fromTo(
+					blockContent.querySelectorAll('.date-content'),
+					{
+						yPercent: 140,
+						rotate: -2,
+					},
+					{
+						yPercent: 0,
+						rotate: 0,
+					}
+				)
+
+				tl.from(
+					self[splitType] || self.lines,
+					{
+						yPercent: 140,
+						rotate: -2,
+					},
+					'<='
+				)
+
+				tl.fromTo(
+					blockContent.querySelectorAll('.btn-container'),
+					{
+						yPercent: 140,
+						rotate: -2,
+					},
+					{
+						yPercent: 0,
+						rotate: 0,
+					},
+					'<='
+				)
+			},
+		})
 	})
 }

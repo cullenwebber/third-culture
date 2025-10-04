@@ -139,6 +139,7 @@ class ServicesScene extends BaseScene {
 	}
 
 	onResize() {
+		super.onResize()
 		if (this.containerTracker) {
 			this.containerTracker.updateAllPositions()
 		}
@@ -150,7 +151,7 @@ class ServicesScene extends BaseScene {
 		const velocity = this.lenis.velocity
 		if (velocity > 0) {
 			this.direction = 1
-		} else {
+		} else if (velocity < 0) {
 			this.direction = -1
 		}
 

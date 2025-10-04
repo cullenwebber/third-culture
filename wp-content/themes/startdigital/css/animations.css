@@ -1,4 +1,12 @@
-/* Makes animated elements hidden by default on page load */
-[data-fade], [data-stagger]{
-    @apply hidden;
+.infinite-scroll {
+	animation: scroll-left 15s linear infinite;
+}
+
+@keyframes scroll-left {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-100%);
+	}
 }

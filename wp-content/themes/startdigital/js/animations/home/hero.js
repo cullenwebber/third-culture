@@ -5,7 +5,7 @@ gsap.registerPlugin(SplitText)
 export default function heroAnimation() {
 	const homeHeroTrigger = document.querySelector('#home-hero-trigger')
 
-	if (!homeHeroTrigger) return
+	return
 
 	let tl
 
@@ -28,7 +28,7 @@ export default function heroAnimation() {
 
 			gsap.set(paragraphs, { opacity: 1 })
 			gsap.set(self.lines[0], {
-				textIndent: '3rem',
+				textIndent: '36px',
 			})
 
 			tl.fromTo(

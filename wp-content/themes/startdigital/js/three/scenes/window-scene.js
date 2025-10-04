@@ -15,7 +15,6 @@ class WindowScene extends BaseScene {
 		this.targetDivSelector = '#home-about'
 		this.columnModelPath = '/column.glb'
 		this.ledgeThickness = 0.05
-		this.ledgeDepth = 0.25
 		this.zPosition = 0
 
 		// Internal state
@@ -67,11 +66,13 @@ class WindowScene extends BaseScene {
 					const box = new THREE.Box3().setFromObject(gltf.scene)
 					const columnHeight = box.max.y - box.min.y
 					const columnWidth = box.max.x - box.min.x
+					const columnDepth = box.max.z - box.min.z
 
-					// Store original column dimensions for scaling
+					// Store original column dimensions for scaling (including depth)
 					this.originalColumnDimensions = {
 						height: columnHeight,
 						width: columnWidth,
+						depth: columnDepth,
 					}
 
 					// Create left column
@@ -92,17 +93,10 @@ class WindowScene extends BaseScene {
 						{ mesh: rightColumn, side: 'right' },
 					]
 
-					// Initial positioning
 					this.updateColumnPositions()
 					resolve(gltf)
 				},
-				(progress) => {
-					// Optional progress callback
-					console.log(
-						'Loading columns:',
-						(progress.loaded / progress.total) * 100 + '%'
-					)
-				},
+				(progress) => {},
 				(error) => {
 					console.error('Error loading columns:', error)
 					reject(error)
@@ -177,6 +171,7 @@ class WindowScene extends BaseScene {
 		// Scale columns to match div height
 		const scale = divBounds.height / this.originalColumnDimensions.height
 		const scaledColumnWidth = this.originalColumnDimensions.width * scale
+		const scaledColumnDepth = this.originalColumnDimensions.depth * scale
 
 		this.columns.forEach(({ mesh, side }) => {
 			mesh.scale.setScalar(scale)
@@ -187,11 +182,11 @@ class WindowScene extends BaseScene {
 			mesh.position.set(xPos, divBounds.centerY, this.zPosition)
 		})
 
-		// Update ledges to span between columns
-		this.updateLedges(divBounds, scaledColumnWidth)
+		// Update ledges to span between columns with scaled depth
+		this.updateLedges(divBounds, scaledColumnWidth, scaledColumnDepth)
 	}
 
-	updateLedges(divBounds, scaledColumnWidth) {
+	updateLedges(divBounds, scaledColumnWidth, scaledColumnDepth) {
 		// Remove existing ledges
 		if (this.ledges) {
 			this.ledges.forEach((ledge) => {
@@ -201,14 +196,14 @@ class WindowScene extends BaseScene {
 		}
 
 		// Create new ledges with updated dimensions
-		this.createLedgesWithBounds(divBounds, scaledColumnWidth)
+		this.createLedgesWithBounds(divBounds, scaledColumnWidth, scaledColumnDepth)
 	}
 
-	createLedgesWithBounds(divBounds, scaledColumnWidth) {
-		// Ledge dimensions based on div bounds
+	createLedgesWithBounds(divBounds, scaledColumnWidth, scaledColumnDepth) {
+		// Ledge dimensions based on div bounds and column depth
 		const ledgeWidth = divBounds.width + scaledColumnWidth
-		const ledgeHeight = this.ledgeThickness
-		const ledgeDepth = this.ledgeDepth
+		const ledgeHeight = scaledColumnDepth * 0.2
+		const ledgeDepth = scaledColumnDepth * 1.05
 
 		const ledgeGeometry = new RoundedBoxGeometry(
 			ledgeWidth,
@@ -225,7 +220,7 @@ class WindowScene extends BaseScene {
 		)
 		topLedge.position.set(
 			divBounds.centerX,
-			divBounds.top + ledgeHeight / 2,
+			divBounds.top + ledgeHeight / 2 - 0.01,
 			this.zPosition
 		)
 		topLedge.castShadow = true
@@ -239,7 +234,7 @@ class WindowScene extends BaseScene {
 		)
 		bottomLedge.position.set(
 			divBounds.centerX,
-			divBounds.bottom - ledgeHeight / 2,
+			divBounds.bottom - ledgeHeight / 2 + 0.01,
 			this.zPosition
 		)
 		bottomLedge.castShadow = true
@@ -260,6 +255,7 @@ class WindowScene extends BaseScene {
 	}
 
 	onResize() {
+		super.onResize()
 		this.updateColumnPositions()
 	}
 

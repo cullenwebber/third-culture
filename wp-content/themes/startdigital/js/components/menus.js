@@ -2,68 +2,76 @@ import gsap from 'gsap'
 
 export default function initMenus() {
 	toggleMenu()
-	toggleMobileSubMenu()
-
-	// TOGGLE STATE OF MOBILE MENU
-	function toggleMenu() {
-		const menuButtons = document.querySelectorAll('[data-toggle-menu]')
-		const mainElement = document.querySelector('main')
-		const staggerContainers = document.querySelectorAll('[data-stagger-items]')
-
-		menuButtons.forEach((btn) => {
-			btn.addEventListener('click', () => {
-				document.body.classList.toggle('menu-open')
-				document.documentElement.classList.toggle('overflow-hidden')
-
-				if (document.body.classList.contains('menu-open')) {
-					staggerContainers.forEach((stagger) => {
-						const elementsStagger = gsap.utils.toArray(stagger.children)
-
-						gsap.from(elementsStagger, {
-							y: 20,
-							opacity: 0,
-							delay: 0.25,
-							stagger: 0.1,
-						})
-					})
-				}
-			})
-		})
-
-		mainElement.addEventListener('click', () => {
-			if (document.body.classList.contains('menu-open')) {
-				closeMenu()
-			}
-		})
-
-		document.addEventListener('keydown', (e) => {
-			if (e.key === 'Escape' && document.body.classList.contains('menu-open')) {
-				closeMenu()
-			}
-		})
-	}
-
-	// TOGGLE THE MOBILE SUB MENU
-	function toggleMobileSubMenu() {
-		const toggles = document.querySelectorAll('[data-toggle-mobile-sub-menu]')
-
-		toggles.forEach((toggle) => {
-			toggle.addEventListener('click', () => {
-				const parentEl = toggle.closest('[data-mobile-menu-item]')
-				const subMenu = parentEl.querySelector('[data-mobile-sub-menu]')
-
-				// Doesn't exist, bail early
-				if (!subMenu) {
-					return
-				}
-
-				subMenu.classList.toggle('hidden')
-			})
-		})
-	}
 }
 
-export function closeMenu() {
-	document.body.classList.remove('menu-open')
-	document.documentElement.classList.remove('overflow-hidden')
+// Initialize menu state
+let isMenuOpen = false
+
+function toggleMenu() {
+	const menu = document.querySelector('[data-menu]')
+	const button = document.querySelector('[data-menu-button]')
+	const lines = button.querySelectorAll('.lines')
+
+	button.addEventListener('click', (e) => {
+		e.stopPropagation() // Prevent this click from triggering document listener
+		handleMenuToggle(menu, lines)
+	})
+
+	// Close menu when clicking outside
+	document.addEventListener('click', (e) => {
+		// Check if menu is open and click is outside both menu and button
+		if (isMenuOpen && !menu.contains(e.target) && !button.contains(e.target)) {
+			handleMenuToggle(menu, lines)
+		}
+	})
+
+	gsap.set('.nav-menu-items', {
+		yPercent: 100,
+	})
+}
+
+const handleMenuToggle = (menu, lines) => {
+	if (!isMenuOpen) {
+		const nav = menu.querySelector('nav')
+		const targetHeight = nav.scrollHeight
+
+		gsap.to(menu, {
+			height: targetHeight,
+			duration: 1.0,
+			ease: 'power4.inOut',
+		})
+
+		gsap.to('.nav-menu-items', {
+			yPercent: 0,
+			stagger: 0.075,
+			delay: 0.4,
+			duration: 0.45,
+			ease: 'power2.out',
+		})
+
+		gsap.to(lines[0], { y: '4px', duration: 0.4 })
+		gsap.to(lines[2], { y: '-4px', duration: 0.4 })
+	} else {
+		// Close menu
+		gsap.to(menu, {
+			height: 0,
+			duration: 1.0,
+			ease: 'power4.inOut',
+		})
+
+		gsap.to('.nav-menu-items', {
+			yPercent: 100,
+			stagger: {
+				from: 'end',
+				each: 0.075,
+			},
+			duration: 0.45,
+			ease: 'power2.in',
+		})
+
+		gsap.to(lines[0], { y: 0, duration: 0.4 })
+		gsap.to(lines[2], { y: 0, duration: 0.4 })
+	}
+
+	isMenuOpen = !isMenuOpen
 }

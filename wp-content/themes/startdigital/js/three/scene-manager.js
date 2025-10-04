@@ -74,7 +74,7 @@ class SceneManager {
 
 	bindEvents() {
 		this.lenis.on('scroll', this.handleScroll.bind(this))
-		this.resizeObserver = new ResizeObserver(this.handleResize)
+		this.resizeObserver = new ResizeObserver(this.handleResize.bind(this))
 		this.resizeObserver.observe(document.body)
 	}
 

@@ -8,14 +8,13 @@ import BackgroundShaderMaterial from '../materials/background-material'
 import ContainerTracker from '../utils/container-tracker'
 import TrackedRoundedBoxGeometry from '../utils/tracked-box-geometry'
 
-class HomeScene extends BaseScene {
+class FooterScene extends BaseScene {
 	constructor(id, container) {
 		super(id, container)
 		this.lastMousePosition = null
 		this.lastMouseTime = null
 		this.currentMousePosition = { x: 0, y: 0 }
 		this.originalStoneDimensions = null
-		this.logoContainer = null
 		this.footerLogoContainer = null
 	}
 
@@ -45,7 +44,6 @@ class HomeScene extends BaseScene {
 	}
 
 	setupLogoContainers() {
-		this.logoContainer = document.getElementById('hero-logo-container')
 		this.footerLogoContainer = document.getElementById('footer-logo-container')
 	}
 
@@ -68,15 +66,6 @@ class HomeScene extends BaseScene {
 					// Main logo
 					this.logo = gltf.scene
 					this.originalLogoDimensions = this.getLogoBoundingBox()
-
-					this.logo.traverse((child) => {
-						if (child.isMesh) {
-							child.castShadow = true
-							child.material = this.concreteMaterial.getMaterial()
-						}
-					})
-
-					this.scene.add(this.logo)
 
 					// Clone for footer
 					this.footerLogo = this.logo.clone()
@@ -103,17 +92,6 @@ class HomeScene extends BaseScene {
 	}
 
 	setupLogoTracking() {
-		if (this.logoContainer) {
-			this.containerTracker.addTrackedObject('hero-logo', {
-				object3D: this.logo,
-				htmlContainer: this.logoContainer,
-				originalDimensions: this.originalLogoDimensions,
-				scalingMode: 'width',
-				scaleMultiplier: 1.0,
-				offsetZ: 0.05,
-			})
-		}
-
 		if (this.footerLogoContainer) {
 			this.containerTracker.addTrackedObject('footer-logo', {
 				object3D: this.footerLogo,
@@ -127,22 +105,9 @@ class HomeScene extends BaseScene {
 	}
 
 	loadStone() {
-		const heroBox = new TrackedRoundedBoxGeometry(this.scene, this.camera, {
-			startElement: document.querySelector('#home-hero-trigger'),
-			endElement: document.querySelector('#home-about-trigger'),
-			depth: 0.6,
-			radius: 0.2,
-			segments: 1,
-			material: this.concreteMaterial.getMaterial(),
-			padding: 32,
-			offsetX: 0,
-			offsetY: 0,
-			offsetZ: -0.3,
-		})
-
 		const servicesBox = new TrackedRoundedBoxGeometry(this.scene, this.camera, {
-			startElement: document.querySelector('#home-news-trigger'),
-			endElement: document.querySelector('#footer-container'),
+			startElement: document.querySelector('footer'),
+			endElement: document.querySelector('footer'),
 			depth: 0.6,
 			radius: 0.2,
 			segments: 1,
@@ -244,4 +209,4 @@ class HomeScene extends BaseScene {
 	}
 }
 
-export default HomeScene
+export default FooterScene

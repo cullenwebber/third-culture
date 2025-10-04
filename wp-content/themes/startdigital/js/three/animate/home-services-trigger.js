@@ -10,8 +10,6 @@ class servicesScrollTrigger {
 		this.triggerContainers = Array.from({ length: 4 }).map((_, i) => {
 			return document.querySelector(`#service-text-${i}`)
 		})
-
-		console.log(this.triggerContainers)
 		this.init()
 	}
 
@@ -29,7 +27,7 @@ class servicesScrollTrigger {
 				trigger: '#service-0',
 				start: 'center center',
 				endTrigger: '#service-scroll-container',
-				end: 'bottom bottom',
+				end: 'bottom bottom-=16%',
 				pin: true,
 				pinSpacing: false,
 				scrub: true,
@@ -41,18 +39,7 @@ class servicesScrollTrigger {
 	registerAnimations() {
 		const that = this
 
-		this.servicesTl.to(
-			{},
-			{
-				// onUpdate: function () {
-				// 	const progress = this.progress()
-				// 	that.meshs[0].traverse((child) => {
-				// 		if (!child.isMesh) return
-				// 		child.scale.set(progress, progress, progress)
-				// 	})
-				// },
-			}
-		)
+		this.servicesTl.to({}, {})
 
 		this.triggerContainers.forEach((triggerEl, i) => {
 			const mesh = this.meshs[i]
@@ -98,7 +85,7 @@ class servicesScrollTrigger {
 			})
 
 			textTl.to(triggerEl.querySelector('.capability-text'), {
-				filter: 'blur(0px)',
+				// filter: 'blur(0px)',
 				opacity: 1,
 				duration: 0.65,
 				ease: 'power2.inOut',

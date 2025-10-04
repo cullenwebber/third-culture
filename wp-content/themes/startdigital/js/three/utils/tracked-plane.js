@@ -11,7 +11,6 @@ class TrackedPlane {
 		this.lenis = getLenis()
 		this.container = container
 
-		// Configuration options
 		this.config = {
 			material: config.material,
 			zPosition: config.zPosition || 0,
@@ -24,12 +23,33 @@ class TrackedPlane {
 		this.smoothVelocity = 0
 		this.velocityLerpFactor = 0.1
 
+		// Hover state
+		this.hoverValue = 0
+		this.targetHover = 0
+		this.hoverLerpFactor = 0.025
+
 		this.geometry = new PlaneGeometry(1, 1, 16, 16)
 		this.mesh = new Mesh(this.geometry, this.material)
 		this.scene.add(this.mesh)
 
 		this.setupListeners()
 		this.updatePlane()
+		this.animate()
+	}
+
+	animate() {
+		// Smooth hover transition
+		this.hoverValue = THREE.MathUtils.lerp(
+			this.hoverValue,
+			this.targetHover,
+			this.hoverLerpFactor
+		)
+
+		if (this.imageMaterial) {
+			this.imageMaterial.setHover(this.hoverValue)
+		}
+
+		requestAnimationFrame(() => this.animate())
 	}
 
 	updatePlane() {
@@ -43,13 +63,11 @@ class TrackedPlane {
 		const rect = this.element.getBoundingClientRect()
 		const containerRect = this.getContainerRect()
 
-		// Get world dimensions from pixel dimensions using configured z position
 		const worldDimensions = this.getWorldSizeFromPixels({
 			width: rect.width,
 			height: rect.height,
 		})
 
-		// Update geometry with new dimensions
 		this.geometry.dispose()
 		this.geometry = new PlaneGeometry(
 			worldDimensions.width,
@@ -59,7 +77,6 @@ class TrackedPlane {
 		)
 		this.mesh.geometry = this.geometry
 
-		// Update material uniforms with new quad size
 		if (this.imageMaterial) {
 			this.imageMaterial.material.uniforms.uQuadSize.value = new THREE.Vector2(
 				worldDimensions.width,
@@ -67,20 +84,16 @@ class TrackedPlane {
 			)
 		}
 
-		// Calculate center position relative to the container
 		const centerX = rect.left + rect.width / 2 - containerRect.left
 		const centerY = rect.top + rect.height / 2 - containerRect.top
 
-		// Convert to NDC coordinates using container dimensions
 		const ndcX = (centerX / containerRect.width) * 2 - 1
 		const ndcY = -((centerY / containerRect.height) * 2 - 1)
 
-		// Convert to world coordinates using the configured z position
 		const { width, height } = this.getFrustumDimensions(this.config.zPosition)
 		const worldX = ndcX * (width / 2)
 		const worldY = ndcY * (height / 2)
 
-		// Set position with configured z position
 		this.mesh.position.set(worldX, worldY, this.config.zPosition)
 
 		const viewportHeight = window.innerHeight
@@ -113,9 +126,9 @@ class TrackedPlane {
 			uQuadSize: new THREE.Vector2(rect.width, rect.height),
 			uViewportSize: new THREE.Vector2(window.innerWidth, window.innerHeight),
 			uViewportPosition: 0.0,
+			uHover: 0.0,
 		})
 
-		// Load the texture
 		const textureLoader = new THREE.TextureLoader()
 		textureLoader.load(
 			imageSrc,
@@ -126,10 +139,9 @@ class TrackedPlane {
 						loadedTexture.image.width,
 						loadedTexture.image.height
 					)
-				// Trigger a render update
 				this.material.needsUpdate = true
 			},
-			undefined, // onProgress
+			undefined,
 			(error) => {
 				console.error('Error loading texture:', error)
 			}
@@ -150,6 +162,16 @@ class TrackedPlane {
 
 			this.imageMaterial.setScrollVelocity(this.smoothVelocity)
 		})
+
+		// Hover listeners
+		this.element.addEventListener('mouseenter', () => {
+			this.targetHover = 1
+		})
+
+		this.element.addEventListener('mouseleave', () => {
+			this.targetHover = 0
+		})
+
 		window.addEventListener('resize', this.updatePlane.bind(this))
 	}
 
@@ -181,10 +203,9 @@ class TrackedPlane {
 		return this.imageMaterial
 	}
 
-	// Method to update z position after instantiation
 	setZPosition(zPosition) {
 		this.config.zPosition = zPosition
-		this.updatePlane() // Recalculate position and size with new z value
+		this.updatePlane()
 	}
 
 	getZPosition() {
@@ -202,7 +223,6 @@ class TrackedPlane {
 
 	getWorldSizeFromPixels(options) {
 		const containerRect = this.getContainerRect()
-		// Use the configured z position for calculations
 		const { width: frustumWidth, height: frustumHeight } =
 			this.getFrustumDimensions(this.config.zPosition)
 		const result = {}
@@ -245,6 +265,8 @@ class TrackedPlane {
 		if (this.imageMaterial && this.imageMaterial.dispose) {
 			this.imageMaterial.dispose()
 		}
+		this.element.removeEventListener('mouseenter', () => {})
+		this.element.removeEventListener('mouseleave', () => {})
 		this.lenis.off('scroll', this.updatePlane.bind(this))
 		window.removeEventListener('resize', this.updatePlane.bind(this))
 	}

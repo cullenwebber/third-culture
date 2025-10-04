@@ -10,6 +10,7 @@ class ProjectsGridScene extends BaseScene {
 		this.imageContainers = document.querySelectorAll('.image-container')
 		this.projectTextEl = document.querySelector('.project-title .is-h1')
 		this.projectNumEl = document.querySelector('.project-title h6')
+		this.projectTitleEls = document.querySelectorAll('[project-grid-title]')
 	}
 
 	createObjects() {
@@ -25,6 +26,13 @@ class ProjectsGridScene extends BaseScene {
 		new WebGLText(this.scene, this.camera, this.projectNumEl, this.container, {
 			material: new THREE.MeshBasicMaterial({ color: 0xffffff }),
 			zPosition: -1,
+		})
+
+		this.projectTitleEls.forEach((el) => {
+			new WebGLText(this.scene, this.camera, el, this.container, {
+				material: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+				zPosition: -3,
+			})
 		})
 	}
 

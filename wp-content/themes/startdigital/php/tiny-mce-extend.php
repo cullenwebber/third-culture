@@ -16,8 +16,8 @@ add_filter('mce_buttons_2', 'sd_add_custom_dropdown_to_mce');
  */
 function sd_allow_custom_classes_to_be_applied_to_headings($init_array)
 {
-    $titles = ['Heading 1', 'Heading 2', 'Heading 3', 'Heading 4', 'Heading 5', 'Heading 6', 'Heading 7', 'Supertitle'];
-    $headings = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'supertitle'];
+    $titles = ['Heading 1', 'Heading 2', 'Heading 3', 'Heading 4', 'Heading 5', 'Heading 6', 'Supertitle'];
+    $headings = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'supertitle'];
     $style_formats = array();
 
     foreach ($headings as $index => $heading) {
