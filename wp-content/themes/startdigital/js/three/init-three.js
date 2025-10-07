@@ -7,6 +7,10 @@ import WindowScene from './scenes/window-scene'
 import NewsScene from './scenes/news-scene'
 import { createCanvas } from './utils'
 import FooterScene from './scenes/footer-scene'
+import ContactScene from './scenes/contact-scene'
+import CapabilityScene from './scenes/capabilities-scene'
+import CaseStudiesScene from './scenes/case-studies.scene'
+import PageScene from './scenes/page-scene'
 
 function initThree() {
 	const heroContainer = document.querySelector('#home-hero')
@@ -15,6 +19,10 @@ function initThree() {
 	const servicesContainer = document.querySelector('#page-capabilities')
 	const newsContainer = document.querySelector('#home-news-trigger')
 	const innerPageContainer = document.querySelector('#page-inner')
+	const contactContainer = document.querySelector('#contact-container')
+	const capabilityContainer = document.querySelector('#capabilities-hero')
+	const caseStudiesContainer = document.querySelector('#case-studies-hero')
+	const entireContainer = document.querySelector('#white-page')
 
 	const canvas = createCanvas()
 	const sceneManager = new SceneManager(canvas)
@@ -40,6 +48,27 @@ function initThree() {
 		sceneManager.addScene(ServicesScene, 'services', heroContainer, 2)
 
 	if (newsContainer) sceneManager.addScene(NewsScene, 'news', newsContainer, 2)
+
+	// Pages that are all stone
+	if (entireContainer)
+		sceneManager.addScene(PageScene, 'page', entireContainer, 0)
+
+	// Case Studies page
+	if (caseStudiesContainer)
+		sceneManager.addScene(
+			CaseStudiesScene,
+			'caseStudies',
+			caseStudiesContainer,
+			2
+		)
+
+	// Capability page
+	if (capabilityContainer)
+		sceneManager.addScene(CapabilityScene, 'capability', capabilityContainer, 2)
+
+	// Contact page
+	if (contactContainer)
+		sceneManager.addScene(ContactScene, 'contact', contactContainer, 1)
 
 	// Capabilities page
 	if (servicesContainer)

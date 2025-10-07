@@ -2,13 +2,71 @@
 
 {% block content %}
 
-	<div class="space-y-6">
-		<div class="space-y-6 md:space-y-2">
-			{% for post in posts %}
-				{% include "partials/tease-post.twig" %}
+	{% set news_posts = fn('get_news_posts') %}
+	{% set length = news_posts|length %}
+
+	<section	id="white-page"	class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
+	<section	id="entire-page"	class="flex flex-col gap-8 justify-center overflow-hidden">
+		<div	class="container flex flex-col relative z-40">
+			<div	class="flex flex-col gap-8 lg:gap-16 xl:gap-32 relative items-center">
+				<div	class="flex flex-col gap-4 sm:gap-8 xl:gap-16 relative z-40 max-w-[1900px] w-full">
+					<div	split-type="chars"	class="block-content relative w-fit">
+						<h1>
+							{{ post.title }}
+						</h1>
+						<h6	class="is-superscript absolute left-full top-1/4 w-fit whitespace-nowrap">
+							(
+							{{ length }}
+							)
+						</h6>
+					</div>
+					<div	class="flex flex-col gap-12 self-end">
+						<div	class="block-content max-w-[700px] xl:max-w-[1150px] indent-16 sm:indent-32">
+							{{ post.intro }}
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+		<div	class="flex flex-col relative z-40 post-teases container w-full max-sm:w-full max-lg:w-[80%] xl:w-[90%] 4xl:w-3/4">
+			{% for news in news_posts %}
+				<article	class="post-tease-news flex flex-col lg:flex-row lg:items-center w-full gap-12 xl:gap-20 py-24 xl:py-32">
+					<a	href="{{ news.link }}"	class="image-container relative overflow-hidden aspect-4/3 w-full">
+						<img	src="{{ get_image(news.thumbnail).src }}"	alt="{{ news.thumbnail.alt }}"	class="w-full object-cover h-full absolute inset-0" />
+					</a>
+					<div	class="flex flex-col lg:items-center gap-2 px-2 w-full 3xl:w-3/4">
+						<div	class="news-content flex flex-col gap-4 max-w-[550px] lg:max-w-[700px]">
+							<div	class="overflow-hidden">
+								<div	class="flex flex-row gap-8 items-center date-content">
+									<span	class="">
+										{{ news.date|date('j M') }}
+									</span>
+									<div	class="size-2 bg-black rounded-[1px]"></div>
+									<span	class="">
+										{{ news.terms('category')[0].name ?: 'News' }}
+									</span>
+								</div>
+							</div>
+							<h5	class="is-h4">
+								{{ news.title }}
+							</h5>
+							<div	class="block-content indent-16">
+								<p	class="text-base max-w-[450px] my-4">
+									You see, we’re the children of explorers, diplomats, migrants, and missionaries — outsiders who learned how to adapt and find our place within different cultural contexts.
+								</p>
+							</div>
+							<div	class="overflow-hidden">
+								<div	class="btn-container">
+									{% include "partials/button.twig" with { title: 'Read More' , link: news.link } %}
+								</div>
+							</div>
+						</div>
+					</div>
+				</article>
 			{% endfor %}
 		</div>
+	</section>
 
-		{% include "partials/pagination.twig" %}
-	</div>
 {% endblock %}

@@ -69,6 +69,16 @@
                 "param": "page",
                 "operator": "!=",
                 "value": "12"
+            },
+            {
+                "param": "page",
+                "operator": "!=",
+                "value": "14"
+            },
+            {
+                "param": "page",
+                "operator": "!=",
+                "value": "16"
             }
         ]
     ],
@@ -81,5 +91,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1759555417
+    "modified": 1759665341
 }

@@ -1,20 +1,86 @@
 {% extends "base.twig" %}
 
 {% block content %}
-	<article class="container post-type-{{ post.post_type }}" id="post-{{ post.ID }}">
-		<h1>{{ post.title }}</h1>
+	<section	id="white-page"	class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
+	<article	class="container post-type-{{ post.post_type }} relative z-40"	id="post-{{ post.ID }}">
+		<section	id="entire-page"	class="flex flex-col gap-8 sm:gap-16 justify-center items-center overflow-hidden pt-24 pb-24 lg:pb-48">
+			<div	class="flex flex-col gap-8 items-center">
+				<span	class="is-supertitle">
+					{{ '(' ~ post.category.name ~ ')' }}
+				</span>
+				<h1	class="is-h2 xl:text-[64px] text-center max-w-[1100px]">
+					{{ post.title }}
+				</h1>
+				<div	class="block-content max-w-[650px] *:text-xl text-center">
+					{{ post.introduction }}
+				</div>
 
-		<p class="blog-author">
-			<span>By</span>
-			<a href="{{post.author.path}}">
-				{{ post.author.name }}
-			</a>
-			<span>&bull;</span>
-			<time datetime="{{ post.date|date('d/m/Y') }}">{{ post.date }}</time>
-		</p>
-
-		<div class="article-body">
-			{{ post.content }}
-		</div>
+			</div>
+			<div	class="max-w-[1100px] flex flex-col gap-6 sm:flex-row justify-between w-full border-t border-dashed border-black/30 pt-6">
+				<div	class="flex flex-col items-center gap-1 w-full">
+					<span	class="is-supertitle text-black/30">
+						Date
+					</span>
+					<p	class="text-lg">
+						{{ post.date }}
+					</p>
+				</div>
+				<div	class="flex flex-col items-center gap-1 w-full">
+					<span	class="is-supertitle text-black/30">
+						Author
+					</span>
+					<p	class="text-lg">
+						{{ post.author.name }}
+					</p>
+				</div>
+				<div	class="flex flex-col items-center gap-1 w-full">
+					<span	class="is-supertitle text-black/30">
+						Read
+					</span>
+					<p	class="text-lg">
+						{{ post.reading_length }}
+						mins
+					</p>
+				</div>
+			</div>
+			<div	class="max-w-[1200px] aspect-16/9 w-full relative overflow-hidden rounded-lg">
+				<img	src="{{ get_image(post.thumbnail).src }}"	alt="{{ post.thumbnail.alt }}"	class="absolute top-0 left-0 w-full h-full object-cover" />
+			</div>
+			<div	class="prose lg:prose-xl max-w-[800px]">
+				{{ post.content }}
+			</div>
+		</section>
 	</article>
+	<section	class="flex flex-col overflow-hidden border-t border-black/30 border-dashed relative z-40">
+		<div	class="container flex flex-col gap-8 lg:gap-16 xl:gap-24 items-center">
+			<div	class="flex flex-col lg:flex-row justify-between sm:items-end relative z-40 gap-8 w-full">
+				<div	class="flex flex-col gap-4 sm:gap-8 xl:gap-16 w-full">
+					<div	split-type="chars"	class="block-content">
+						<h5	class="is-h2">
+							Related Articles
+						</h5>
+					</div>
+					<div	class="flex flex-row xl:ml-[10%]">
+						<div	class="block-content max-w-[500px] 2xl:max-w-[1000px] w-full indent-16 *:leading-snug">
+							{{ options.related_articles_content }}
+						</div>
+					</div>
+				</div>
+				{% include "partials/button.twig" with { title: 'All Articles' , link: '/news', class: 'w-fit shrink-0' } %}
+			</div>
+			<div	id="home-swiper-trigger"	class="w-full 4xl:w-3/4 self-end relative z-40">
+				<div	class="flex w-full">
+					<div	id="news-swiper-container"	class="swiper !overflow-visible w-full">
+						<div	class="swiper-wrapper">
+							{% for news in fn('get_news_posts', 6) %}
+								<div	class="swiper-slide">
+									{% include "partials/posts/post-tease.twig" with { post: news } %}
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
 {% endblock %}

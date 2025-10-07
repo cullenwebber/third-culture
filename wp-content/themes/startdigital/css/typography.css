@@ -120,3 +120,54 @@ h6,
 .is-superscript {
 	@apply text-xs sm:text-xl lg:text-3xl;
 }
+
+/* Add these custom styles to your CSS file using Tailwind's @apply directive */
+
+.prose :where(h1):not(:where([class~='not-prose'] *)) {
+	@apply text-4xl font-extrabold mt-0 mb-6;
+}
+
+.prose :where(h2):not(:where([class~='not-prose'] *)) {
+	@apply text-3xl font-bold mt-10 mb-5;
+}
+
+.prose :where(h3):not(:where([class~='not-prose'] *)) {
+	@apply text-2xl font-semibold mt-8 mb-4;
+}
+
+.prose :where(h4):not(:where([class~='not-prose'] *)) {
+	@apply text-xl font-semibold mt-6 mb-3;
+}
+
+.prose :where(h5):not(:where([class~='not-prose'] *)) {
+	@apply text-lg font-semibold mt-6 mb-3;
+}
+
+.prose :where(h6):not(:where([class~='not-prose'] *)) {
+	@apply text-base font-semibold mt-5 mb-2;
+}
+
+/* Large screen adjustments for lg:prose-xl */
+.prose.lg\:prose-xl :where(h1):not(:where([class~='not-prose'] *)) {
+	@apply lg:text-5xl lg:mb-8;
+}
+
+.prose.lg\:prose-xl :where(h2):not(:where([class~='not-prose'] *)) {
+	@apply lg:text-4xl lg:mt-12;
+}
+
+.prose.lg\:prose-xl :where(h3):not(:where([class~='not-prose'] *)) {
+	@apply lg:text-3xl lg:mt-10;
+}
+
+.prose.lg\:prose-xl :where(h4):not(:where([class~='not-prose'] *)) {
+	@apply lg:text-2xl lg:mt-8;
+}
+
+.prose.lg\:prose-xl :where(h5):not(:where([class~='not-prose'] *)) {
+	@apply lg:text-xl lg:mt-8;
+}
+
+.prose.lg\:prose-xl :where(h6):not(:where([class~='not-prose'] *)) {
+	@apply lg:text-lg lg:mt-6;
+}
