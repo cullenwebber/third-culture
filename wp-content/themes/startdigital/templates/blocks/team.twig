@@ -1,0 +1,30 @@
+<section class="flex flex-col overflow-hidden relative z-40">
+    <div class="container flex flex-col gap-8">
+        <div split-type="chars" class="w-full 4xl:w-3/4 block-content self-end">
+            {{ block.content }}
+        </div>
+        <div id="home-swiper-trigger" class="w-full 4xl:w-3/4 self-end relative z-40">
+            <div class="flex w-full">
+                <div id="news-swiper-container" class="swiper !overflow-visible w-full">
+                    <div class="swiper-wrapper">
+                        {% for team_member in block.team_members %}
+                            <div class="swiper-slide">
+                                <article class="flex flex-col gap-4">
+                                    <img src="{{ get_image(team_member.image).src }}" alt="{{ team_member.image.alt }}" class="w-full object-cover aspect-3/4" />
+                                    <div class="flex flex-col gap-1">
+                                        <h3 class="is-h5">
+                                            {{ team_member.name }}
+                                        </h3>
+                                        <span class="is-supertitle">
+                                            {{ team_member.role }}
+                                        </span>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,55 @@
+<section class="min-h-lvh text-black relative flex flex-col justify-center z-40 pt-32">
+    <div class="container 3xl:w-[90%] flex flex-col gap-12 lg:gap-24">
+        <h1 class="is-h2 max-w-[450px] lg:max-w-[800px] 2xl:max-w-[1200px] !leading-[1.1]">
+            {{ post.hero_title ?: post.title }}
+        </h1>
+        <div class="flex flex-col lg:flex-row justify-between gap-16">
+            <div class="block-content max-w-[450px] 2xl:max-w-[800px] indent-16">
+                {{ post.introduction }}
+                {% if post.external_link %}
+                    {% include "partials/button.twig" with { title: post.external_link.title , link: post.external_link.url, target: post.external_link.targe, class: 'mt-4' } %}
+                {% endif %}
+            </div>
+            <div class="flex flex-col max-lg:self-end gap-2 w-full max-w-[500px]">
+                <h2 class="is-h5 pb-6">
+                    Project Overview
+                </h2>
+
+                {% if post.year %}
+                    <div class="border-t border-black/50 border-dashed flex flex-row justify-between py-4">
+                        <span class="is-supertitle text-black/50">
+                            Year
+                        </span>
+                        <p>
+                            {{ post.year|date('Y') }}
+                        </p>
+                    </div>
+                {% endif %}
+                {% if post.industry %}
+                    <div class="border-t border-black/50 border-dashed flex flex-row justify-between py-4">
+                        <span class="is-supertitle text-black/50">
+                            Industry
+                        </span>
+                        <p>
+                            {{ post.industry }}
+                        </p>
+                    </div>
+                {% endif %}
+                {% if post.deliverables %}
+                    <div class="border-t border-black/50 border-dashed flex flex-row justify-between py-4">
+                        <span class="is-supertitle text-black/50">
+                            deliverables
+                        </span>
+                        <div class="flex flex-col gap-2 items-end text-end">
+                            {% for item in post.deliverables %}
+                                <p>
+                                    {{ item.title }}
+                                </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>

@@ -98,10 +98,18 @@
     "label_placement": "top",
     "instruction_placement": "label",
     "hide_on_screen": [
+        "block_editor",
         "the_content"
     ],
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1759564452
+    "acfe_display_title": "",
+    "acfe_autosync": [
+        "json"
+    ],
+    "acfe_form": 0,
+    "acfe_meta": "",
+    "acfe_note": "",
+    "modified": 1760446367
 }

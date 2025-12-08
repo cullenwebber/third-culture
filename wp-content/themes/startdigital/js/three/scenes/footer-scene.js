@@ -98,8 +98,8 @@ class FooterScene extends BaseScene {
 				htmlContainer: this.footerLogoContainer,
 				originalDimensions: this.originalLogoDimensions,
 				scalingMode: 'width',
-				scaleMultiplier: 1.0,
-				offsetZ: 0.05,
+				scaleMultiplier: 0.98,
+				offsetZ: 0.0,
 			})
 		}
 	}

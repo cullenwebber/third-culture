@@ -1,77 +1,78 @@
 {% extends 'page.twig' %}
 {% block content %}
-    {% set projects = fn('get_projects_posts') %}
+	{% set projects = fn('get_projects_posts') %}
 
-    {% set length = projects|length %}
-    <section id="page-inner" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
-    <section id="page-projects" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
+	{% set length = projects|length %}
+	<section id="page-inner" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
+	<section id="page-projects" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
 
-    <section id="case-studies-hero" class="min-h-lvh text-white flex flex-col justify-end pt-24 py-12">
-        <div class="container flex flex-col gap-12 relative z-40">
-            <div class="block-content max-w-[600px] w-full indent-16 self-end">
-                <span class="is-h2 leading-none">
-                    {{ '(' ~ length ~ ')' }}
-                </span>
-                {{ post.heading_content }}
-            </div>
-            <div class="flex flex-col justify-end gap-4 sm:gap-8 xl:gap-16 w-full self-center">
-                <div split-type="chars" class="block-content relative w-fit">
-                    {{ post.heading }}
-                </div>
-
-            </div>
-        </div>
-    </section>
-    <section class="text-white !py-0">
-        <div class="container flex flex-col gap-8 lg:gap-16 xl:gap-32 relative items-center">
-            <div class="flex flex-col gap-4 sm:gap-8 xl:gap-16 relative z-40 max-w-[1900px] w-full">
-                <div class="flex flex-row self-end">
-                    <div class="block-content max-w-[700px] xl:max-w-[1150px] indent-16 sm:indent-32">
-                        {{ post.block_content }}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    <section id="project-grid" class="text-white relative">
-        <div class="sticky top-0 left-0 w-full h-lvh flex flex-col justify-center z-50 pointer-events-none">
-            <div class="container project-text-container flex flex-col items-center relative z-40">
-                <div class="flex flex-col items-center gap-4 sm:gap-8 lg:gap-16 relative z-40 w-fit">
-                    <div class="project-title lg:text-center relative">
-                        {{ post.project_title }}
-                        <h6 class="is-superscript absolute left-full top-1/4 w-fit whitespace-nowrap">
-                            (
-                            {{ length }}
-                            )
-                        </h6>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="container w-full xl:w-[90%] 4xl:w-[80%] flex flex-col relative z-40 gap-16">
-            {% for project in projects %}
-                <a href="{{ project.link }}" id="project-container-{{ loop.index }}" class="project-container flex flex-col gap-4 -mt-[0%]">
-                    <div class="image-container w-full aspect-3/4 relative">
-                        <img src="{{ get_image(project.project_thumbnail) }}" alt="Image of the project {{ project.title }}" class="sr-only" />
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <h4 project-grid-title class="is-h5">
-                            {{ project.title }}
-                        </h4>
-                        {% if project.terms('project-type')[0] %}
-                            <div class="2xl:text-xl flex flex-col">
-                                <p project-grid-title class="">
-                                    (
-                                    {{ project.terms('project-type')[0].name }}
-                                    )
-                                </p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </a>
-            {% endfor %}
-            <div class="h-lvh"></div>
-        </div>
-        <div class="container flex flex-col items-center relative z-40"></div>
-    </section>
+	<section id="case-studies-hero" class="min-h-lvh text-white flex flex-col justify-end pt-24 py-12">
+		<div class="container flex flex-col gap-12 relative z-40">
+			<div class="block-content max-w-[600px] w-full indent-16 self-end">
+				<span class="is-h2 leading-none">{{ '(' ~ length ~ ')' }}</span>
+				{{ post.heading_content }}
+			</div>
+			<div class="flex flex-col justify-end gap-4 sm:gap-8 xl:gap-16 w-full self-center">
+				<div split-type="chars" class="block-content relative w-fit">
+					{{ post.heading }}
+				</div>
+			</div>
+		</div>
+	</section>
+	<section class="text-white !py-0">
+		<div class="container flex flex-col gap-8 lg:gap-16 xl:gap-32 relative items-center">
+			<div class="flex flex-col gap-4 sm:gap-8 xl:gap-16 relative z-40 max-w-[1900px] w-full">
+				<div class="flex flex-row self-end">
+					<div class="block-content max-w-[700px] xl:max-w-[1150px] indent-16 sm:indent-32">
+						{{ post.block_content }}
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section id="project-grid" class="text-white relative">
+		<div class="sticky top-0 left-0 w-full h-lvh flex flex-col justify-center z-50 pointer-events-none">
+			<div class="container project-text-container flex flex-col items-center relative z-40">
+				<div class="flex flex-col items-center gap-4 sm:gap-8 lg:gap-16 relative z-40 w-fit">
+					<div class="project-title lg:text-center relative">
+						{{ post.project_title }}
+						<h6 class="is-superscript absolute left-full top-1/4 w-fit whitespace-nowrap">
+							(
+							{{ length }}
+							)
+						</h6>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="container w-full xl:w-[90%] 4xl:w-[80%] flex flex-col relative z-40 gap-16">
+			{% for project in projects %}
+				<a href="{{ project.link }}"
+					id="project-container-{{ loop.index }}"
+					class="project-container flex flex-col gap-4 -mt-[0%]">
+					<div class="image-container w-full aspect-3/4 relative">
+						<img src="{{ get_image(project.project_thumbnail) }}"
+							alt="Image of the project {{ project.title }}"
+							class="sr-only" />
+					</div>
+					<div class="flex flex-col gap-1">
+						<h4 project-grid-title class="is-h5">
+							{{ project.title }}
+						</h4>
+						{% if project.featured_deliverable %}
+							<div class="2xl:text-xl flex flex-col">
+								<p project-grid-title class="">
+									(
+									{{ project.featured_deliverable.name }}
+									)
+								</p>
+							</div>
+						{% endif %}
+					</div>
+				</a>
+			{% endfor %}
+			<div class="h-lvh"></div>
+		</div>
+		<div class="container flex flex-col items-center relative z-40"></div>
+	</section>
 {% endblock %}

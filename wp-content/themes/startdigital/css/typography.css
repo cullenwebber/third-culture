@@ -171,3 +171,7 @@ h6,
 .prose.lg\:prose-xl :where(h6):not(:where([class~='not-prose'] *)) {
 	@apply lg:text-lg lg:mt-6;
 }
+
+.terms-content.prose * {
+	@apply !text-white;
+}

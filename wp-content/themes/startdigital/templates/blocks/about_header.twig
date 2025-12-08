@@ -1,0 +1,14 @@
+<section class="text-black relative z-40 pt-0">
+	<div class="container">
+		<div class="flex flex-col min-h-lvh justify-end py-4 sm:py-8 lg:py-16">
+			{% include 'icons/wordmark.twig' with {
+				class: 'w-full'
+			} %}
+		</div>
+		<div class="flex flex-row justify-end">
+			<div class="block-content max-w-[700px] xl:max-w-[1150px] indent-16 sm:indent-32">
+				{{ block.content }}
+			</div>
+		</div>
+	</div>
+</section>

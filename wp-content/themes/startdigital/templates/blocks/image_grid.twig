@@ -1,0 +1,26 @@
+<section class="">
+	<div class="container grid grid-cols-2 gap-y-12 xl:grid-cols-4 gap-4 2xl:w-[90%]">
+		{% for item in block.image_item %}
+			<div class="flex flex-col gap-4">
+				{% if item.subtitle %}
+					<div class="flex flex-row flex-wrap gap-y-1 justify-between gap-4 items-end">
+						<p class="is-supertitle">
+							{{ item.subtitle }}
+						</p>
+						<p class="is-supertitle">
+							{{ item.date|date('M') }}
+						</p>
+						<p class="is-supertitle">
+							{{ item.date|date('Y') }}
+						</p>
+					</div>
+				{% endif %}
+				<div class="image-container relative {{ loop.index % 2 == 0 ? 'aspect-square' : 'aspect-[10/16]' }}">
+					<img src="{{ get_image(item.image) }}"
+						alt="{{ item.image.alt }}"
+						class="absolute inset-0 w-full h-full object-cover" />
+				</div>
+			</div>
+		{% endfor %}
+	</div>
+</section>
