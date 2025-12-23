@@ -1,14 +1,13 @@
-<section	id="home-hero"	class="fixed top-0 left-0 h-lvh w-full"></section>
-<section	id="home-hero-trigger"	class="relative !pt-24 !pb-8 text-black h-lvh z-40 flex flex-col justify-end">
-	<div	class="container flex flex-col items-center justify-center flex-grow gap-4 is-h7">
-		{% include "icons/full-logo.twig" with { class: 'h-5 2xl:h-6' } %}
-		<div	class="block-content text-center max-w-[400px] xl:max-w-[500px]">
-			{{ post.hero.heading }}
+<div id="frontpage-hero" class="fixed top-0 left-0 h-lvh w-full"></div>
+<div id="hero-section-wrapper" class="relative z-40 overflow-hidden">
+	<section id="hero-section" class="h-lvh w-full flex flex-col items-center justify-center">
+		<div class="container flex flex-col items-center gap-6 w-full">
+			{% include 'icons/wordmark.twig' with {
+				class: 'h-8 text-lightBlue'
+			} %}
+			<h1 class="text-white w-fit text-center max-w-[1600px]">
+				Impact experiences for purposeful brands
+			</h1>
 		</div>
-		{% include "partials/button.twig" with { title: post.about.link.title, link: post.about.link.url, target: post.about.link.target, class: '-ml-8' } %}
-	</div>
-	<div	class="container flex flex-col gap-8">
-		<div	id="hero-logo-container"	class="w-full aspect-[501/73]"></div>
-	</div>
-
-</section>
+	</section>
+</div>

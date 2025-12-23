@@ -12,14 +12,16 @@ module.exports = {
 			colors: {
 				white: '#F7F7F7',
 				black: '#232323',
+				darkBlue: '#030030',
+				navy: '#02001B',
+				lightBlue: '#B3AFED',
+				paragraphLight: '#AAA9B7',
+				paragraphDark: '#51506A',
 			},
 			fontFamily: {
-				heading: ['Bagoss', 'sans-serif'],
-				body: ['Bagoss', 'sans-serif'],
-				supertitle: ['Bagoss', 'sans-serif'],
-				alt: ['Burgess', 'serif'],
-				palace: ['Palace', 'serif'],
-				palaceItalic: ['PalaceItalic', 'serif'],
+				heading: ['Montreal', 'sans-serif'],
+				body: ['Montreal', 'sans-serif'],
+				supertitle: ['Montreal', 'sans-serif'],
 			},
 			borderRadius: {
 				4: '4px',

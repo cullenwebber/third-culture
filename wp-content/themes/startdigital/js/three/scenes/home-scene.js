@@ -1,26 +1,63 @@
 import * as THREE from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DestructibleMesh, FractureOptions } from '@dgreenheck/three-pinata'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import BaseScene from '../base-scene'
 import { getStaticPath } from '../utils'
-import ConcreteShaderMaterial from '../materials/white-concrete'
-import BackgroundShaderMaterial from '../materials/background-material'
 import ContainerTracker from '../utils/container-tracker'
-import TrackedRoundedBoxGeometry from '../utils/tracked-box-geometry'
+import GradientMaterial from '../materials/gradient-material'
+import WebGLText from '../utils/webgl-text'
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
+import WebGLManager from '../context-manager'
+import MeshTransmissionMaterial from '../materials/MeshTransmissionMaterial'
+
+gsap.registerPlugin(ScrollTrigger)
 
 class HomeScene extends BaseScene {
-	constructor(id, container) {
-		super(id, container)
-		this.lastMousePosition = null
-		this.lastMouseTime = null
-		this.currentMousePosition = { x: 0, y: 0 }
-		this.originalStoneDimensions = null
-		this.logoContainer = null
-		this.footerLogoContainer = null
+	setupScene() {
+		this.context = new WebGLManager()
+		const environment = new RoomEnvironment()
+		const pmremGenerator = new THREE.PMREMGenerator(this.context.renderer)
+		this.envMap = pmremGenerator.fromScene(environment).texture
+		this.scene.environment = this.envMap
 	}
 
-	setupScene() {
-		this.scene.background = new THREE.Color(0x1e1e1e)
+	createMaterials() {
+		const { width: canvasWidth, height: canvasHeight } =
+			this.container.getBoundingClientRect()
+		this.gradientMaterial = new GradientMaterial()
+		this.gradientMaterial.uniforms.resolution.value.set(
+			canvasWidth,
+			canvasHeight
+		)
+
+		this.transmissionMaterial = Object.assign(new MeshTransmissionMaterial(5), {
+			_transmission: 1.0,
+			chromaticAberration: 0.05,
+			roughness: 0.1,
+			thickness: 1.4,
+			ior: 1.4,
+			distortion: 1.75,
+			distortionScale: 0.8,
+			temporalDistortion: 0.1,
+			reflectivity: 0.1,
+			flatShading: false,
+		})
+
+		this.transmissionMaterial.color.set('#999999')
+
+		this.wireMaterial = new THREE.MeshBasicMaterial({
+			color: 0x201d4d,
+			wireframe: true,
+		})
+
+		this.metalMaterial = new THREE.MeshStandardMaterial({
+			color: '#18154E',
+			metalness: 1,
+			roughness: 0.45,
+		})
 	}
 
 	setupContainerTracking() {
@@ -31,67 +68,185 @@ class HomeScene extends BaseScene {
 		)
 	}
 
-	createMaterials() {
-		this.concreteMaterial = new ConcreteShaderMaterial()
-		this.backgroundMaterial = new BackgroundShaderMaterial()
+	setupScrollAnimation() {
+		const heroSection = document.querySelector('#hero-section-wrapper')
+
+		if (!heroSection) return
+
+		this.tl = gsap.timeline({
+			scrollTrigger: {
+				trigger: heroSection,
+				start: 'top top',
+				end: 'bottom top',
+				scrub: true,
+			},
+		})
+
+		// Animate h1 to top left using ScrollTrigger
+		this.tl
+			.to('#hero-section', {
+				x: '-75vw',
+			})
+			.from(
+				'#about-scene',
+				{
+					x: '75vw',
+				},
+				'<='
+			)
+			.to(
+				this.gradientMaterial.uniforms.progress,
+				{
+					value: 1,
+				},
+				'<='
+			)
+			.to(
+				this.sphere.rotation,
+				{
+					y: Math.PI / 4,
+					x: Math.PI / 8,
+				},
+				'<='
+			)
+			.to(
+				this.wireMaterial.color,
+				{
+					r: 0.0,
+					g: 0.0,
+					b: 0.03,
+				},
+				'<='
+			)
 	}
 
 	async createObjects() {
-		this.configureLoader()
-		this.createBackgroundPlane()
-		this.setupLogoContainers()
-		this.loadStone()
-		await Promise.all([this.loadLogo()])
-	}
+		const { width, height } = this.getFrustumDimensions(0)
 
-	setupLogoContainers() {
-		this.logoContainer = document.getElementById('hero-logo-container')
-		this.footerLogoContainer = document.getElementById('footer-logo-container')
-	}
+		const planeGeometry = new THREE.PlaneGeometry(width, height, 1, 1)
+		this.background = new THREE.Mesh(planeGeometry, this.gradientMaterial)
+		this.background.renderOrder = -1 // Render first, behind everything
 
-	configureLoader() {
-		const dracoLoader = new DRACOLoader()
-		dracoLoader.setDecoderPath(
-			'https://www.gstatic.com/draco/versioned/decoders/1.5.6/'
+		// Store reference to h1 for tracking
+		this.h1Element = document.querySelector('h1')
+
+		this.text = new WebGLText(
+			this.scene,
+			this.camera,
+			this.h1Element,
+			this.container
 		)
-		this.gltfLoader = new GLTFLoader()
-		this.gltfLoader.setDRACOLoader(dracoLoader)
+
+		let sphereGeometry = new THREE.IcosahedronGeometry(width * 2, 3)
+		this.sphere = new THREE.Mesh(sphereGeometry, this.wireMaterial)
+
+		// Load the logo
+		await this.loadLogo()
+		this.scene.add(this.sphere)
+		this.scene.add(this.background)
+
+		// Setup scroll animation after everything is created
+		this.setupScrollAnimation()
 	}
 
 	async loadLogo() {
-		const glbPath = getStaticPath('/logo-less-sharp.glb')
+		const path = getStaticPath('/cube-triangle-no-damage.glb')
 
+		// Set up DRACO loader
+		const dracoLoader = new DRACOLoader()
+		dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
+
+		// Set up GLTF loader with DRACO
+		const gltfLoader = new GLTFLoader()
+		gltfLoader.setDRACOLoader(dracoLoader)
+
+		// Load the model
 		return new Promise((resolve, reject) => {
-			this.gltfLoader.load(
-				glbPath,
+			gltfLoader.load(
+				path,
 				(gltf) => {
-					// Main logo
 					this.logo = gltf.scene
-					this.originalLogoDimensions = this.getLogoBoundingBox()
+					this.logoChildren = []
+					this.logoFragments = []
 
+					// Calculate original dimensions for scaling
+					const bbox = new THREE.Box3().setFromObject(gltf.scene)
+					const originalWidth = bbox.max.x - bbox.min.x
+					const originalHeight = bbox.max.y - bbox.min.y
+
+					// Process each mesh and create destructible versions
 					this.logo.traverse((child) => {
-						if (child.isMesh) {
-							child.castShadow = true
-							child.material = this.concreteMaterial.getMaterial()
-						}
+						if (!child.isMesh) return
+
+						// Create a group for this mesh's fragments
+						const fragmentGroup = new THREE.Group()
+						fragmentGroup.position.copy(child.position)
+						fragmentGroup.rotation.copy(child.rotation)
+						fragmentGroup.scale.copy(child.scale)
+						this.logo.add(fragmentGroup)
+
+						// Create destructible mesh from original
+						const destructibleMesh = new DestructibleMesh(
+							child.geometry,
+							this.transmissionMaterial,
+							this.transmissionMaterial
+						)
+
+						// Fracture the mesh
+						const options = new FractureOptions({
+							fractureMethod: 'voronoi',
+							fragmentCount: 20,
+							voronoiOptions: {
+								mode: '3D',
+							},
+						})
+
+						const fragments = destructibleMesh.fracture(options, (fragment) => {
+							fragment.material = this.transmissionMaterial
+							// Store initial position for animation relative to group
+							fragment.userData.initialPosition = fragment.position.clone()
+							fragment.userData.initialRotation = fragment.rotation.clone()
+							fragment.userData.center = new THREE.Vector3()
+							fragment.geometry.computeBoundingBox()
+							fragment.geometry.boundingBox.getCenter(fragment.userData.center)
+							fragmentGroup.add(fragment)
+						})
+
+						this.logoFragments.push(...fragments)
+
+						// Hide original mesh
+						child.visible = false
+
+						// Store animation data
+						this.logoChildren.push({
+							mesh: child,
+							fragmentGroup: fragmentGroup,
+							initialPosition: child.position.clone(),
+							initialRotation: child.rotation.clone(),
+							floatOffset: Math.random() * Math.PI * 2,
+							rotateOffset: Math.random() * Math.PI * 2,
+						})
 					})
 
 					this.scene.add(this.logo)
 
-					// Clone for footer
-					this.footerLogo = this.logo.clone()
-					this.footerLogo.traverse((child) => {
-						if (child.isMesh) {
-							child.castShadow = true
-							child.material = this.concreteMaterial.getMaterial()
-						}
+					// Setup hover interaction
+					this.calculateFragmentCentroids()
+
+					// Track logo to h1 element using containerTracker
+					this.containerTracker.addTrackedObject('logo', {
+						object3D: this.logo,
+						htmlContainer: this.h1Element,
+						originalDimensions: {
+							width: originalWidth,
+							height: originalHeight,
+						},
+						scaleMultiplier: 0.35,
+						scalingMode: 'contain',
+						offsetZ: 0.75,
 					})
-					this.scene.add(this.footerLogo)
 
-					// Setup tracking for both logos
-					this.setupLogoTracking()
-
-					resolve(gltf)
+					resolve(this.logo)
 				},
 				undefined,
 				(error) => {
@@ -102,106 +257,145 @@ class HomeScene extends BaseScene {
 		})
 	}
 
-	setupLogoTracking() {
-		if (this.logoContainer) {
-			this.containerTracker.addTrackedObject('hero-logo', {
-				object3D: this.logo,
-				htmlContainer: this.logoContainer,
-				originalDimensions: this.originalLogoDimensions,
-				scalingMode: 'width',
-				scaleMultiplier: 0.98,
-				offsetZ: 0,
-			})
-		}
-
-		if (this.footerLogoContainer) {
-			this.containerTracker.addTrackedObject('footer-logo', {
-				object3D: this.footerLogo,
-				htmlContainer: this.footerLogoContainer,
-				originalDimensions: this.originalLogoDimensions,
-				scalingMode: 'width',
-				scaleMultiplier: 0.98,
-				offsetZ: 0.0,
-			})
-		}
-	}
-
-	loadStone() {
-		const heroBox = new TrackedRoundedBoxGeometry(this.scene, this.camera, {
-			startElement: document.querySelector('#home-hero-trigger'),
-			endElement: document.querySelector('#home-about-trigger'),
-			depth: 0.6,
-			radius: 0.2,
-			segments: 1,
-			material: this.concreteMaterial.getMaterial(),
-			padding: 32,
-			offsetX: 0,
-			offsetY: 0,
-			offsetZ: -0.3,
-		})
-
-		const servicesBox = new TrackedRoundedBoxGeometry(this.scene, this.camera, {
-			startElement: document.querySelector('#home-news-trigger'),
-			endElement: document.querySelector('#footer-container'),
-			depth: 0.6,
-			radius: 0.2,
-			segments: 1,
-			material: this.concreteMaterial.getMaterial(),
-			padding: 32,
-			offsetX: 0,
-			offsetY: 0,
-			offsetZ: -0.3,
-		})
-	}
-
-	getLogoBoundingBox() {
-		if (!this.logo) return { width: 1, height: 1 }
-
-		const box = new THREE.Box3().setFromObject(this.logo)
-		return {
-			width: box.max.x - box.min.x,
-			height: box.max.y - box.min.y,
-		}
-	}
-
-	createBackgroundPlane() {
-		const { width, height } = this.getFrustumDimensions(-5)
-		const plane = new THREE.PlaneGeometry(width, height, 1, 1)
-		const mesh = new THREE.Mesh(plane, this.backgroundMaterial.getMaterial())
-		mesh.receiveShadow = true
-		mesh.position.z = -5
-
-		this.backgroundPlane = mesh
-		this.scene.add(mesh)
-	}
-
 	createMouseListeners() {
-		this.handleMouseMove = this.handleMouseMove.bind(this)
-		window.addEventListener('mousemove', this.handleMouseMove)
+		if (!this.logo || !this.logoFragments.length) return
+
+		this.h1Element.addEventListener('mouseenter', () => {
+			if (this.isHovering) return
+			this.isHovering = true
+			this.explodeFragments()
+		})
+
+		this.h1Element.addEventListener('mouseleave', () => {
+			if (!this.isHovering) return
+			this.isHovering = false
+			this.implodeFragments()
+		})
 	}
 
-	dispose() {
-		if (this.handleMouseMove) {
-			window.removeEventListener('mousemove', this.handleMouseMove)
-		}
-		if (this.containerTracker) {
-			this.containerTracker.dispose()
-		}
-		super.dispose()
+	calculateFragmentCentroids() {
+		// Calculate centroid for each fragmentGroup
+		this.logoChildren.forEach((childData) => {
+			const fragmentGroup = childData.fragmentGroup
+			const groupFragments = this.logoFragments.filter((frag) =>
+				fragmentGroup.children.includes(frag)
+			)
+
+			if (groupFragments.length === 0) return
+
+			const centroid = new THREE.Vector3()
+			groupFragments.forEach((frag) => {
+				centroid.add(frag.userData.initialPosition)
+			})
+			centroid.divideScalar(groupFragments.length)
+
+			// Store centroid in each fragment
+			groupFragments.forEach((frag) => {
+				frag.userData.groupCentroid = centroid
+			})
+
+			// Also store in childData
+			childData.centroid = centroid
+		})
 	}
 
-	handleMouseMove(event) {
-		const x = event.clientX / window.innerWidth
-		const y = 1 - event.clientY / window.innerHeight
-		const lightX = (event.clientX / window.innerWidth) * 2 - 1
-		const lightY = (event.clientY / window.innerHeight) * 0.5 + 0.5
-		const lightZ = 2.0
+	explodeFragments() {
+		this.logoFragments.forEach((fragment) => {
+			// Calculate direction from the fragment group's centroid to this fragment
+			const centroid = fragment.userData.groupCentroid || new THREE.Vector3()
+			const direction = fragment.userData.initialPosition
+				.clone()
+				.sub(centroid)
+				.normalize()
+			const distance = 4.0
 
-		this.currentMousePosition = { x, y }
+			// Animate fragment outward from its initial position
+			gsap.to(fragment.position, {
+				x: fragment.userData.initialPosition.x + direction.x * distance,
+				y: fragment.userData.initialPosition.y + direction.y * distance,
+				z: fragment.userData.initialPosition.z + direction.z * distance,
+				duration: 0.6,
+				ease: 'power2.out',
+			})
 
-		this.concreteMaterial.animateLight(
-			new THREE.Vector3(lightX, lightY, lightZ)
-		)
+			// Random rotation
+			gsap.to(fragment.rotation, {
+				x: fragment.userData.initialRotation.x + Math.random() * Math.PI,
+				y: fragment.userData.initialRotation.y + Math.random() * Math.PI,
+				duration: 0.6,
+				ease: 'power2.out',
+			})
+		})
+	}
+
+	implodeFragments() {
+		this.logoFragments.forEach((fragment) => {
+			// Return to original position
+			gsap.to(fragment.position, {
+				x: fragment.userData.initialPosition.x,
+				y: fragment.userData.initialPosition.y,
+				z: fragment.userData.initialPosition.z,
+				duration: 0.6,
+				ease: 'power2.inOut',
+			})
+
+			// Return to original rotation
+			gsap.to(fragment.rotation, {
+				x: fragment.userData.initialRotation.x,
+				y: fragment.userData.initialRotation.y,
+				z: fragment.userData.initialRotation.z,
+				duration: 0.6,
+				ease: 'power2.inOut',
+			})
+		})
+	}
+
+	animate(deltaTime) {
+		if (this.gradientMaterial) {
+			this.gradientMaterial.uniforms.time.value += deltaTime
+		}
+
+		// Update transmission material time uniform
+		if (this.transmissionMaterial && this.transmissionMaterial.uniforms) {
+			this.transmissionMaterial.uniforms.time.value += deltaTime
+		}
+
+		// Animate logo children (fragment groups)
+		if (this.logoChildren && this.logoChildren.length > 0) {
+			const time = this.gradientMaterial
+				? this.gradientMaterial.uniforms.time.value
+				: 0
+
+			this.logoChildren.forEach((childData) => {
+				const {
+					fragmentGroup,
+					initialPosition,
+					initialRotation,
+					floatOffset,
+					rotateOffset,
+				} = childData
+
+				// Float up and down
+				const floatSpeed = 0.35
+				const floatAmount = 0.2
+				fragmentGroup.position.y =
+					initialPosition.y +
+					Math.sin(time * floatSpeed + floatOffset) * floatAmount
+
+				// Rotate back and forth on Y axis
+				const rotateSpeed = 0.35
+				const rotateAmount = 0.5
+				fragmentGroup.rotation.y =
+					initialRotation.y +
+					Math.sin(time * rotateSpeed + rotateOffset) * rotateAmount
+
+				// Subtle rotation on X axis
+				fragmentGroup.rotation.x =
+					initialRotation.x +
+					Math.cos(time * rotateSpeed * 0.7 + rotateOffset) *
+						(rotateAmount * 0.5)
+			})
+		}
 	}
 
 	getFrustumDimensions(zDifference = 0) {
@@ -210,37 +404,7 @@ class HomeScene extends BaseScene {
 		const aspect = this.camera.aspect
 		const height = 2 * Math.tan(fov / 2) * distance
 		const width = height * aspect
-
 		return { width, height }
-	}
-
-	onResize() {
-		super.onResize()
-
-		if (this.backgroundPlane) {
-			const { width, height } = this.getFrustumDimensions(-5)
-			this.backgroundPlane.geometry.dispose()
-			this.backgroundPlane.geometry = new THREE.PlaneGeometry(
-				width,
-				height,
-				1,
-				1
-			)
-		}
-
-		if (this.containerTracker) {
-			this.containerTracker.updateAllPositions()
-		}
-
-		if (this.stone) {
-			this.updateStoneScale()
-			this.updateStonePosition()
-		}
-	}
-
-	animate(deltaTime) {
-		this.time += deltaTime
-		this.backgroundMaterial.updateTime(this.time)
 	}
 }
 

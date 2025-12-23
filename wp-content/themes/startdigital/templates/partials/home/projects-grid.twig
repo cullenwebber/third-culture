@@ -1,25 +1,18 @@
-{% set length = post.projects.projects|length %}
-
-<section id="project-grid" class="text-white relative">
-	<div class="sticky top-0 left-0 w-full h-lvh flex flex-col justify-center z-50 pointer-events-none">
-		<div class="container project-text-container flex flex-col items-center relative z-40">
-			<div class="flex flex-col items-center gap-4 sm:gap-8 lg:gap-16 relative z-40 w-fit">
-				<div class="project-title lg:text-center relative">
-					{{ post.projects.title }}
-					<h6 class="is-superscript absolute left-full top-1/4 w-fit whitespace-nowrap">
-						(
-						{{ length }}
-						)
-					</h6>
-				</div>
+<section id="home-projects-inner" class="text-navy relative z-40 !py-0">
+	<div id="home-projects-container" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></div>
+	<div class="container flex flex-col items-center relative z-40 h-[50lvh] justify-center -mt-[100lvh]">
+		<div class="project-title relative max-w-[1000px] text-center items-center flex flex-col block-content">
+			<div class="supertitle text-paragraphDark flex flex-row items-center gap-2">
+				<div class="size-2.5 bg-paragraphDark blink"></div>In Focus
 			</div>
+			{{ post.projects.title }}
 		</div>
 	</div>
-	<div class="container w-full xl:w-[90%] 4xl:w-[80%] flex flex-col relative z-40 gap-16">
+	<div class="container w-full flex flex-col relative z-40 gap-16">
 		{% for project in post.projects.projects %}
 			<a href="{{ project.link }}"
 				id="project-container-{{ loop.index }}"
-				class="project-container flex flex-col gap-4 -mt-[0%]">
+				class="project-container flex flex-col gap-4 -mt-[0%] opacity-0 pointer-events-none">
 				<div class="image-container w-full aspect-3/4 relative">
 					<img src="{{ get_image(project.project_thumbnail) }}"
 						alt="Image of the project {{ project.title }}"
@@ -31,10 +24,8 @@
 					</h4>
 					{% if project.featured_deliverable %}
 						<div class="2xl:text-xl flex flex-col">
-							<p project-grid-title class="">
-								(
+							<p project-grid-subtitle class="">
 								{{ project.featured_deliverable.name }}
-								)
 							</p>
 						</div>
 					{% endif %}
@@ -42,12 +33,5 @@
 			</a>
 		{% endfor %}
 		<div class="h-lvh"></div>
-	</div>
-	<div class="container flex flex-col items-center relative z-40">
-		{% include 'partials/big-button.twig' with {
-			title: 'All Projects',
-			link: '/projects',
-			class: 'text-white'
-		} %}
 	</div>
 </section>

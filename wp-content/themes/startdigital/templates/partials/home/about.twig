@@ -1,20 +1,17 @@
-<section id="home-about-trigger" class="w-full z-40 relative text-black">
-    <div class="xl:min-h-lvh container flex flex-col justify-center gap-24 lg:gap-32 xl:gap-32 3xl:gap-48 3xl:pt-20">
-        <div class="flex justify-center items-center lg:grid lg:grid-cols-3 gap-8">
-            {# THREEJS CONTAINER #}
-            <div id="home-about" class=" max-lg:w-[65%] max-md:max-w-[300px] max-lg:max-w-[400px] w-full self-center aspect-3/4 lg:col-start-2 relative">{# <div class="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 text-white flex flex-row items-center justify-end gap-3 is-h7 w-fit">
-                <div class="size-2 bg-white shrink-0"></div>
-                <span class="shrink-0">
-                Impact + Growth
-                </span>
-            </div> #}
-            </div>
-
-        </div>
-        <div class="flex flex-col items-center">
-            <div class="block-content !grid grid-cols-1 md:grid-cols-2 gap-8 md:!gap-16 max-w-[400px] md:max-w-[800px] 2xl:max-w-[1000px] indent-16 justify-end">
-                {{ post.about.content }}
-            </div>
-        </div>
-    </div>
-</section>
+<div class="overflow-hidden">
+	<section id="about-scene" class="relative z-40 min-h-lvh flex flex-col justify-center">
+		<div class="container flex flex-col gap-32 max-w-[65%]">
+			<div class="block-content">
+				<div class="supertitle text-paragraphLight flex flex-row items-center gap-2">
+					<div class="size-2.5 bg-paragraphLight blink"></div>Who we are
+				</div>
+				<h2 class="text-white max-w-[1000px]">
+					Full service Communications agency
+				</h2>
+			</div>
+			<div class="text-paragraphLight self-end block-content !grid grid-cols-1 md:grid-cols-2 gap-8 md:!gap-16 max-w-[400px] md:max-w-[800px] 2xl:max-w-[1050px] indent-16 justify-end">
+				{{ post.about.content }}
+			</div>
+		</div>
+	</section>
+</div>

@@ -10,7 +10,12 @@ let isMenuOpen = false
 function toggleMenu() {
 	const menu = document.querySelector('[data-menu]')
 	const button = document.querySelector('[data-menu-button]')
+
+	if (!button) return
+
 	const lines = button.querySelectorAll('.lines')
+
+	if (!lines.length > 0) return
 
 	button.addEventListener('click', (e) => {
 		e.stopPropagation() // Prevent this click from triggering document listener
