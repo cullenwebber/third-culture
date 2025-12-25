@@ -84,16 +84,16 @@ class HomeScene extends BaseScene {
 
 		// Animate h1 to top left using ScrollTrigger
 		this.tl
-			.to('#hero-section', {
-				x: '-75vw',
-			})
-			.from(
-				'#about-scene',
-				{
-					x: '75vw',
-				},
-				'<='
-			)
+			// .to('#hero-section', {
+			// 	x: '-75vw',
+			// })
+			// .from(
+			// 	'#about-scene',
+			// 	{
+			// 		x: '75vw',
+			// 	},
+			// 	'<='
+			// )
 			.to(
 				this.gradientMaterial.uniforms.progress,
 				{
@@ -142,7 +142,7 @@ class HomeScene extends BaseScene {
 
 		// Load the logo
 		await this.loadLogo()
-		this.scene.add(this.sphere)
+		// this.scene.add(this.sphere)
 		this.scene.add(this.background)
 
 		// Setup scroll animation after everything is created

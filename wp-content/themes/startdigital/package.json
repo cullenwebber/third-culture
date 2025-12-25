@@ -32,8 +32,12 @@
 		"troika-three-text": "^0.52.4"
 	},
 	"devDependencies": {
+		"@gltf-transform/core": "^4.2.1",
+		"@gltf-transform/extensions": "^4.2.1",
+		"@gltf-transform/functions": "^4.2.1",
 		"@tailwindcss/typography": "^0.5.10",
 		"cssnano": "^5.1.15",
+		"draco3dgltf": "^1.5.7",
 		"esbuild-serve": "^1.0.1",
 		"prettier": "^2.8.8",
 		"prettier-plugin-twig-melody": "^0.4.6",

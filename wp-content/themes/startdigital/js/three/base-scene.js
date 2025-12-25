@@ -109,6 +109,10 @@ class BaseScene {
 		// Override in subclasses
 	}
 
+	preRender(renderer) {
+		// Override in subclasses for pre-render passes (e.g., shadow maps)
+	}
+
 	onResize(width, height) {
 		this.updateCameraAspect()
 	}

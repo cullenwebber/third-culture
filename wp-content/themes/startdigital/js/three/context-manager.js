@@ -152,6 +152,11 @@ class WebGLManager {
 			viewport.height
 		)
 
+		// Call preRender hook for shadow maps, etc.
+		if (scene.preRender) {
+			scene.preRender(this.renderer)
+		}
+
 		const postProcessor = this.postProcessing.get(sceneId)
 
 		if (postProcessor) {
