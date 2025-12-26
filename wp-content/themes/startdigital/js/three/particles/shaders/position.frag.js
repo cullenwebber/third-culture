@@ -5,6 +5,7 @@ uniform vec2 resolution;
 uniform sampler2D texturePosition;
 uniform sampler2D textureDefaultPosition;
 uniform sampler2D textureTargetPosition;
+uniform sampler2D textureHit;
 uniform float time;
 uniform float speed;
 uniform float dieSpeed;
@@ -23,7 +24,11 @@ void main() {
 
 	vec4 positionInfo = texture2D(texturePosition, uv);
 	vec3 position = positionInfo.xyz;
-	float life = positionInfo.a - dieSpeed;
+
+	// Hit particles decay slower
+	float hitIntensity = texture2D(textureHit, uv).r;
+	float decayMultiplier = mix(1.0, 0.1, hitIntensity); // Hit particles decay 5x slower
+	float life = positionInfo.a - dieSpeed * decayMultiplier;
 
 	// Get target position (blend between default and target based on morphProgress)
 	vec4 defaultPos = texture2D(textureDefaultPosition, uv);

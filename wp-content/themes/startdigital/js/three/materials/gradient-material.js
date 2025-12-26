@@ -60,8 +60,8 @@ class GradientMaterial extends THREE.ShaderMaterial {
 					vec2 uv = gl_FragCoord.xy / resolution.xy;
 
 					// Define the gradient colors (0x030030 to 0x02001B)
-					vec3 topColor = vec3(3.0/255.0, 0.0, 48.0/255.0);
-					vec3 bottomColor = vec3(2.0/255.0, 0.0, 20.0/255.0);
+					vec3 topColor = vec3(0.012,0.,0.188);
+					vec3 bottomColor = vec3(0.008,0.,0.106);
 
 					// Create base gradient from top to bottom
 					vec3 gradient = mix(bottomColor, topColor, uv.y);
@@ -75,10 +75,10 @@ class GradientMaterial extends THREE.ShaderMaterial {
 					float grain = random(uvrandom) * 0.1;
 
 					// Mix noise and grain with gradient
-					vec3 gradientWithEffects = gradient + (noiseValue - 0.5) * 0.2 + grain;
+					vec3 gradientWithEffects = gradient + (noiseValue - 0.5) * 0.2;
 
 					// Transition to solid bottom color based on progress
-					vec3 color = mix(gradientWithEffects, (bottomColor + grain), progress);
+					vec3 color = mix(gradientWithEffects, (bottomColor), progress);
 
 					gl_FragColor = vec4(color, 1.0);
 				}

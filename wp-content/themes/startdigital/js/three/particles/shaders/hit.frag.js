@@ -17,7 +17,7 @@ void main() {
 
 	// Calculate distance to mouse - radius scales with velocity
 	float mouseDist = length(position - mouse3d);
-	float mouseRadius = 40.0 + mouseVelocity * 4.0;
+	float mouseRadius = 40.0 + mouseVelocity * 5.0;
 
 	// Add hit intensity when near mouse - stronger with velocity
 	float newHit = 0.0;

@@ -55,7 +55,12 @@
                     "media_upload": 1,
                     "delay": 0
                 }
-            ]
+            ],
+            "acfe_seamless_style": 0,
+            "acfe_group_modal": 0,
+            "acfe_group_modal_close": 0,
+            "acfe_group_modal_button": "",
+            "acfe_group_modal_size": "large"
         },
         {
             "key": "field_68a1c467cd252",
@@ -126,7 +131,12 @@
                     },
                     "return_format": "array"
                 }
-            ]
+            ],
+            "acfe_seamless_style": 0,
+            "acfe_group_modal": 0,
+            "acfe_group_modal_close": 0,
+            "acfe_group_modal_button": "",
+            "acfe_group_modal_size": "large"
         },
         {
             "key": "field_68a1c4a8cd257",
@@ -245,6 +255,27 @@
                             "parent_repeater": "field_68a1c4d8cd25b"
                         },
                         {
+                            "key": "field_694cc35af2419",
+                            "label": "Content",
+                            "name": "content",
+                            "aria-label": "",
+                            "type": "wysiwyg",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "tabs": "all",
+                            "toolbar": "full",
+                            "media_upload": 1,
+                            "delay": 0,
+                            "parent_repeater": "field_68a1c4d8cd25b"
+                        },
+                        {
                             "key": "field_68a1c4f6cd25e",
                             "label": "Subservice",
                             "name": "subservice",
@@ -288,6 +319,7 @@
                                     "parent_repeater": "field_68a1c4f6cd25e"
                                 }
                             ],
+                            "acfe_repeater_stylised_button": 0,
                             "parent_repeater": "field_68a1c4d8cd25b"
                         },
                         {
@@ -307,7 +339,8 @@
                             "return_format": "array",
                             "parent_repeater": "field_68a1c4d8cd25b"
                         }
-                    ]
+                    ],
+                    "acfe_repeater_stylised_button": 0
                 },
                 {
                     "key": "field_68a317f49f4f6",
@@ -325,7 +358,12 @@
                     },
                     "return_format": "array"
                 }
-            ]
+            ],
+            "acfe_seamless_style": 0,
+            "acfe_group_modal": 0,
+            "acfe_group_modal_close": 0,
+            "acfe_group_modal_button": "",
+            "acfe_group_modal_size": "large"
         },
         {
             "key": "field_68a1c536a08fd",
@@ -406,9 +444,17 @@
                     "allow_null": 0,
                     "bidirectional": 0,
                     "ui": 1,
-                    "bidirectional_target": []
+                    "bidirectional_target": [],
+                    "save_custom": 0,
+                    "save_post_type": "",
+                    "save_post_status": ""
                 }
-            ]
+            ],
+            "acfe_seamless_style": 0,
+            "acfe_group_modal": 0,
+            "acfe_group_modal_close": 0,
+            "acfe_group_modal_button": "",
+            "acfe_group_modal_size": "large"
         },
         {
             "key": "field_68a1c5d93635a",
@@ -483,7 +529,12 @@
                     "media_upload": 1,
                     "delay": 0
                 }
-            ]
+            ],
+            "acfe_seamless_style": 0,
+            "acfe_group_modal": 0,
+            "acfe_group_modal_close": 0,
+            "acfe_group_modal_button": "",
+            "acfe_group_modal_size": "large"
         }
     ],
     "location": [
@@ -506,5 +557,12 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1759560246
+    "acfe_display_title": "",
+    "acfe_autosync": [
+        "json"
+    ],
+    "acfe_form": 0,
+    "acfe_meta": "",
+    "acfe_note": "",
+    "modified": 1766638435
 }

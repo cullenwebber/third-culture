@@ -84,16 +84,7 @@ class HomeScene extends BaseScene {
 
 		// Animate h1 to top left using ScrollTrigger
 		this.tl
-			// .to('#hero-section', {
-			// 	x: '-75vw',
-			// })
-			// .from(
-			// 	'#about-scene',
-			// 	{
-			// 		x: '75vw',
-			// 	},
-			// 	'<='
-			// )
+
 			.to(
 				this.gradientMaterial.uniforms.progress,
 				{
@@ -233,15 +224,17 @@ class HomeScene extends BaseScene {
 					// Setup hover interaction
 					this.calculateFragmentCentroids()
 
+					this.logoEl = document.querySelector('#hero-element')
+
 					// Track logo to h1 element using containerTracker
 					this.containerTracker.addTrackedObject('logo', {
 						object3D: this.logo,
-						htmlContainer: this.h1Element,
+						htmlContainer: this.logoEl,
 						originalDimensions: {
 							width: originalWidth,
 							height: originalHeight,
 						},
-						scaleMultiplier: 0.35,
+						scaleMultiplier: 0.75,
 						scalingMode: 'contain',
 						offsetZ: 0.75,
 					})
@@ -260,13 +253,13 @@ class HomeScene extends BaseScene {
 	createMouseListeners() {
 		if (!this.logo || !this.logoFragments.length) return
 
-		this.h1Element.addEventListener('mouseenter', () => {
+		this.logoEl.addEventListener('mouseenter', () => {
 			if (this.isHovering) return
 			this.isHovering = true
 			this.explodeFragments()
 		})
 
-		this.h1Element.addEventListener('mouseleave', () => {
+		this.logoEl.addEventListener('mouseleave', () => {
 			if (!this.isHovering) return
 			this.isHovering = false
 			this.implodeFragments()

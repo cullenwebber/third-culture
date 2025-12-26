@@ -21,7 +21,7 @@ class HomeProjectsScene extends BaseScene {
 		this.projectsGroup = new THREE.Group()
 		this.scene.add(this.projectsGroup)
 		this.spiralRadius = 2.2
-		this.spiralHeight = 16
+		this.projectSpacing = 3.5 // Vertical spacing between each project
 		this.scrollProgress = 0
 		this.projectTitles = [] // Store WebGLText instances for each project
 	}
@@ -79,14 +79,21 @@ class HomeProjectsScene extends BaseScene {
 
 		if (projectCount === 0) return
 
+		// Calculate spiral height based on number of projects
+		this.spiralHeight = (projectCount - 1) * this.projectSpacing
+
 		// Create spiral of projects
 		const loadPromises = []
 
+		// Calculate starting angle so the top project is always at the same position
+		const targetTopAngle = Math.PI / 2 // Desired angle for the top project (90 degrees)
+		const topProjectIndex = projectCount - 1
+		const startAngle = targetTopAngle - topProjectIndex * Math.PI
+
 		projectContainers.forEach((container, index) => {
 			// Calculate spiral position - each image is 180 degrees from the previous
-			const angle = index * Math.PI + Math.PI / 2 // 180 degrees per item
-			const t = index / (projectCount - 1 || 1) // Normalize to 0-1 for height
-			const height = t * this.spiralHeight - this.spiralHeight / 2
+			const angle = index * Math.PI + startAngle // 180 degrees per item
+			const height = index * this.projectSpacing - this.spiralHeight / 2
 
 			// Get image
 			const img = container.querySelector('img')
@@ -255,15 +262,26 @@ class HomeProjectsScene extends BaseScene {
 		if (!container) return
 
 		const projectCount = this.projectsGroup.children.length
-		// Add extra rotations to fill the extended scroll range
-		const totalRotations = projectCount / 2 + 1 // Add 1 extra rotation
 
-		// Extend the vertical movement range to match - reduce extension for better sync
-		const heightExtension = this.spiralHeight * 0.2 // 25% extension on each end
-		const startGroupY = -this.spiralHeight / 2 - heightExtension // Start higher
-		const endGroupY = this.spiralHeight / 2 + heightExtension // End lower
+		// Content spans (projectCount - 1) gaps, plus extra at each end
+		const totalRotation = (projectCount - 1) * Math.PI
 
-		// Animate the entire projects group rotation
+		const startRotation = 0
+		const endRotation = startRotation + totalRotation
+
+		const startY = -this.spiralHeight / 2
+		const endY = this.spiralHeight / 2
+
+		// Calculate relative durations for each phase based on scroll distances
+		const viewportHeight = window.innerHeight
+		const containerHeight = container.offsetHeight
+
+		const phase1Duration = viewportHeight // top bottom -> top top
+		const phase2Duration = containerHeight - viewportHeight // top top -> bottom bottom
+		const phase3Duration = viewportHeight // bottom bottom -> bottom top
+
+		const { height } = this.getFrustumDimensions()
+
 		this.tl = gsap.timeline({
 			scrollTrigger: {
 				trigger: container,
@@ -274,40 +292,79 @@ class HomeProjectsScene extends BaseScene {
 			},
 		})
 
-		// Rotate the group and move it vertically simultaneously
-		this.tl
-			.fromTo(
-				this.projectsGroup.rotation,
-				{ y: 0 },
-				{
-					y: Math.PI * 2 * totalRotations - Math.PI, // Full rotations needed
-					ease: 'none',
-				},
-				0
-			)
-			.fromTo(
-				this.projectsGroup.position,
-				{ y: startGroupY }, // Start at top
-				{
-					y: endGroupY, // Move to bottom
-					ease: 'none',
-				},
-				0
-			)
+		// Phase 1: Intro rotation (top bottom -> top top)
+		this.tl.fromTo(
+			this.projectsGroup.rotation,
+			{ y: -Math.PI },
+			{ y: startRotation, ease: 'none', duration: phase1Duration },
+			0
+		)
 
-		this.tl2 = gsap.timeline({
-			scrollTrigger: {
-				trigger: container,
-				start: 'top top',
-				end: 'bottom bottom',
-				scrub: true,
-				ease: 'none',
-				onUpdate: (self) => {
-					this.scrollProgress = self.progress
-					this.backgroundMaterial.uniforms.uScroll.value = -self.progress * 2.0
-				},
+		this.tl.fromTo(
+			this.projectsGroup.position,
+			{ y: startY - this.projectSpacing },
+			{ y: startY, ease: 'none', duration: phase1Duration },
+			'<='
+		)
+
+		this.tl.fromTo(
+			this.centerCube.position,
+			{ y: height },
+			{ y: 0, ease: 'none', duration: phase1Duration },
+			'<='
+		)
+		this.tl.fromTo(
+			this.pyramid.position,
+			{ y: height },
+			{ y: 0, ease: 'none', duration: phase1Duration },
+			'<='
+		)
+
+		let that = this
+		// Phase 2: Main animation (top top -> bottom bottom)
+		this.tl.to(this.projectsGroup.rotation, {
+			y: endRotation,
+			ease: 'none',
+			duration: phase2Duration,
+			onUpdate: function () {
+				const progress = this.progress()
+				that.backgroundMaterial.uniforms.uScroll.value = -progress * 2.0
 			},
 		})
+
+		this.tl.fromTo(
+			this.projectsGroup.position,
+			{ y: startY },
+			{ y: endY, ease: 'none', duration: phase2Duration },
+			'<='
+		)
+
+		// Phase 3: Outro rotation (bottom bottom -> bottom top)
+		this.tl.to(this.projectsGroup.rotation, {
+			y: endRotation + Math.PI,
+			ease: 'none',
+			duration: phase3Duration,
+		})
+
+		this.tl.fromTo(
+			this.projectsGroup.position,
+			{ y: endY },
+			{ y: endY + this.projectSpacing, ease: 'none', duration: phase3Duration },
+			'<='
+		)
+
+		this.tl.fromTo(
+			this.centerCube.position,
+			{ y: 0 },
+			{ y: -height, ease: 'none', duration: phase1Duration },
+			'<='
+		)
+		this.tl.fromTo(
+			this.pyramid.position,
+			{ y: 0 },
+			{ y: -height, ease: 'none', duration: phase1Duration },
+			'<='
+		)
 	}
 
 	animate(deltaTime) {

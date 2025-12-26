@@ -7,6 +7,7 @@ import Particles from '../particles/particles.js'
 import Simulator from '../particles/simulator.js'
 import { getStaticPath } from '../utils.js'
 import { getLenis } from '../../utils/smooth-scroll.js'
+import ScrollPinnedObject from '../utils/ScrollPinnedObject.js'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -53,6 +54,9 @@ class HomeCapabilitiesScene extends BaseScene {
 		// Create particles (hidden until model loads)
 		this.particles = new Particles(this.simulator, textureSize, textureSize)
 		this.particles.container.visible = false
+
+		// Disable frustum culling to prevent particles from disappearing when partially offscreen
+		this.particles.mesh.frustumCulled = false
 
 		this.scene.add(this.particles.container)
 
@@ -139,6 +143,19 @@ class HomeCapabilitiesScene extends BaseScene {
 					this.transitionToShape(prevShape)
 				},
 			})
+		})
+
+		// Pin particles to center of viewport during scroll
+		const container = document.querySelector('#home-capabilities-section')
+		const { height } = this.getFrustumDimensions()
+
+		this.pinnedParticles = new ScrollPinnedObject(this.particles.container, {
+			container: container,
+			camera: this.camera,
+			lenis: this.lenis,
+			startYOffset: height,
+			centerY: 0,
+			endYOffset: -height,
 		})
 	}
 
@@ -229,7 +246,7 @@ class HomeCapabilitiesScene extends BaseScene {
 		// Update mouse 3D position
 		this.updateMouse3d()
 
-		// Calculate velocity normalized by time (units per second)
+		// Calculate velocity from mouse position
 		const dist = this.mouse3dLocal.distanceTo(prevPos)
 		if (dist < 500 && deltaTime > 0) {
 			const velocityPerSecond = dist / deltaTime
@@ -243,7 +260,7 @@ class HomeCapabilitiesScene extends BaseScene {
 		this.particles.container.rotation.y +=
 			this.direction * deltaTime * 0.3 + velocity * 0.0045
 
-		// Update simulator with mouse position and velocity (in local space)
+		// Update simulator with mouse position (in local space)
 		this.simulator.update(deltaTime, {
 			...this.particleSettings,
 			mouse3d: this.mouse3dLocal,
@@ -254,6 +271,15 @@ class HomeCapabilitiesScene extends BaseScene {
 		this.particles.update(deltaTime)
 	}
 
+	getFrustumDimensions(zDifference = 0) {
+		const distance = this.camera.position.z - zDifference
+		const fov = this.camera.fov * (Math.PI / 180)
+		const aspect = this.camera.aspect
+		const height = 2 * Math.tan(fov / 2) * distance
+		const width = height * aspect
+		return { width, height }
+	}
+
 	dispose() {
 		// Kill all ScrollTriggers for this scene
 		ScrollTrigger.getAll().forEach((st) => st.kill())
@@ -261,6 +287,11 @@ class HomeCapabilitiesScene extends BaseScene {
 		// Remove mouse listener
 		if (this.onMouseMove) {
 			window.removeEventListener('mousemove', this.onMouseMove)
+		}
+
+		// Clean up pinned particles
+		if (this.pinnedParticles) {
+			this.pinnedParticles.destroy()
 		}
 
 		// Dispose precomputed textures

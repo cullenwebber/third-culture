@@ -116,6 +116,7 @@ class Simulator {
 				texturePosition: { value: null },
 				textureDefaultPosition: { value: null },
 				textureTargetPosition: { value: null },
+				textureHit: { value: null },
 				mouse3d: { value: new THREE.Vector3() },
 				mouseVelocity: { value: 0.0 },
 				speed: { value: 1.0 },
@@ -142,7 +143,7 @@ class Simulator {
 				textureHit: { value: null },
 				mouse3d: { value: new THREE.Vector3() },
 				mouseVelocity: { value: 0.0 },
-				decay: { value: 0.97 },
+				decay: { value: 0.98 },
 			},
 			vertexShader: quadVert,
 			fragmentShader: hitFrag,
@@ -394,6 +395,7 @@ class Simulator {
 		uniforms.textureTargetPosition.value =
 			this.textureTargetPosition || this.textureDefaultPosition
 		uniforms.texturePosition.value = this.prevPositionRenderTarget.texture
+		uniforms.textureHit.value = this.hitRenderTarget?.texture || null
 		uniforms.morphProgress.value = this.morphProgress
 		uniforms.time.value += dt * 0.001
 

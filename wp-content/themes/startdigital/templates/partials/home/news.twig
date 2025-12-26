@@ -1,66 +1,73 @@
 {% set news_posts = fn('get_news_posts', 4) %}
-{% set length = news_posts|length %}
 
-<section id="home-news-trigger" class="flex flex-col gap-8 justify-center overflow-hidden">
-    <div class="container flex flex-col relative z-40">
-        <div class="flex flex-col gap-8 lg:gap-16 xl:gap-32 relative items-center">
-            <div class="flex flex-col gap-4 sm:gap-8 xl:gap-16 relative z-40 max-w-[1900px] w-full">
-                <div split-type="chars" class="block-content relative w-fit">
-                    {{ post.news.title }}
-                    <h6 class="is-superscript absolute left-full top-1/4 w-fit whitespace-nowrap">
-                        (
-                        {{ length }}
-                        )
-                    </h6>
-                </div>
-                <div class="flex flex-col gap-12 self-end">
-                    <div class="block-content max-w-[700px] xl:max-w-[1150px] indent-16 sm:indent-32">
-                        {{ post.news.content }}
-                    </div>
-                </div>
+<section class="flex flex-col gap-8 justify-center overflow-hidden bg-white relative z-40 text-navy">
+	<div class="container flex flex-col relative z-40 gap-20">
+		<div class="flex flex-row justify-between items-end">
+			<div class="block-content relative w-fit">
+				<div class="supertitle text-paragraphDark flex flex-row items-center gap-2">
+					<div class="size-2.5 bg-paragraphDark blink"></div>Whats been happening
+				</div>
+				{{ post.news.title }}
+			</div>
 
-            </div>
-        </div>
+			<div class="block-content max-w-[500px] text-paragraphDark text-pretty">
+				{{ post.news.content }}
+			</div>
+		</div>
+		<div class="flex flex-col gap-8">
+			<div id="news-swiper-container" class="swiper w-full !overflow-visible">
+				{% include 'icons/mask.twig' with {
+					class: 'sr-only',
+					id: 'news-mask'
+				} %}
+				<div class="swiper-wrapper">
+					{% for news in news_posts %}
+						<div class="swiper-slide">
+							<a href="{{ news.link }}"
+								class="post-tease flex flex-col w-full gap-8 p-8 rounded-3xl overflow-hidden aspect-3/4 relative"
+								style="clip-path: url('#news-mask');">
+								<img src="{{ get_image(news.thumbnail).src }}"
+									alt="{{ news.thumbnail.alt }}"
+									class="w-full object-cover absolute top-0 left-0 h-full" />
+								<div class="absolute bottom-0 left-0 bg-gradient-to-t from-darkBlue to bg-darkBlue/0 w-full h-1/2"></div>
 
-    </div>
-    <div id="home-swiper-trigger" class="flex flex-col relative z-40 post-teases container w-full max-sm:w-full max-lg:w-[80%] xl:w-[90%] 4xl:w-3/4">
-        {% for news in news_posts %}
-            <article class="post-tease flex flex-col lg:flex-row lg:items-center w-full gap-12 xl:gap-20 py-24 xl:py-32">
-                <a href="{{ news.link }}" class="image-container relative overflow-hidden aspect-4/3 w-full">
-                    <img src="{{ get_image(news.thumbnail).src }}" alt="{{ news.thumbnail.alt }}" class="w-full object-cover opacity-0" />
-                </a>
-                <div class="flex flex-col lg:items-center gap-2 px-2 w-full 3xl:w-3/4">
-                    <div class="news-content flex flex-col gap-4 max-w-[550px] lg:max-w-[700px]">
-                        <div class="overflow-hidden">
-                            <div class="flex flex-row gap-8 items-center date-content">
-                                <span class="">
-                                    {{ news.date|date('j M') }}
-                                </span>
-                                <div class="size-2 bg-black rounded-[1px]"></div>
-                                <span class="">
-                                    {{ news.terms('category')[0].name ?: 'News' }}
-                                </span>
-                            </div>
-                        </div>
-                        <h5 class="is-h4">
-                            {{ news.title }}
-                        </h5>
-                        <div class="block-content indent-16">
-                            <p class="text-base max-w-[450px] my-4">
-                                You see, we’re the children of explorers, diplomats, migrants, and missionaries — outsiders who learned how to adapt and find our place within different cultural contexts.
-                            </p>
-                        </div>
-                        <div class="overflow-hidden">
-                            <div class="btn-container">
-                                {% include "partials/button.twig" with { title: 'Read More' , link: news.link } %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </article>
-        {% endfor %}
-    </div>
-    <div class="container relative z-40 flex flex-col items-center">
-        {% include "partials/big-button.twig" with { title: 'All Articles', link: '/news' } %}
-    </div>
+								<div class="relative flex flex-col flex-grow justify-between gap-4 z-20">
+									<div class="flex flex-row gap-2 items-center date-content">
+										<span class="bg-darkBlue rounded-lg py-1 px-4 text-white">
+											{{ news.terms('category')[0].name ? : 'News' }}
+										</span>
+										<span class="bg-white rounded-lg py-1 px-4 text-">{{ news.date|date('j M') }}</span>
+									</div>
+									<div class="w-3/4 flex flex-col gap-4">
+										<h5 class="is-h4 text-white text-pretty">
+											{{ news.title }}
+										</h5>
+										<div class="flex flex-row items-center gap-2 text-paragraphLight">
+											Read more{% include 'icons/chevron.twig' with {
+												class: 'size-3'
+											} %}
+										</div>
+									</div>
+								</div>
+							</a>
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+			<div class="flex flex-row gap-2">
+				<div id="news-swiper-prev"
+					class="cursor-pointer size-16 flex justify-center items-center bg-darkBlue rounded-lg hover:bg-navy transition active:scale-95">
+					{% include 'icons/chevron.twig' with {
+						class: 'size-4 text-white rotate-180 -translate-x-0.5'
+					} %}
+				</div>
+				<div id="news-swiper-next"
+					class="cursor-pointer size-16 flex justify-center items-center bg-darkBlue rounded-lg hover:bg-navy transition active:scale-95">
+					{% include 'icons/chevron.twig' with {
+						class: 'size-4 text-white translate-x-0.5'
+					} %}
+				</div>
+			</div>
+		</div>
+	</div>
 </section>

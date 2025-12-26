@@ -14,6 +14,7 @@ module.exports = {
 				black: '#232323',
 				darkBlue: '#030030',
 				navy: '#02001B',
+				overlay: '#1A1835',
 				lightBlue: '#B3AFED',
 				paragraphLight: '#AAA9B7',
 				paragraphDark: '#51506A',

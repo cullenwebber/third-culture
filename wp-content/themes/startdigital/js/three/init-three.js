@@ -3,6 +3,7 @@ import HeroScene from './scenes/home-scene'
 import HomeProjectsScene from './scenes/home-projects-scene'
 import { createCanvas } from './utils'
 import HomeCapabilitiesScene from './scenes/home-capabilities-scene'
+import FooterScene from './scenes/footer-scene'
 
 function initThree() {
 	const heroContainer = document.querySelector('#frontpage-hero')
@@ -10,7 +11,7 @@ function initThree() {
 	const capabilitiesContainer = document.querySelector(
 		'#home-capabilities-container'
 	)
-
+	const footerContainer = document.querySelector('footer')
 	const canvas = createCanvas()
 	const sceneManager = new SceneManager(canvas)
 
@@ -30,6 +31,9 @@ function initThree() {
 			capabilitiesContainer,
 			2
 		)
+
+	if (footerContainer)
+		sceneManager.addScene(FooterScene, 'footer', footerContainer, 3)
 
 	sceneManager.start()
 }
