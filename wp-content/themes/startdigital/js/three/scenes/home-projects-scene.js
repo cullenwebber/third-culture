@@ -24,6 +24,12 @@ class HomeProjectsScene extends BaseScene {
 		this.projectSpacing = 3.5 // Vertical spacing between each project
 		this.scrollProgress = 0
 		this.projectTitles = [] // Store WebGLText instances for each project
+		this.projectPlanes = [] // Store project planes for hover effect
+
+		// Mouse tracking
+		this.mouse = new THREE.Vector2(9999, 9999)
+		this.raycaster = new THREE.Raycaster()
+		this.hoveredProject = null
 	}
 
 	createMaterials() {
@@ -145,6 +151,30 @@ class HomeProjectsScene extends BaseScene {
 						const plane = new THREE.Mesh(planeGeometry, planeMaterial)
 						projectGroup.add(plane)
 
+						// Get link from container - check if container is a link or contains one
+						let link = null
+						if (container.tagName === 'A') {
+							link = container.href
+						} else {
+							const linkElement = container.querySelector('a')
+							link = linkElement ? linkElement.href : null
+						}
+
+						console.log('Project card created:', {
+							index,
+							link,
+							hasLink: !!link,
+							containerTag: container.tagName,
+						})
+
+						// Store plane for hover effect and click
+						this.projectPlanes.push({
+							plane,
+							material: planeMaterial,
+							link,
+							container,
+						})
+
 						// Add project title and subtitle at the bottom of the plane
 						const titleElement = container.querySelector('[project-grid-title]')
 						const subtitleElement = container.querySelector(
@@ -255,6 +285,7 @@ class HomeProjectsScene extends BaseScene {
 		await Promise.all(loadPromises)
 
 		this.setupScrollAnimation()
+		this.createMouseListeners()
 	}
 
 	setupScrollAnimation() {
@@ -328,7 +359,7 @@ class HomeProjectsScene extends BaseScene {
 			duration: phase2Duration,
 			onUpdate: function () {
 				const progress = this.progress()
-				that.backgroundMaterial.uniforms.uScroll.value = -progress * 2.0
+				that.backgroundMaterial.uniforms.uScroll.value = -progress * 1.0
 			},
 		})
 
@@ -367,10 +398,105 @@ class HomeProjectsScene extends BaseScene {
 		)
 	}
 
+	createMouseListeners() {
+		this.onMouseMove = (event) => {
+			const rect = this.container.getBoundingClientRect()
+			this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+			this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+		}
+
+		this.onClick = (event) => {
+			if (this.hoveredProject && this.hoveredProject.link) {
+				window.location.href = this.hoveredProject.link
+			}
+		}
+
+		window.addEventListener('mousemove', this.onMouseMove)
+		document
+			.querySelector('#home-projects-inner')
+			.addEventListener('click', this.onClick)
+	}
+
+	updateHover() {
+		if (this.projectPlanes.length === 0) return
+
+		// Update raycaster
+		this.raycaster.setFromCamera(this.mouse, this.camera)
+
+		// Check for intersections - raycast recursively through group hierarchy
+		const intersects = this.raycaster.intersectObjects(
+			this.projectsGroup.children,
+			true
+		)
+
+		// Filter for only our plane meshes
+		const planeIntersects = intersects.filter((intersect) => {
+			return this.projectPlanes.some((p) => p.plane === intersect.object)
+		})
+
+		if (planeIntersects.length > 0) {
+			const intersectedPlane = planeIntersects[0].object
+			const projectData = this.projectPlanes.find(
+				(p) => p.plane === intersectedPlane
+			)
+
+			if (projectData && projectData !== this.hoveredProject) {
+				// Unhover previous
+				if (this.hoveredProject) {
+					gsap.to(this.hoveredProject.material.uniforms.uBulge, {
+						value: 0,
+						duration: 0.4,
+						ease: 'power2.out',
+					})
+				}
+
+				// Hover new
+				this.hoveredProject = projectData
+
+				// Update cursor
+				document.body.style.cursor = 'pointer'
+
+				// Update mouse position in UV space
+				const uv = planeIntersects[0].uv
+				if (uv) {
+					projectData.material.uniforms.uMouse.value.set(uv.x, uv.y)
+				}
+
+				gsap.to(projectData.material.uniforms.uBulge, {
+					value: 1,
+					duration: 0.4,
+					ease: 'power2.out',
+				})
+			} else if (projectData) {
+				// Update mouse position
+				const uv = planeIntersects[0].uv
+				if (uv) {
+					projectData.material.uniforms.uMouse.value.set(uv.x, uv.y)
+				}
+			}
+		} else {
+			// No intersection - unhover
+			if (this.hoveredProject) {
+				gsap.to(this.hoveredProject.material.uniforms.uBulge, {
+					value: 0,
+					duration: 0.4,
+					ease: 'power2.out',
+				})
+				this.hoveredProject = null
+
+				// Reset cursor
+				document.body.style.cursor = ''
+			}
+		}
+	}
+
 	animate(deltaTime) {
 		if (!this.isVisible) return
 
 		this.time += deltaTime
+
+		// Update hover effect
+		this.updateHover()
 
 		// Rotate center cube
 		if (this.centerCube) {
@@ -387,6 +513,23 @@ class HomeProjectsScene extends BaseScene {
 		const height = 2 * Math.tan(fov / 2) * distance
 		const width = height * aspect
 		return { width, height }
+	}
+
+	dispose() {
+		// Remove mouse listeners
+		if (this.onMouseMove) {
+			window.removeEventListener('mousemove', this.onMouseMove)
+		}
+		if (this.onClick) {
+			this.container.removeEventListener('click', this.onClick)
+		}
+
+		// Reset cursor
+		if (this.container) {
+			this.container.style.cursor = ''
+		}
+
+		super.dispose()
 	}
 }
 

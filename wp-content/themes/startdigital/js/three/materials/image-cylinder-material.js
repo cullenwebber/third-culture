@@ -26,6 +26,13 @@ class ImageCylinderMaterial extends THREE.ShaderMaterial {
 			uTextureSize: { value: uTextureSize ?? new THREE.Vector2(1, 1) },
 			uQuadSize: { value: uQuadSize ?? new THREE.Vector2(1, 1) },
 			uBackColor: { value: uBackColor ?? new THREE.Color('#18154E') },
+			// Bulge hover effect
+			uMouse: { value: new THREE.Vector2(0.5, 0.5) },
+			uMouseIntro: { value: new THREE.Vector2(0.5, 0.5) },
+			uIntro: { value: 1.0 },
+			uBulgeRadius: { value: 0.9 },
+			uBulgeStrength: { value: 1.0 },
+			uBulge: { value: 0.0 }, // 0 = no effect, 1 = full effect
 		}
 
 		// Call parent constructor with material options
@@ -78,8 +85,29 @@ class ImageCylinderMaterial extends THREE.ShaderMaterial {
 		return /* glsl */ `
             uniform sampler2D uTexture;
             uniform vec3 uBackColor;
+            uniform vec2 uMouse;
+            uniform vec2 uMouseIntro;
+            uniform float uIntro;
+            uniform float uBulgeRadius;
+            uniform float uBulgeStrength;
+            uniform float uBulge;
             varying vec2 vUv;
             varying vec2 vUvCover;
+
+            // Bulge effect
+            vec2 bulge(vec2 uv, vec2 center) {
+                uv -= center; // center to mouse
+
+                float dist = length(uv) / uBulgeRadius; // amount of distortion based on mouse pos
+                float distPow = pow(dist, 4.); // exponential as you are far from the mouse
+                float strengthAmount = uBulgeStrength / (1.0 + distPow); // strength
+
+                uv *= (1. - uBulge) + uBulge * strengthAmount; // use uBulge to smoothly reset/add effect
+
+                uv += center; // reset pos
+
+                return uv;
+            }
 
             // SDF for rounded box
             float sdRoundedBox(vec2 p, vec2 b, float r) {
@@ -106,6 +134,10 @@ class ImageCylinderMaterial extends THREE.ShaderMaterial {
             }
 
             void main() {
+                // Apply bulge effect to UVs
+                vec2 mixMouse = mix(uMouseIntro, uMouse, uIntro);
+                vec2 bulgedUV = bulge(vUvCover, mixMouse);
+
                 // Create custom shape with SDF (calculate once)
                 vec2 p = vUv - 0.5;
 
@@ -128,15 +160,15 @@ class ImageCylinderMaterial extends THREE.ShaderMaterial {
                 // Determine color based on face
                 vec4 color;
                 if (gl_FrontFacing) {
-                    // Front face - show texture
-                    color = texture2D(uTexture, vUvCover);
+                    // Front face - show texture with bulge effect
+                    color = texture2D(uTexture, bulgedUV);
                     color.a *= alpha;
 
                     // Add gradient from halfway down to bottom
                     vec3 gradientColor = vec3(2.0/255.0, 0.0, 27.0/255.0); // 0x02001B
                     float gradientStart = 0.5; // Start halfway down
                     float gradientEnd = 0.0;   // End at bottom
-                    float gradientFactor = smoothstep(gradientStart, gradientEnd, vUvCover.y);
+                    float gradientFactor = smoothstep(gradientStart, gradientEnd, vUv.y);
 
                     // Mix texture with gradient color
                     color.rgb = mix(color.rgb, gradientColor, gradientFactor);

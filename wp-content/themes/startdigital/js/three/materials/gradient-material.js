@@ -7,6 +7,10 @@ class GradientMaterial extends THREE.ShaderMaterial {
 			time: { value: 0 },
 			resolution: { value: new THREE.Vector2() },
 			progress: { value: 0 },
+			gridSize: { value: 90.0 },
+			dotSize: { value: 0.08 },
+			dotOpacity: { value: 0.15 },
+			uScroll: { value: 0 },
 		}
 
 		this.vertexShader = this.getVertexShader()
@@ -19,7 +23,10 @@ class GradientMaterial extends THREE.ShaderMaterial {
 
 	getVertexShader() {
 		return /* glsl */ `
+				varying vec2 vUv;
+
 				void main() {
+					vUv = uv;
 					gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 				}
 			`
@@ -30,6 +37,11 @@ class GradientMaterial extends THREE.ShaderMaterial {
 				uniform float time;
 				uniform vec2 resolution;
 				uniform float progress;
+				uniform float gridSize;
+				uniform float dotSize;
+				uniform float dotOpacity;
+				uniform float uScroll;
+				varying vec2 vUv;
 
 				// Random function from DotScreenShader
 				float random(vec2 p) {
@@ -56,6 +68,12 @@ class GradientMaterial extends THREE.ShaderMaterial {
 					return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
 				}
 
+				// SDF for a square/box shape
+				float sdBox(vec2 p, vec2 size) {
+					vec2 d = abs(p) - size;
+					return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+				}
+
 				void main() {
 					vec2 uv = gl_FragCoord.xy / resolution.xy;
 
@@ -77,8 +95,55 @@ class GradientMaterial extends THREE.ShaderMaterial {
 					// Mix noise and grain with gradient
 					vec3 gradientWithEffects = gradient + (noiseValue - 0.5) * 0.2;
 
+					// === SQUARE DOT GRID ===
+					// Calculate aspect ratio from UV derivatives
+					vec2 dotUv = vUv;
+					dotUv.y += uScroll; // Scroll the grid
+					vec2 ddx_uv = dFdx(dotUv);
+					vec2 ddy_uv = dFdy(dotUv);
+					float aspectRatio = length(ddx_uv) / length(ddy_uv);
+
+					// Adjust UV coordinates to maintain square grid
+					vec2 adjustedUv;
+					if (aspectRatio < 1.0) {
+						adjustedUv = vec2(dotUv.x, dotUv.y * aspectRatio);
+					} else {
+						adjustedUv = vec2(dotUv.x / aspectRatio, dotUv.y);
+					}
+
+					// Scale by grid size
+					adjustedUv *= gridSize;
+
+					// Create repeating 7x7 pattern for dots (same spacing as crosses)
+					vec2 patternUv = mod(adjustedUv, 7.0);
+					vec2 patternCell = floor(patternUv);
+					vec2 patternLocal = fract(patternUv);
+
+					float dotPattern = 0.0;
+
+					// Check all 4 corners of current cell in the pattern
+					for (int y = 0; y <= 1; y++) {
+						for (int x = 0; x <= 1; x++) {
+							vec2 corner = patternCell + vec2(float(x), float(y));
+							vec2 wrappedCorner = mod(corner, 7.0);
+
+							// Place dot at (0,0) of each 7x7 tile
+							if (abs(wrappedCorner.x) < 0.01 && abs(wrappedCorner.y) < 0.01) {
+								vec2 cornerLocalPos = patternLocal - vec2(float(x), float(y));
+
+								// Square dot using SDF
+								float boxSDF = sdBox(cornerLocalPos, vec2(dotSize));
+								float dot = 1.0 - smoothstep(-0.001, 0.001, boxSDF);
+								dotPattern = max(dotPattern, dot);
+							}
+						}
+					}
+
+					// Apply dots to gradient (brighten the gradient where dots are)
+					vec3 colorWithDots = gradientWithEffects + vec3(dotPattern * dotOpacity);
+
 					// Transition to solid bottom color based on progress
-					vec3 color = mix(gradientWithEffects, (bottomColor), progress);
+					vec3 color = mix(colorWithDots, (bottomColor + vec3(dotPattern * dotOpacity)), progress);
 
 					gl_FragColor = vec4(color, 1.0);
 				}

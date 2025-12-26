@@ -1,16 +1,31 @@
-<div id="frontpage-hero" class="fixed top-0 left-0 h-lvh w-full"></div>
-<div id="hero-section-wrapper" class="relative z-40 overflow-hidden">
-	<section id="hero-section" class="h-lvh w-full flex flex-col items-center justify-center">
+<div id="hero-section-wrapper" class="relative z-40">
+	<div id="frontpage-hero" class="sticky top-0 left-0 h-lvh w-full"></div>
+	<section id="hero-section" class="h-lvh w-full flex flex-col items-center justify-center -mt-[100lvh]">
 		<div class="container flex flex-col items-center gap-6 w-full">
 			{% include 'icons/wordmark.twig' with {
 				class: 'h-8 text-paragraphLight'
 			} %}
 			<div class="relative">
 				<div id="hero-element"
-					class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] z-20"></div>
+					class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] 4xl:size-[650px] z-20"></div>
 				<h1 class="text-white w-fit text-center max-w-[1600px]">
 					Impact experiences for purposeful brands
 				</h1>
+			</div>
+		</div>
+	</section>
+	<section id="about-scene" class="relative z-40 min-h-lvh flex flex-col justify-center">
+		<div class="container flex flex-col gap-32 max-w-[85%] 4xl:max-w-[65%]">
+			<div class="block-content">
+				<div class="supertitle text-paragraphLight flex flex-row items-center gap-2">
+					<div class="size-2.5 bg-paragraphLight blink"></div>Who we are
+				</div>
+				<h2 class="text-white max-w-[800px] 4xl:max-w-[1000px]">
+					Full service Communications agency
+				</h2>
+			</div>
+			<div class="text-paragraphLight self-end block-content !grid grid-cols-1 md:grid-cols-2 gap-8 md:!gap-16 max-w-[400px] md:max-w-[800px] 2xl:max-w-[1050px] justify-end">
+				{{ post.about.content }}
 			</div>
 		</div>
 	</section>

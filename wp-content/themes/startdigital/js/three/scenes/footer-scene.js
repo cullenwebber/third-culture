@@ -5,11 +5,12 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { RoundedTriangleGeometry } from '../utils/RoundedTriangleGeometry.js'
 import WebGLManager from '../context-manager.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import GradientMaterial from '../materials/gradient-material.js'
+import { getLenis } from '../../utils/smooth-scroll.js'
 
 class FooterScene extends BaseScene {
 	constructor(id, container) {
 		super(id, container)
-
 		// Physics
 		this.world = null
 		this.physicsObjects = []
@@ -21,13 +22,83 @@ class FooterScene extends BaseScene {
 		this.prevMouse3d = new THREE.Vector3()
 		this.mouseVelocity = new THREE.Vector3()
 
+		// Scroll tracking
+		this.lenis = getLenis()
+		this.attractionActive = false
+		this.attractionProgress = 0 // 0 to 1, how much attraction is applied
+
+		// Random disruption
+		this.disruptionTimer = 0
+		this.disruptionInterval = 4 + Math.random() * 3 // Random 4-7 seconds
+		this.disruptionEnabled = true
+
 		// Config
 		this.cubeCount = 18
 		this.cameraDistance = 5
+
+		// Setup scroll listener
+		this.setupScrollListener()
+	}
+
+	setupScrollListener() {
+		this.lenis.on('scroll', () => {
+			this.updateScrollPosition()
+		})
+
+		// Call once on init to set initial state
+		setTimeout(() => {
+			this.updateScrollPosition()
+		}, 100)
+	}
+
+	updateScrollPosition() {
+		if (!this.physicsContainer) return
+
+		const rect = this.container.getBoundingClientRect()
+		const viewportHeight = window.innerHeight
+
+		// Calculate when footer is in view
+		const containerTop = rect.top
+		const containerCenter = rect.top + rect.height / 2
+
+		// Activate attraction when footer center hits viewport center
+		if (containerCenter < viewportHeight / 2 && !this.attractionActive) {
+			this.attractionActive = true
+		}
+
+		// Calculate progress: 0 when at 'top bottom', 1 when center hits center
+		if (containerTop < viewportHeight && containerTop > 0) {
+			// Entering phase
+			this.attractionProgress = 1 - containerTop / viewportHeight
+		} else if (containerTop <= 0) {
+			// Fully in view
+			this.attractionProgress = 1
+		} else {
+			// Not yet in view
+			this.attractionProgress = 0
+		}
+
+		// Move container to follow viewport center during scroll
+		// When footer is entering (top bottom -> top top), offset the container upward
+		const { height } = this.getFrustumDimensions()
+		let yOffset = 0
+
+		if (containerTop > 0 && containerTop < viewportHeight) {
+			// Container is entering from bottom
+			// Map containerTop (viewportHeight -> 0) to yOffset (height -> 0)
+			const progress = containerTop / viewportHeight
+			yOffset = height * progress // Shapes start slightly above, come down
+		}
+
+		this.physicsContainer.position.y = yOffset
 	}
 
 	setupScene() {
 		this.setupPhysics()
+
+		// Create container for physics objects to follow screen center
+		this.physicsContainer = new THREE.Group()
+		this.scene.add(this.physicsContainer)
 
 		this.context = new WebGLManager()
 		const environment = new RoomEnvironment()
@@ -65,7 +136,7 @@ class FooterScene extends BaseScene {
 			type: CANNON.Body.KINEMATIC,
 			material: this.mouseMaterial,
 		})
-		this.mouseBody.addShape(new CANNON.Sphere(1.5))
+		this.mouseBody.addShape(new CANNON.Sphere(1.0))
 		this.mouseBody.position.set(0, 100, 0) // Start off-screen
 		this.world.addBody(this.mouseBody)
 	}
@@ -73,12 +144,30 @@ class FooterScene extends BaseScene {
 	createObjects() {
 		const shapeSize = 0.8
 		const shapeCount = 25
-
 		for (let i = 0; i < shapeCount; i++) {
 			// Randomly choose between cube and triangle
 			const shapeType = Math.random() > 0.5 ? 'cube' : 'triangle'
 			this.createShape(shapeSize, i, shapeType)
 		}
+
+		this.createBackground()
+	}
+
+	createBackground() {
+		const { width: canvasWidth, height: canvasHeight } =
+			this.container.getBoundingClientRect()
+		this.gradientMaterial = new GradientMaterial()
+		this.gradientMaterial.uniforms.resolution.value.set(
+			canvasWidth,
+			canvasHeight
+		)
+		this.gradientMaterial.uniforms.progress.value = 0.5
+
+		const { width, height } = this.getFrustumDimensions(0)
+		const planeGeometry = new THREE.PlaneGeometry(width, height, 1, 1)
+		this.background = new THREE.Mesh(planeGeometry, this.gradientMaterial)
+		this.background.renderOrder = -1 // Render first, behind everything
+		this.scene.add(this.background)
 	}
 
 	createShape(size, index, shapeType) {
@@ -128,7 +217,7 @@ class FooterScene extends BaseScene {
 		const z = (Math.random() - 0.5) * 1.5
 
 		mesh.position.set(x, y, z)
-		this.scene.add(mesh)
+		this.physicsContainer.add(mesh)
 
 		// Cannon.js body
 		const body = new CANNON.Body({
@@ -198,34 +287,68 @@ class FooterScene extends BaseScene {
 		this.mouseVelocity.subVectors(this.mouse3d, this.prevMouse3d)
 	}
 
+	applyDisruption() {
+		const explosionStrength = 1.0 + Math.random() * 1
+
+		for (const obj of this.physicsObjects) {
+			// Random direction
+			const randomDir = new CANNON.Vec3(
+				(Math.random() - 0.5) * 2,
+				(Math.random() - 0.5) * 2,
+				(Math.random() - 0.5) * 2
+			)
+			randomDir.normalize()
+
+			// Apply explosive force
+			const force = randomDir.scale(explosionStrength)
+			obj.body.applyImpulse(force, obj.body.position)
+		}
+
+		// Set next random interval
+		this.disruptionInterval = 4 + Math.random() * 3
+		this.disruptionTimer = 0
+	}
+
 	applyForces(deltaTime) {
-		const centerStrength = 1.5
 		const mouseRepulsionRadius = 2.0
 		const mouseRepulsionStrength = 15.0
 
 		const mouseSpeed = this.mouseVelocity.length() / deltaTime
-		const velocityBoost = Math.min(mouseSpeed * 0.3, 3.0)
+		const velocityBoost = Math.min(mouseSpeed * 0.3, 5.0)
 
 		for (const obj of this.physicsObjects) {
 			const pos = obj.body.position
 
-			// Attraction to center
-			const toCenterX = -pos.x
-			const toCenterY = -pos.y
-			const toCenterZ = -pos.z
-			const distToCenter = Math.sqrt(
-				toCenterX * toCenterX + toCenterY * toCenterY + toCenterZ * toCenterZ
-			)
-
-			if (distToCenter > 0.1) {
-				// Stronger attraction when further away
-				const attractionForce = centerStrength * Math.min(distToCenter, 3.0)
-				const centerForce = new CANNON.Vec3(
-					(toCenterX / distToCenter) * attractionForce,
-					(toCenterY / distToCenter) * attractionForce,
-					(toCenterZ / distToCenter) * attractionForce
+			// Attraction to center (controlled by attractionProgress)
+			if (this.attractionProgress > 0) {
+				const toCenterX = -pos.x
+				const toCenterY = -pos.y
+				const toCenterZ = -pos.z
+				const distToCenter = Math.sqrt(
+					toCenterX * toCenterX + toCenterY * toCenterY + toCenterZ * toCenterZ
 				)
-				obj.body.applyForce(centerForce)
+
+				if (distToCenter > 0.1) {
+					// Base attraction strength
+					let centerStrength = 1.5
+
+					// When attraction becomes active, apply a strong initial burst
+					if (this.attractionActive && this.attractionProgress > 0.5) {
+						centerStrength = 8.0 // Much stronger when triggered
+					}
+
+					// Scale by progress
+					const attractionForce =
+						centerStrength *
+						Math.min(distToCenter, 3.0) *
+						this.attractionProgress
+					const centerForce = new CANNON.Vec3(
+						(toCenterX / distToCenter) * attractionForce,
+						(toCenterY / distToCenter) * attractionForce,
+						(toCenterZ / distToCenter) * attractionForce
+					)
+					obj.body.applyForce(centerForce)
+				}
 			}
 
 			// Mouse repulsion
@@ -314,9 +437,31 @@ class FooterScene extends BaseScene {
 	animate(deltaTime) {
 		if (!this.isInitialized || this.physicsObjects.length === 0) return
 
+		if (this.gradientMaterial) {
+			this.gradientMaterial.uniforms.time.value += deltaTime
+		}
+
 		this.time += deltaTime
+
+		// Random disruption timer (only when footer is visible)
+		if (this.disruptionEnabled && this.attractionProgress > 0.1) {
+			this.disruptionTimer += deltaTime
+			if (this.disruptionTimer >= this.disruptionInterval) {
+				this.applyDisruption()
+			}
+		}
+
 		this.updateMouse3d()
 		this.updatePhysics(deltaTime)
+	}
+
+	getFrustumDimensions(zDifference = 0) {
+		const distance = this.camera.position.z - zDifference
+		const fov = this.camera.fov * (Math.PI / 180)
+		const aspect = this.camera.aspect
+		const height = 2 * Math.tan(fov / 2) * distance
+		const width = height * aspect
+		return { width, height }
 	}
 
 	dispose() {

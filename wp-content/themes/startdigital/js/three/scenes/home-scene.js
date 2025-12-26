@@ -77,8 +77,9 @@ class HomeScene extends BaseScene {
 			scrollTrigger: {
 				trigger: heroSection,
 				start: 'top top',
-				end: 'bottom top',
+				end: 'bottom bottom',
 				scrub: true,
+				ease: 'none',
 			},
 		})
 
@@ -89,23 +90,15 @@ class HomeScene extends BaseScene {
 				this.gradientMaterial.uniforms.progress,
 				{
 					value: 1,
+					ease: 'none',
 				},
 				'<='
 			)
 			.to(
-				this.sphere.rotation,
+				this.gradientMaterial.uniforms.uScroll,
 				{
-					y: Math.PI / 4,
-					x: Math.PI / 8,
-				},
-				'<='
-			)
-			.to(
-				this.wireMaterial.color,
-				{
-					r: 0.0,
-					g: 0.0,
-					b: 0.03,
+					value: -0.5,
+					ease: 'none',
 				},
 				'<='
 			)
@@ -127,9 +120,6 @@ class HomeScene extends BaseScene {
 			this.h1Element,
 			this.container
 		)
-
-		let sphereGeometry = new THREE.IcosahedronGeometry(width * 2, 3)
-		this.sphere = new THREE.Mesh(sphereGeometry, this.wireMaterial)
 
 		// Load the logo
 		await this.loadLogo()

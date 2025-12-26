@@ -8,6 +8,7 @@ import Simulator from '../particles/simulator.js'
 import { getStaticPath } from '../utils.js'
 import { getLenis } from '../../utils/smooth-scroll.js'
 import ScrollPinnedObject from '../utils/ScrollPinnedObject.js'
+import GradientMaterial from '../materials/gradient-material.js'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -70,8 +71,26 @@ class HomeCapabilitiesScene extends BaseScene {
 
 		this.particles.container.visible = true
 
+		// Create background first (needed for scroll animations)
+		this.createBackground()
+
 		// Setup scroll animations
 		this.setupScrollTriggers()
+	}
+
+	createBackground() {
+		const { width: canvasWidth, height: canvasHeight } =
+			this.container.getBoundingClientRect()
+		this.gradientMaterial = new GradientMaterial()
+		this.gradientMaterial.uniforms.resolution.value.set(
+			canvasWidth,
+			canvasHeight
+		)
+		const { width, height } = this.getFrustumDimensions(0)
+		const planeGeometry = new THREE.PlaneGeometry(width, height, 1, 1)
+		this.background = new THREE.Mesh(planeGeometry, this.gradientMaterial)
+		this.background.renderOrder = -1 // Render first, behind everything
+		this.scene.add(this.background)
 	}
 
 	async loadAllModels() {
@@ -157,6 +176,38 @@ class HomeCapabilitiesScene extends BaseScene {
 			centerY: 0,
 			endYOffset: -height,
 		})
+
+		// Animate gradient background
+		this.gradientTl = gsap.timeline({
+			scrollTrigger: {
+				trigger: container,
+				start: 'top top',
+				end: 'bottom bottom',
+				scrub: true,
+				ease: 'none',
+			},
+		})
+
+		this.gradientTl
+			.fromTo(
+				this.gradientMaterial.uniforms.progress,
+				{
+					value: 0.5,
+					ease: 'none',
+				},
+				{
+					value: 1,
+				},
+				0
+			)
+			.to(
+				this.gradientMaterial.uniforms.uScroll,
+				{
+					value: -2.0,
+					ease: 'none',
+				},
+				0
+			)
 	}
 
 	createLights() {
@@ -239,6 +290,10 @@ class HomeCapabilitiesScene extends BaseScene {
 
 	animate(deltaTime) {
 		if (!this.isInitialized || !this.simulator || !this.particles) return
+
+		if (this.gradientMaterial) {
+			this.gradientMaterial.uniforms.time.value += deltaTime
+		}
 
 		// Store previous mouse position before update
 		const prevPos = this.mouse3dLocal.clone()
