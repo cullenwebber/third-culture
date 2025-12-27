@@ -5,6 +5,9 @@ import homeAnimationBootstrap from './animations/home/bootstrap'
 import buttonAnimations from './animations/buttonAnimation'
 import initThree from './three/init-three'
 import initNewsSwiper from './components/news-slider'
+import initMouseFollower from './components/mouse-follower'
+import initCapabilityScroller from './components/capability-scroller'
+import initProjectScroller from './components/project-scroller'
 
 document.addEventListener('DOMContentLoaded', () => {
 	initSmoothScrolling()
@@ -14,4 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	buttonAnimations()
 	initThree()
 	initNewsSwiper()
+	initMouseFollower()
+	initCapabilityScroller()
+	initProjectScroller()
 })

@@ -6,7 +6,10 @@ import { RoundedTriangleGeometry } from '../utils/RoundedTriangleGeometry.js'
 import WebGLManager from '../context-manager.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import GradientMaterial from '../materials/gradient-material.js'
-import { getLenis } from '../../utils/smooth-scroll.js'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 class FooterScene extends BaseScene {
 	constructor(id, container) {
@@ -23,74 +26,38 @@ class FooterScene extends BaseScene {
 		this.mouseVelocity = new THREE.Vector3()
 
 		// Scroll tracking
-		this.lenis = getLenis()
 		this.attractionActive = false
 		this.attractionProgress = 0 // 0 to 1, how much attraction is applied
-
-		// Random disruption
-		this.disruptionTimer = 0
-		this.disruptionInterval = 4 + Math.random() * 3 // Random 4-7 seconds
-		this.disruptionEnabled = true
 
 		// Config
 		this.cubeCount = 18
 		this.cameraDistance = 5
-
-		// Setup scroll listener
-		this.setupScrollListener()
 	}
 
-	setupScrollListener() {
-		this.lenis.on('scroll', () => {
-			this.updateScrollPosition()
-		})
-
-		// Call once on init to set initial state
-		setTimeout(() => {
-			this.updateScrollPosition()
-		}, 100)
-	}
-
-	updateScrollPosition() {
-		if (!this.physicsContainer) return
-
-		const rect = this.container.getBoundingClientRect()
-		const viewportHeight = window.innerHeight
-
-		// Calculate when footer is in view
-		const containerTop = rect.top
-		const containerCenter = rect.top + rect.height / 2
-
-		// Activate attraction when footer center hits viewport center
-		if (containerCenter < viewportHeight / 2 && !this.attractionActive) {
-			this.attractionActive = true
-		}
-
-		// Calculate progress: 0 when at 'top bottom', 1 when center hits center
-		if (containerTop < viewportHeight && containerTop > 0) {
-			// Entering phase
-			this.attractionProgress = 1 - containerTop / viewportHeight
-		} else if (containerTop <= 0) {
-			// Fully in view
-			this.attractionProgress = 1
-		} else {
-			// Not yet in view
-			this.attractionProgress = 0
-		}
-
-		// Move container to follow viewport center during scroll
-		// When footer is entering (top bottom -> top top), offset the container upward
+	setupScrollTrigger() {
 		const { height } = this.getFrustumDimensions()
-		let yOffset = 0
 
-		if (containerTop > 0 && containerTop < viewportHeight) {
-			// Container is entering from bottom
-			// Map containerTop (viewportHeight -> 0) to yOffset (height -> 0)
-			const progress = containerTop / viewportHeight
-			yOffset = height * progress // Shapes start slightly above, come down
-		}
+		ScrollTrigger.create({
+			trigger: this.container,
+			start: 'top bottom',
+			end: 'top top',
+			onUpdate: (self) => {
+				this.attractionProgress = self.progress
 
-		this.physicsContainer.position.y = yOffset
+				// Activate attraction when past 50%
+				if (self.progress > 0.5 && !this.attractionActive) {
+					this.attractionActive = true
+				}
+
+				if (this.physicsContainer) {
+					this.physicsContainer.position.y = height * (1 - self.progress)
+				}
+			},
+			onLeaveBack: () => {
+				this.attractionProgress = 0
+				this.attractionActive = false
+			},
+		})
 	}
 
 	setupScene() {
@@ -110,6 +77,11 @@ class FooterScene extends BaseScene {
 	adjustCamera() {
 		this.camera.position.z = this.cameraDistance
 		this.camera.lookAt(0, 0, 0)
+	}
+
+	createLights() {
+		const ambientLight = new THREE.AmbientLight(0xffffff, 10.0)
+		this.scene.add(ambientLight)
 	}
 
 	setupPhysics() {
@@ -151,6 +123,7 @@ class FooterScene extends BaseScene {
 		}
 
 		this.createBackground()
+		this.setupScrollTrigger()
 	}
 
 	createBackground() {
@@ -201,8 +174,8 @@ class FooterScene extends BaseScene {
 		const color = '#030030'
 		const material = new THREE.MeshStandardMaterial({
 			color,
-			roughness: 0.2,
-			metalness: 0.9,
+			roughness: 0.3,
+			metalness: 0.8,
 		})
 
 		const mesh = new THREE.Mesh(geometry, material)
@@ -287,31 +260,9 @@ class FooterScene extends BaseScene {
 		this.mouseVelocity.subVectors(this.mouse3d, this.prevMouse3d)
 	}
 
-	applyDisruption() {
-		const explosionStrength = 1.0 + Math.random() * 1
-
-		for (const obj of this.physicsObjects) {
-			// Random direction
-			const randomDir = new CANNON.Vec3(
-				(Math.random() - 0.5) * 2,
-				(Math.random() - 0.5) * 2,
-				(Math.random() - 0.5) * 2
-			)
-			randomDir.normalize()
-
-			// Apply explosive force
-			const force = randomDir.scale(explosionStrength)
-			obj.body.applyImpulse(force, obj.body.position)
-		}
-
-		// Set next random interval
-		this.disruptionInterval = 4 + Math.random() * 3
-		this.disruptionTimer = 0
-	}
-
 	applyForces(deltaTime) {
-		const mouseRepulsionRadius = 2.0
-		const mouseRepulsionStrength = 15.0
+		const mouseRepulsionRadius = 4.0
+		const mouseRepulsionStrength = 25.0
 
 		const mouseSpeed = this.mouseVelocity.length() / deltaTime
 		const velocityBoost = Math.min(mouseSpeed * 0.3, 5.0)
@@ -443,14 +394,6 @@ class FooterScene extends BaseScene {
 
 		this.time += deltaTime
 
-		// Random disruption timer (only when footer is visible)
-		if (this.disruptionEnabled && this.attractionProgress > 0.1) {
-			this.disruptionTimer += deltaTime
-			if (this.disruptionTimer >= this.disruptionInterval) {
-				this.applyDisruption()
-			}
-		}
-
 		this.updateMouse3d()
 		this.updatePhysics(deltaTime)
 	}
@@ -468,6 +411,13 @@ class FooterScene extends BaseScene {
 		if (this.onMouseMove) {
 			window.removeEventListener('mousemove', this.onMouseMove)
 		}
+
+		// Kill ScrollTriggers for this scene
+		ScrollTrigger.getAll().forEach((st) => {
+			if (st.trigger === this.container) {
+				st.kill()
+			}
+		})
 
 		// Clear physics
 		this.physicsObjects.forEach((obj) => {

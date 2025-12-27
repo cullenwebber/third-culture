@@ -1,8 +1,8 @@
 <section id="home-capabilities-section" class="text-white !py-0">
 	<div id="home-capabilities-container" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></div>
 	<div class="container flex flex-col gap-8 lg:gap-16 xl:gap-32 relative items-center -mt-[100lvh]">
-		<section class="flex flex-col min-h-lvh gap-24 z-40 relative w-full">
-			<div class="block-content relative w-fit max-w-[1200px]">
+		<section class="flex flex-col gap-24 z-40 relative w-full">
+			<div class="block-content relative w-fit max-w-[1000px]">
 				<div class="supertitle text-paragraphLight flex flex-row items-center gap-2">
 					<div class="size-2.5 bg-paragraphLight blink"></div>Our Capabilities
 				</div>
@@ -16,10 +16,9 @@
 
 		<div id="service-scroll-container" class="flex flex-col items-center z-40 relative w-full">
 			{% for service in post.capabilities.services %}
-				{% set subservices = service.subservice %}
-
 				<a href="{{ service.link.url }}"
 					id="service-text-{{ loop.index0 }}"
+					data-capability-section="{{ loop.index0 }}"
 					class="min-h-lvh flex items-center justify-center flex-col max-w-[450px] w-full {{
 					loop.index is odd
 						? 'md:self-end mr-[5%]'
@@ -34,16 +33,42 @@
 						<div class="block-content text-paragraphLight text-balance">
 							{{ service.content }}
 						</div>
-						<div class="flex flex-row gap-2 flex-wrap">
-							{% for subservice in service.subservice %}
-								<div class="shrink-0 bg-white/10 backdrop-blur-md py-2 px-4 rounded-md">
-									{{ subservice.title }}
-								</div>
-							{% endfor %}
-						</div>
 					</div>
 				</a>
 			{% endfor %}
 		</div>
+		<div class="h-[10lvh]"></div>
 	</div>
 </section>
+
+<div id="capability-scroller"
+	class="fixed bottom-12 left-0 flex flex-row justify-center w-full z-40 translate-y-[calc(100%+4rem)]">
+	<div class="bg-white/5 backdrop-blur-md text-white max-w-[500px] rounded-sm relative w-full">
+		<div class="rounded-tl-sm border-l border-t size-2 border-paragraphLight absolute -top-2 -left-2"></div>
+		<div class="rounded-tr-sm border-r border-t size-2 border-paragraphLight absolute -top-2 -right-2"></div>
+		<div class="rounded-br-sm border-r border-b size-2 border-paragraphLight absolute -bottom-2 -right-2"></div>
+		<div class="rounded-bl-sm border-l border-b size-2 border-paragraphLight absolute -bottom-2 -left-2"></div>
+
+		<div class="capability-scroller-container relative overflow-hidden w-full h-[40px]">
+			{% for service in post.capabilities.services %}
+				<div class="capability-scroller flex flex-row items-center absolute left-0 w-full h-full {{
+					loop.first
+						? 'top-0'
+						: 'top-full'
+					}}"
+					data-capability-index="{{ loop.index0 }}">
+					{% for _ in 1..2 %}
+						<div class="flex flex-row items-center infinite-scroll">
+							{% for subservice in service.subservice %}
+								<div class="subservice shrink-0 is-supertitle whitespace-nowrap ml-8">
+									{{ subservice.title }}
+								</div>
+								<div class="size-2.5 bg-paragraphLight shrink-0 ml-8"></div>
+							{% endfor %}
+						</div>
+					{% endfor %}
+				</div>
+			{% endfor %}
+		</div>
+	</div>
+</div>

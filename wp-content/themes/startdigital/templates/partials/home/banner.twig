@@ -1,19 +1,28 @@
 <div id="hero-section-wrapper" class="relative z-40">
 	<div id="frontpage-hero" class="sticky top-0 left-0 h-lvh w-full"></div>
-	<section id="hero-section" class="h-lvh w-full flex flex-col items-center justify-center -mt-[100lvh]">
-		<div class="container flex flex-col items-center gap-6 w-full">
-			{% include 'icons/wordmark.twig' with {
-				class: 'h-8 text-paragraphLight'
-			} %}
-			<div class="relative">
+	<section id="hero-section" class="min-h-lvh w-full flex flex-col items-center justify-center -mt-[100lvh] pb-12">
+		<div class="container flex flex-col items-center gap-16 flex-grow w-full relative">
+			<div class="flex flex-col gap-16 flex-grow justify-center w-full items-center">
+				<div id="hero-svg" class="max-w-[1800px] w-full">
+					{% include 'icons/wordmark.twig' with {
+						class: 'w-full text-white'
+					} %}
+				</div>
 				<div id="hero-element"
 					class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] 4xl:size-[650px] z-20"></div>
-				<h1 class="text-white w-fit text-center max-w-[1600px]">
-					Impact experiences for purposeful brands
-				</h1>
+				<div class="relative">
+					<h1 class="text-white w-full text-center max-w-[1500px] is-h3 normal-case">
+						is an independent agency that exists to help purposeful brands maximise their impact in an interconnected
+						world by designing experiences that influence action.
+					</h1>
+				</div>
+			</div>
+			<div class="supertitle text-paragraphLight flex flex-row items-center gap-2">
+				<div class="size-2.5 bg-paragraphLight blink"></div>Scroll to Explore
 			</div>
 		</div>
 	</section>
+
 	<section id="about-scene" class="relative z-40 min-h-lvh flex flex-col justify-center">
 		<div class="container flex flex-col gap-32 max-w-[85%] 4xl:max-w-[65%]">
 			<div class="block-content">

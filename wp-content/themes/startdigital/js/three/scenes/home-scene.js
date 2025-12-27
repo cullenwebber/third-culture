@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import { DestructibleMesh, FractureOptions } from '@dgreenheck/three-pinata'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -33,7 +34,7 @@ class HomeScene extends BaseScene {
 			canvasHeight
 		)
 
-		this.transmissionMaterial = Object.assign(new MeshTransmissionMaterial(5), {
+		this.transmissionMaterial = Object.assign(new MeshTransmissionMaterial(3), {
 			_transmission: 1.0,
 			chromaticAberration: 0.05,
 			roughness: 0.1,
@@ -47,11 +48,6 @@ class HomeScene extends BaseScene {
 		})
 
 		this.transmissionMaterial.color.set('#999999')
-
-		this.wireMaterial = new THREE.MeshBasicMaterial({
-			color: 0x201d4d,
-			wireframe: true,
-		})
 
 		this.metalMaterial = new THREE.MeshStandardMaterial({
 			color: '#18154E',
@@ -86,8 +82,11 @@ class HomeScene extends BaseScene {
 		// Animate h1 to top left using ScrollTrigger
 		this.tl
 
-			.to(
+			.fromTo(
 				this.gradientMaterial.uniforms.progress,
+				{
+					value: 0.5,
+				},
 				{
 					value: 1,
 					ease: 'none',
@@ -123,7 +122,10 @@ class HomeScene extends BaseScene {
 
 		// Load the logo
 		await this.loadLogo()
-		// this.scene.add(this.sphere)
+
+		// Load the wordmark SVG
+		this.loadWordmark()
+
 		this.scene.add(this.background)
 
 		// Setup scroll animation after everything is created
@@ -238,6 +240,75 @@ class HomeScene extends BaseScene {
 				}
 			)
 		})
+	}
+
+	loadWordmark() {
+		const heroSvgContainer = document.querySelector('#hero-svg')
+		if (!heroSvgContainer) return
+
+		const svgElement = heroSvgContainer.querySelector('svg')
+		if (!svgElement) return
+
+		// Get SVG content as string
+		const svgString = new XMLSerializer().serializeToString(svgElement)
+
+		// Parse SVG
+		const loader = new SVGLoader()
+		const svgData = loader.parse(svgString)
+
+		// Create group for the wordmark
+		this.wordmark = new THREE.Group()
+
+		// Get SVG viewBox dimensions
+		const viewBox = svgElement.viewBox.baseVal
+		const svgWidth = viewBox.width || 1504
+		const svgHeight = viewBox.height || 234
+
+		// Create meshes from paths
+		svgData.paths.forEach((path) => {
+			const shapes = SVGLoader.createShapes(path)
+
+			shapes.forEach((shape) => {
+				const geometry = new THREE.ShapeGeometry(shape)
+				const mesh = new THREE.Mesh(
+					geometry,
+					new THREE.MeshBasicMaterial({
+						color: 0xffffff,
+						side: THREE.DoubleSide,
+					})
+				)
+				this.wordmark.add(mesh)
+			})
+		})
+
+		// Center the wordmark
+		const bbox = new THREE.Box3().setFromObject(this.wordmark)
+		const center = bbox.getCenter(new THREE.Vector3())
+		this.wordmark.children.forEach((child) => {
+			child.position.x -= center.x
+			child.position.y -= center.y
+		})
+
+		// Flip Y axis (SVG has inverted Y)
+
+		this.scene.add(this.wordmark)
+
+		// Track wordmark to the hero-svg container
+		this.containerTracker.addTrackedObject('wordmark', {
+			object3D: this.wordmark,
+			htmlContainer: heroSvgContainer,
+			originalDimensions: {
+				width: svgWidth,
+				height: svgHeight,
+			},
+			scaleMultiplier: 1.0,
+			scalingMode: 'width',
+			offsetZ: 0,
+		})
+
+		this.wordmark.rotation.x = Math.PI
+
+		svgElement.style.opacity = 0
 	}
 
 	createMouseListeners() {

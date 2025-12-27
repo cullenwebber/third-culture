@@ -23,17 +23,17 @@ h4,
 h5,
 h6,
 .is-h7 {
-	@apply font-heading !leading-[1.0] tracking-[-0.04em];
+	@apply font-heading !leading-[1.0] tracking-[-0.02em];
 }
 
 h1,
 .is-h1 {
-	@apply text-[100px] 4xl:text-[160px] uppercase;
+	@apply text-[100px] 4xl:text-[160px];
 }
 
 h2,
 .is-h2 {
-	@apply text-[72px] 4xl:text-[100px] uppercase;
+	@apply text-[72px] 4xl:text-[110px];
 }
 
 h3,

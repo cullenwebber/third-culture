@@ -9,7 +9,7 @@ class GradientMaterial extends THREE.ShaderMaterial {
 			progress: { value: 0 },
 			gridSize: { value: 90.0 },
 			dotSize: { value: 0.08 },
-			dotOpacity: { value: 0.15 },
+			dotOpacity: { value: 0.1 },
 			uScroll: { value: 0 },
 		}
 
