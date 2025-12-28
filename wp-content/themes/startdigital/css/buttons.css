@@ -1,12 +1,13 @@
-.button,
-.is-button {
-	@apply text-base border rounded-full py-2 px-6 flex items-center gap-4 w-fit duration-150;
+.button__small {
+	&.dark {
+		@apply text-navy;
 
-	&:hover {
-		@apply bg-white text-black;
-	}
+		.button__icon-container {
+			@apply bg-navy;
 
-	&:active {
-		@apply scale-95 duration-150;
+			svg {
+				@apply text-white;
+			}
+		}
 	}
 }

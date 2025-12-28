@@ -1,6 +1,8 @@
 {% set length = (post.projects|length) + 2 %}
 
-<section id="home-projects-inner" class="text-navy relative z-40 !py-0" style="height: {{ 100 * length ~ 'lvh' }}">
+<section id="home-projects-inner"
+	class="text-navy relative z-40 !py-0 flex flex-col dark-mouse"
+	style="height: {{ 100 * length ~ 'lvh' }}">
 	<div id="home-projects-container" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></div>
 	<div class="container flex flex-col items-center relative z-40 h-[50lvh] justify-center -mt-[100lvh]">
 		<div class="project-title relative max-w-[800px] 4xl:max-w-[800px] text-center items-center flex flex-col block-content">
@@ -10,7 +12,7 @@
 			{{ post.projects.title }}
 		</div>
 	</div>
-	<div class="container w-full flex flex-col relative z-40">
+	<div class="container flex-grow w-full flex flex-col relative z-40">
 		{% for project in post.projects.projects %}
 			<a href="{{ project.link }}"
 				id="project-container-{{ loop.index }}"
@@ -35,6 +37,14 @@
 				</div>
 			</a>
 		{% endfor %}
+	</div>
+	<div class="container relative z-40 pb-32 flex flex-col items-center">
+		{% include 'partials/button.twig' with {
+			title: 'View all projects',
+			link: '/projects',
+			target: '_self',
+			class: 'dark'
+		} %}
 	</div>
 </section>
 

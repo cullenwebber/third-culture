@@ -1,6 +1,6 @@
 {% set news_posts = fn('get_news_posts', 4) %}
 
-<section class="flex flex-col gap-8 justify-center overflow-hidden bg-white relative z-40 text-navy">
+<section class="flex flex-col gap-8 justify-center overflow-hidden bg-white relative z-40 text-navy dark-mouse">
 	<div class="container flex flex-col relative z-40 gap-20">
 		<div class="flex flex-row justify-between items-end">
 			<div class="block-content relative w-fit">
@@ -12,6 +12,12 @@
 
 			<div class="block-content max-w-[500px] text-paragraphDark text-pretty">
 				{{ post.news.content }}
+				{% include 'partials/button.twig' with {
+					title: 'View all articles',
+					link: '/news',
+					target: '_self',
+					class: 'dark mt-4'
+				} %}
 			</div>
 		</div>
 		<div class="flex flex-col gap-8">
@@ -24,28 +30,43 @@
 					{% for news in news_posts %}
 						<div class="swiper-slide">
 							<a href="{{ news.link }}"
-								class="post-tease flex flex-col w-full gap-8 p-8 rounded-3xl overflow-hidden aspect-3/4 relative"
+								class="post-tease flex flex-col w-full gap-8 p-8 overflow-hidden aspect-3/4 relative"
 								style="clip-path: url('#news-mask');">
 								<img src="{{ get_image(news.thumbnail).src }}"
 									alt="{{ news.thumbnail.alt }}"
 									class="w-full object-cover absolute top-0 left-0 h-full" />
 								<div class="absolute bottom-0 left-0 bg-gradient-to-t from-darkBlue to bg-darkBlue/0 w-full h-1/2"></div>
 
-								<div class="relative flex flex-col flex-grow justify-between gap-4 z-20">
-									<div class="flex flex-row gap-2 items-center date-content">
-										<span class="bg-darkBlue rounded-lg py-1 px-4 text-white">
+								<div class="relative flex flex-col flex-grow justify-end gap-8 z-20">
+									{# <div class="flex flex-row gap-2 items-center date-content text-base">
+										<span class="bg-darkBlue rounded-sm py-1 px-4 text-white">
 											{{ news.terms('category')[0].name ? : 'News' }}
 										</span>
-										<span class="bg-white rounded-lg py-1 px-4 text-">{{ news.date|date('j M') }}</span>
-									</div>
+										<span class="bg-white rounded-sm py-1 px-4 text-navy">{{ news.date|date('j M') }}</span>
+									</div> #}
 									<div class="w-3/4 flex flex-col gap-4">
 										<h5 class="is-h4 text-white text-balance">
 											{{ news.title }}
 										</h5>
-										<div class="flex flex-row items-center gap-2 text-paragraphLight">
-											Read more{% include 'icons/chevron.twig' with {
-												class: 'size-3'
-											} %}
+										<div class="button__small flex flex-row items-center justify-start gap-3 text-paragraphLight w-fit text-base group my-5 mt-4">
+											<div class="relative flex justify-start text-left">
+												<div class="relative w-fit overflow-hidden">
+													<div class="button__text indent-0">
+														Read more
+													</div>
+													<div class="button__text absolute top-full left-0 w-full">
+														Read more
+													</div>
+												</div>
+											</div>
+											<div class="button__icon-container size-5 bg-paragraphLight flex items-center justify-center rounded-sm relative overflow-hidden">
+												{% include 'icons/button-arrow.twig' with {
+													class: 'w-2.5 text-navy shrink-0 absolute top-1/2 -translate-y-1/2  -left-full group-hover:translate-x-[25px] duration-[400ms] ease-in-out'
+												} %}
+												{% include 'icons/button-arrow.twig' with {
+													class: 'w-2.5 text-navy shrink-0 group-hover:translate-x-[25px] duration-[400ms] ease-in-out'
+												} %}
+											</div>
 										</div>
 									</div>
 								</div>
@@ -56,13 +77,13 @@
 			</div>
 			<div class="flex flex-row gap-2">
 				<div id="news-swiper-prev"
-					class="cursor-pointer size-16 flex justify-center items-center bg-darkBlue rounded-lg hover:bg-navy transition active:scale-95">
+					class="cursor-pointer size-16 flex justify-center items-center bg-darkBlue rounded-md hover:bg-navy transition active:scale-95">
 					{% include 'icons/chevron.twig' with {
 						class: 'size-4 text-white rotate-180 -translate-x-0.5'
 					} %}
 				</div>
 				<div id="news-swiper-next"
-					class="cursor-pointer size-16 flex justify-center items-center bg-darkBlue rounded-lg hover:bg-navy transition active:scale-95">
+					class="cursor-pointer size-16 flex justify-center items-center bg-darkBlue rounded-md hover:bg-navy transition active:scale-95">
 					{% include 'icons/chevron.twig' with {
 						class: 'size-4 text-white translate-x-0.5'
 					} %}

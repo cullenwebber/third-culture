@@ -114,7 +114,7 @@ class FooterScene extends BaseScene {
 	}
 
 	createObjects() {
-		const shapeSize = 0.8
+		const shapeSize = 1.0
 		const shapeCount = 25
 		for (let i = 0; i < shapeCount; i++) {
 			// Randomly choose between cube and triangle
@@ -150,7 +150,7 @@ class FooterScene extends BaseScene {
 
 		if (shapeType === 'triangle') {
 			// Rounded right-angled triangular prism
-			geometry = new RoundedTriangleGeometry(size, size * 0.9, size * 0.075, 3)
+			geometry = new RoundedTriangleGeometry(size, size * 0.25, size * 0.075, 3)
 
 			// Use cylinder approximation for physics
 			const triangleRadius = (size * Math.sqrt(3)) / 3
@@ -162,12 +162,18 @@ class FooterScene extends BaseScene {
 			)
 		} else {
 			// Rounded cube
-			geometry = new RoundedBoxGeometry(size, size, size, 4, size * 0.075)
+			geometry = new RoundedBoxGeometry(
+				size,
+				size * 0.25,
+				size,
+				4,
+				size * 0.075
+			)
 
 			// Box shape for physics
 			const halfSize = size / 2
 			physicsShape = new CANNON.Box(
-				new CANNON.Vec3(halfSize, halfSize, halfSize)
+				new CANNON.Vec3(halfSize, halfSize * 0.35, halfSize)
 			)
 		}
 

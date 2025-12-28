@@ -1,8 +1,8 @@
-<section id="home-capabilities-section" class="text-white !py-0">
+<section id="home-capabilities-section" class="text-white !py-0 bg-navy">
 	<div id="home-capabilities-container" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></div>
 	<div class="container flex flex-col gap-8 lg:gap-16 xl:gap-32 relative items-center -mt-[100lvh]">
 		<section class="flex flex-col gap-24 z-40 relative w-full">
-			<div class="block-content relative w-fit max-w-[1000px]">
+			<div class="block-content relative w-fit max-w-[1200px]">
 				<div class="supertitle text-paragraphLight flex flex-row items-center gap-2">
 					<div class="size-2.5 bg-paragraphLight blink"></div>Our Capabilities
 				</div>
@@ -11,13 +11,18 @@
 
 			<div class="block-content max-w-[700px] xl:max-w-[550px] text-paragraphLight text-pretty">
 				{{ post.capabilities.content }}
+				{% include 'partials/button.twig' with {
+					title: 'View all capabilities',
+					link: '/capabilities',
+					target: '_self',
+					class: 'mt-4'
+				} %}
 			</div>
 		</section>
 
 		<div id="service-scroll-container" class="flex flex-col items-center z-40 relative w-full">
 			{% for service in post.capabilities.services %}
-				<a href="{{ service.link.url }}"
-					id="service-text-{{ loop.index0 }}"
+				<div id="service-text-{{ loop.index0 }}"
 					data-capability-section="{{ loop.index0 }}"
 					class="min-h-lvh flex items-center justify-center flex-col max-w-[450px] w-full {{
 					loop.index is odd
@@ -33,8 +38,14 @@
 						<div class="block-content text-paragraphLight text-balance">
 							{{ service.content }}
 						</div>
+						{% include 'partials/button.twig' with {
+							title: 'Learn more',
+							link: service.link.url,
+							target: '_self',
+							class: 'mt-4'
+						} %}
 					</div>
-				</a>
+				</div>
 			{% endfor %}
 		</div>
 		<div class="h-[10lvh]"></div>

@@ -23,6 +23,12 @@ class HomeScene extends BaseScene {
 		const pmremGenerator = new THREE.PMREMGenerator(this.context.renderer)
 		this.envMap = pmremGenerator.fromScene(environment).texture
 		this.scene.environment = this.envMap
+
+		// Add fog for the flowing rectangles to disappear into
+		this.scene.fog = new THREE.Fog(0x0a0a1a, 0, 35)
+
+		// Animation timescale for smooth transitions
+		this.animationSpeed = 1
 	}
 
 	createMaterials() {
@@ -106,8 +112,10 @@ class HomeScene extends BaseScene {
 	async createObjects() {
 		const { width, height } = this.getFrustumDimensions(0)
 
+		// Make background much larger and push it back so rectangles can flow in front
 		const planeGeometry = new THREE.PlaneGeometry(width, height, 1, 1)
 		this.background = new THREE.Mesh(planeGeometry, this.gradientMaterial)
+
 		this.background.renderOrder = -1 // Render first, behind everything
 
 		// Store reference to h1 for tracking
@@ -133,7 +141,7 @@ class HomeScene extends BaseScene {
 	}
 
 	async loadLogo() {
-		const path = getStaticPath('/cube-triangle-no-damage.glb')
+		const path = getStaticPath('/cube-and-triangle.glb')
 
 		// Set up DRACO loader
 		const dracoLoader = new DRACOLoader()
@@ -161,6 +169,7 @@ class HomeScene extends BaseScene {
 					this.logo.traverse((child) => {
 						if (!child.isMesh) return
 
+						// child.scale.z = 0.25
 						// Create a group for this mesh's fragments
 						const fragmentGroup = new THREE.Group()
 						fragmentGroup.position.copy(child.position)
@@ -226,7 +235,7 @@ class HomeScene extends BaseScene {
 							width: originalWidth,
 							height: originalHeight,
 						},
-						scaleMultiplier: 0.75,
+						scaleMultiplier: 0.9,
 						scalingMode: 'contain',
 						offsetZ: 0.75,
 					})
@@ -318,12 +327,26 @@ class HomeScene extends BaseScene {
 			if (this.isHovering) return
 			this.isHovering = true
 			this.explodeFragments()
+
+			// Slow down animation
+			gsap.to(this, {
+				animationSpeed: 0,
+				duration: 0.4,
+				ease: 'power2.out',
+			})
 		})
 
 		this.logoEl.addEventListener('mouseleave', () => {
 			if (!this.isHovering) return
 			this.isHovering = false
 			this.implodeFragments()
+
+			// Speed up animation
+			gsap.to(this, {
+				animationSpeed: 1,
+				duration: 0.6,
+				ease: 'power2.inOut',
+			})
 		})
 	}
 
@@ -354,22 +377,52 @@ class HomeScene extends BaseScene {
 	}
 
 	explodeFragments() {
-		this.logoFragments.forEach((fragment) => {
+		this.explosionComplete = false
+		this.floatStarted = false
+		this.floatAmplitude = 0
+
+		this.logoFragments.forEach((fragment, i) => {
 			// Calculate direction from the fragment group's centroid to this fragment
 			const centroid = fragment.userData.groupCentroid || new THREE.Vector3()
 			const direction = fragment.userData.initialPosition
 				.clone()
 				.sub(centroid)
 				.normalize()
-			const distance = 4.0
+			const distance = 1.2
+
+			// Calculate and store target exploded position
+			const targetX =
+				fragment.userData.initialPosition.x +
+				direction.x * distance * 0.5 +
+				direction.x * distance * 1.5 * Math.random()
+			const targetY =
+				fragment.userData.initialPosition.y +
+				direction.y * distance * 0 +
+				direction.y * distance * 1.5 * Math.random()
+			const targetZ =
+				fragment.userData.initialPosition.z -
+				distance * 1.5 +
+				distance * 3.0 * Math.random()
+
+			fragment.userData.explodedPosition = new THREE.Vector3(
+				targetX,
+				targetY,
+				targetZ
+			)
+			fragment.userData.fragmentFloatOffset = Math.random() * Math.PI * 2
 
 			// Animate fragment outward from its initial position
 			gsap.to(fragment.position, {
-				x: fragment.userData.initialPosition.x + direction.x * distance,
-				y: fragment.userData.initialPosition.y + direction.y * distance,
-				z: fragment.userData.initialPosition.z + direction.z * distance,
+				x: targetX,
+				y: targetY,
+				z: targetZ,
 				duration: 0.6,
 				ease: 'power2.out',
+				onComplete: () => {
+					if (i === this.logoFragments.length - 1) {
+						this.explosionComplete = true
+					}
+				},
 			})
 
 			// Random rotation
@@ -420,6 +473,8 @@ class HomeScene extends BaseScene {
 				? this.gradientMaterial.uniforms.time.value
 				: 0
 
+			const speed = this.animationSpeed ?? 1
+
 			this.logoChildren.forEach((childData) => {
 				const {
 					fragmentGroup,
@@ -430,15 +485,15 @@ class HomeScene extends BaseScene {
 				} = childData
 
 				// Float up and down
-				const floatSpeed = 0.35
-				const floatAmount = 0.2
+				const floatSpeed = 0.65
+				const floatAmount = 0.2 * speed
 				fragmentGroup.position.y =
 					initialPosition.y +
 					Math.sin(time * floatSpeed + floatOffset) * floatAmount
 
 				// Rotate back and forth on Y axis
-				const rotateSpeed = 0.35
-				const rotateAmount = 0.5
+				const rotateSpeed = 0.65
+				const rotateAmount = 0.4 * speed
 				fragmentGroup.rotation.y =
 					initialRotation.y +
 					Math.sin(time * rotateSpeed + rotateOffset) * rotateAmount
@@ -448,6 +503,66 @@ class HomeScene extends BaseScene {
 					initialRotation.x +
 					Math.cos(time * rotateSpeed * 0.7 + rotateOffset) *
 						(rotateAmount * 0.5)
+			})
+		}
+
+		// Animate individual fragments when hovering (only after explosion completes)
+		if (
+			this.isHovering &&
+			this.explosionComplete &&
+			this.logoFragments &&
+			this.logoFragments.length > 0
+		) {
+			const globalTime = this.gradientMaterial
+				? this.gradientMaterial.uniforms.time.value
+				: 0
+
+			// Capture all positions and rotations at once on first frame after explosion
+			if (!this.floatStarted) {
+				this.floatStarted = true
+				this.floatStartTime = globalTime
+				this.logoFragments.forEach((fragment) => {
+					fragment.userData.explodedPosition = fragment.position.clone()
+					fragment.userData.explodedRotation = fragment.rotation.clone()
+				})
+				// Ease in the float amplitude
+				gsap.to(this, {
+					floatAmplitude: 1,
+					duration: 1.25,
+					ease: 'power2.out',
+				})
+			}
+
+			// Use time relative to when float started, so sin begins at 0
+			const time = globalTime - this.floatStartTime
+			const amplitude = this.floatAmplitude ?? 0
+
+			this.logoFragments.forEach((fragment) => {
+				if (!fragment.userData.explodedPosition) return
+
+				// Use offset for speed variation instead of phase offset
+				const speedVariation = 0.1 + fragment.userData.fragmentFloatOffset * 0.1
+				const floatAmount = 0.1 * amplitude
+				const rotateAmount = 0.4 * amplitude
+
+				// Float each fragment individually - all start from sin(0) = 0
+				fragment.position.y =
+					fragment.userData.explodedPosition.y +
+					Math.sin(time * speedVariation) * floatAmount
+
+				// Use sin for X too so it also starts at 0
+				fragment.position.x =
+					fragment.userData.explodedPosition.x +
+					Math.sin(time * speedVariation * 0.7) * floatAmount * 0.5
+
+				// Slight rotation
+				fragment.rotation.x =
+					fragment.userData.explodedRotation.x +
+					Math.sin(time * speedVariation * 0.5) * rotateAmount
+
+				fragment.rotation.y =
+					fragment.userData.explodedRotation.y +
+					Math.sin(time * speedVariation * 0.6) * rotateAmount
 			})
 		}
 	}

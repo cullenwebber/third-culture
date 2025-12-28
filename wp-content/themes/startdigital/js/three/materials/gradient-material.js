@@ -7,7 +7,8 @@ class GradientMaterial extends THREE.ShaderMaterial {
 			time: { value: 0 },
 			resolution: { value: new THREE.Vector2() },
 			progress: { value: 0 },
-			gridSize: { value: 90.0 },
+			gridSize: { value: 45.0 },
+			gridOpacity: { value: 0.08 },
 			dotSize: { value: 0.08 },
 			dotOpacity: { value: 0.1 },
 			uScroll: { value: 0 },
@@ -38,20 +39,19 @@ class GradientMaterial extends THREE.ShaderMaterial {
 				uniform vec2 resolution;
 				uniform float progress;
 				uniform float gridSize;
+				uniform float gridOpacity;
 				uniform float dotSize;
 				uniform float dotOpacity;
 				uniform float uScroll;
 				varying vec2 vUv;
 
-				// Random function from DotScreenShader
+				// Random function
 				float random(vec2 p) {
 					vec2 k1 = vec2(
-						23.14069263277926, // e^pi (Gelfond's constant)
-						2.665144142690225 // 2^sqrt(2) (Gelfond–Schneider constant)
+						23.14069263277926,
+						2.665144142690225
 					);
-					return fract(
-						cos(dot(p, k1)) * 12345.6789
-					);
+					return fract(cos(dot(p, k1)) * 12345.6789);
 				}
 
 				float noise(vec2 st) {
@@ -74,12 +74,45 @@ class GradientMaterial extends THREE.ShaderMaterial {
 					return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 				}
 
+				// Grid pattern function
+				float grid(vec2 uv, float size) {
+					// Calculate aspect ratio from UV derivatives
+					vec2 ddx_uv = dFdx(uv);
+					vec2 ddy_uv = dFdy(uv);
+					float aspectRatio = length(ddx_uv) / length(ddy_uv);
+
+					// Adjust UV coordinates to maintain square grid
+					vec2 adjustedUv;
+					if (aspectRatio < 1.0) {
+						adjustedUv = vec2(uv.x, uv.y * aspectRatio);
+					} else {
+						adjustedUv = vec2(uv.x / aspectRatio, uv.y);
+					}
+
+					// Scale by grid size
+					adjustedUv *= size;
+
+					// Calculate derivatives for adaptive line width
+					vec2 grid_uv = fract(adjustedUv);
+					vec2 ddx = dFdx(adjustedUv);
+					vec2 ddy = dFdy(adjustedUv);
+
+					// Adaptive line width based on screen resolution
+					vec2 lineWidth = max(abs(ddx), abs(ddy)) * 0.75;
+
+					// Create anti-aliased grid lines
+					vec2 gridLines = abs(grid_uv - 0.5);
+					vec2 grid_aa = smoothstep(0.5 - lineWidth, 0.5 - lineWidth * 0.5, gridLines);
+
+					return max(grid_aa.x, grid_aa.y);
+				}
+
 				void main() {
 					vec2 uv = gl_FragCoord.xy / resolution.xy;
 
-					// Define the gradient colors (0x030030 to 0x02001B)
-					vec3 topColor = vec3(0.012,0.,0.188);
-					vec3 bottomColor = vec3(0.008,0.,0.106);
+					// Define the gradient colors
+					vec3 topColor = vec3(0.012, 0.0, 0.188);
+					vec3 bottomColor = vec3(0.008, 0.0, 0.106);
 
 					// Create base gradient from top to bottom
 					vec3 gradient = mix(bottomColor, topColor, uv.y);
@@ -87,34 +120,33 @@ class GradientMaterial extends THREE.ShaderMaterial {
 					// Add smooth noise
 					float noiseValue = noise(uv * 1.5 + time * 0.2 + 44.0);
 
-					// Add film grain (from DotScreenShader)
-					vec2 uvrandom = uv;
-					uvrandom.y *= random(vec2(uvrandom.y, time));
-					float grain = random(uvrandom) * 0.1;
-
-					// Mix noise and grain with gradient
+					// Mix noise with gradient
 					vec3 gradientWithEffects = gradient + (noiseValue - 0.5) * 0.2;
 
-					// === SQUARE DOT GRID ===
-					// Calculate aspect ratio from UV derivatives
-					vec2 dotUv = vUv;
-					dotUv.y += uScroll; // Scroll the grid
-					vec2 ddx_uv = dFdx(dotUv);
-					vec2 ddy_uv = dFdy(dotUv);
+					// === GRID AND DOTS ===
+					vec2 gridUv = vUv;
+					gridUv.y += uScroll;
+
+					// Calculate grid lines
+					float gridPattern = grid(gridUv, gridSize);
+
+					// Calculate aspect ratio for dots
+					vec2 ddx_uv = dFdx(gridUv);
+					vec2 ddy_uv = dFdy(gridUv);
 					float aspectRatio = length(ddx_uv) / length(ddy_uv);
 
 					// Adjust UV coordinates to maintain square grid
 					vec2 adjustedUv;
 					if (aspectRatio < 1.0) {
-						adjustedUv = vec2(dotUv.x, dotUv.y * aspectRatio);
+						adjustedUv = vec2(gridUv.x, gridUv.y * aspectRatio);
 					} else {
-						adjustedUv = vec2(dotUv.x / aspectRatio, dotUv.y);
+						adjustedUv = vec2(gridUv.x / aspectRatio, gridUv.y);
 					}
 
 					// Scale by grid size
 					adjustedUv *= gridSize;
 
-					// Create repeating 7x7 pattern for dots (same spacing as crosses)
+					// Create repeating 7x7 pattern for dots
 					vec2 patternUv = mod(adjustedUv, 7.0);
 					vec2 patternCell = floor(patternUv);
 					vec2 patternLocal = fract(patternUv);
@@ -139,11 +171,12 @@ class GradientMaterial extends THREE.ShaderMaterial {
 						}
 					}
 
-					// Apply dots to gradient (brighten the gradient where dots are)
-					vec3 colorWithDots = gradientWithEffects + vec3(dotPattern * dotOpacity);
+					// Apply grid and dots to gradient
+					vec3 colorWithGrid = gradientWithEffects + vec3(gridPattern * gridOpacity);
+					vec3 colorWithDots = colorWithGrid + vec3(dotPattern * dotOpacity);
 
 					// Transition to solid bottom color based on progress
-					vec3 color = mix(colorWithDots, (bottomColor + vec3(dotPattern * dotOpacity)), progress);
+					vec3 color = mix(colorWithDots, bottomColor + vec3(gridPattern * gridOpacity) + vec3(dotPattern * dotOpacity), progress);
 
 					gl_FragColor = vec4(color, 1.0);
 				}

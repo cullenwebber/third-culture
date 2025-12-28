@@ -14,12 +14,6 @@ export default function buttonAnimations() {
 
 		let tl
 		tl = gsap.timeline({ paused: true })
-		tl.to(lines, {
-			xPercent: 101,
-			stagger: 0.25,
-			duration: 0.65,
-			ease: 'power4.inOut',
-		})
 
 		let topSplit = SplitText.create(texts[0], {
 			type: 'chars',
@@ -29,9 +23,9 @@ export default function buttonAnimations() {
 					self.chars,
 					{
 						yPercent: -100,
-						stagger: 0.015,
-						duration: 0.65,
-						ease: 'power4.inOut',
+						stagger: 0.01,
+						duration: 0.45,
+						ease: 'power2.inOut',
 					},
 					'<='
 				)
@@ -45,9 +39,9 @@ export default function buttonAnimations() {
 					self.chars,
 					{
 						yPercent: -100,
-						stagger: 0.015,
-						duration: 0.65,
-						ease: 'power4.inOut',
+						stagger: 0.01,
+						duration: 0.45,
+						ease: 'power2.inOut',
 					},
 					'<='
 				)
