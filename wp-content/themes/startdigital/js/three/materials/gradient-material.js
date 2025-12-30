@@ -9,8 +9,9 @@ class GradientMaterial extends THREE.ShaderMaterial {
 			progress: { value: 0 },
 			gridSize: { value: 45.0 },
 			gridOpacity: { value: 0.08 },
-			dotSize: { value: 0.08 },
-			dotOpacity: { value: 0.1 },
+			plusSize: { value: 0.2 },
+			plusThickness: { value: 0.02 },
+			plusOpacity: { value: 0.1 },
 			uScroll: { value: 0 },
 		}
 
@@ -40,8 +41,9 @@ class GradientMaterial extends THREE.ShaderMaterial {
 				uniform float progress;
 				uniform float gridSize;
 				uniform float gridOpacity;
-				uniform float dotSize;
-				uniform float dotOpacity;
+				uniform float plusSize;
+				uniform float plusThickness;
+				uniform float plusOpacity;
 				uniform float uScroll;
 				varying vec2 vUv;
 
@@ -68,25 +70,33 @@ class GradientMaterial extends THREE.ShaderMaterial {
 					return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
 				}
 
-				// SDF for a square/box shape
-				float sdBox(vec2 p, vec2 size) {
-					vec2 d = abs(p) - size;
-					return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+				// SDF for a plus/cross shape
+				float sdPlus(vec2 p, float size, float thickness) {
+					vec2 d = abs(p) - vec2(size, thickness);
+					float horizontal = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+
+					d = abs(p) - vec2(thickness, size);
+					float vertical = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
+
+					return min(horizontal, vertical);
 				}
 
-				// Grid pattern function
+				// Grid pattern function (centered)
 				float grid(vec2 uv, float size) {
 					// Calculate aspect ratio from UV derivatives
 					vec2 ddx_uv = dFdx(uv);
 					vec2 ddy_uv = dFdy(uv);
 					float aspectRatio = length(ddx_uv) / length(ddy_uv);
 
+					// Center UV coordinates (0.5, 0.5 becomes origin)
+					vec2 centeredUv = uv - 0.5;
+
 					// Adjust UV coordinates to maintain square grid
 					vec2 adjustedUv;
 					if (aspectRatio < 1.0) {
-						adjustedUv = vec2(uv.x, uv.y * aspectRatio);
+						adjustedUv = vec2(centeredUv.x, centeredUv.y * aspectRatio);
 					} else {
-						adjustedUv = vec2(uv.x / aspectRatio, uv.y);
+						adjustedUv = vec2(centeredUv.x / aspectRatio, centeredUv.y);
 					}
 
 					// Scale by grid size
@@ -123,35 +133,38 @@ class GradientMaterial extends THREE.ShaderMaterial {
 					// Mix noise with gradient
 					vec3 gradientWithEffects = gradient + (noiseValue - 0.5) * 0.2;
 
-					// === GRID AND DOTS ===
+					// === GRID AND PLUSES ===
 					vec2 gridUv = vUv;
 					gridUv.y += uScroll;
 
-					// Calculate grid lines
+					// Calculate grid lines (grid function handles centering)
 					float gridPattern = grid(gridUv, gridSize);
 
-					// Calculate aspect ratio for dots
+					// Calculate aspect ratio for pluses
 					vec2 ddx_uv = dFdx(gridUv);
 					vec2 ddy_uv = dFdy(gridUv);
 					float aspectRatio = length(ddx_uv) / length(ddy_uv);
 
+					// Center UV coordinates (same as grid function)
+					vec2 centeredUv = gridUv - 0.5;
+
 					// Adjust UV coordinates to maintain square grid
 					vec2 adjustedUv;
 					if (aspectRatio < 1.0) {
-						adjustedUv = vec2(gridUv.x, gridUv.y * aspectRatio);
+						adjustedUv = vec2(centeredUv.x, centeredUv.y * aspectRatio);
 					} else {
-						adjustedUv = vec2(gridUv.x / aspectRatio, gridUv.y);
+						adjustedUv = vec2(centeredUv.x / aspectRatio, centeredUv.y);
 					}
 
 					// Scale by grid size
 					adjustedUv *= gridSize;
 
-					// Create repeating 7x7 pattern for dots
+					// Create repeating 7x7 pattern for pluses
 					vec2 patternUv = mod(adjustedUv, 7.0);
 					vec2 patternCell = floor(patternUv);
 					vec2 patternLocal = fract(patternUv);
 
-					float dotPattern = 0.0;
+					float plusPattern = 0.0;
 
 					// Check all 4 corners of current cell in the pattern
 					for (int y = 0; y <= 1; y++) {
@@ -159,24 +172,24 @@ class GradientMaterial extends THREE.ShaderMaterial {
 							vec2 corner = patternCell + vec2(float(x), float(y));
 							vec2 wrappedCorner = mod(corner, 7.0);
 
-							// Place dot at (0,0) of each 7x7 tile
+							// Place plus at (0,0) of each 7x7 tile
 							if (abs(wrappedCorner.x) < 0.01 && abs(wrappedCorner.y) < 0.01) {
 								vec2 cornerLocalPos = patternLocal - vec2(float(x), float(y));
 
-								// Square dot using SDF
-								float boxSDF = sdBox(cornerLocalPos, vec2(dotSize));
-								float dot = 1.0 - smoothstep(-0.001, 0.001, boxSDF);
-								dotPattern = max(dotPattern, dot);
+								// Plus using SDF
+								float plusSDF = sdPlus(cornerLocalPos, plusSize, plusThickness);
+								float p = 1.0 - smoothstep(-0.001, 0.001, plusSDF);
+								plusPattern = max(plusPattern, p);
 							}
 						}
 					}
 
-					// Apply grid and dots to gradient
+					// Apply grid and pluses to gradient
 					vec3 colorWithGrid = gradientWithEffects + vec3(gridPattern * gridOpacity);
-					vec3 colorWithDots = colorWithGrid + vec3(dotPattern * dotOpacity);
+					vec3 colorWithPluses = colorWithGrid + vec3(plusPattern * plusOpacity);
 
 					// Transition to solid bottom color based on progress
-					vec3 color = mix(colorWithDots, bottomColor + vec3(gridPattern * gridOpacity) + vec3(dotPattern * dotOpacity), progress);
+					vec3 color = mix(colorWithPluses, bottomColor + vec3(gridPattern * gridOpacity) + vec3(plusPattern * plusOpacity), progress);
 
 					gl_FragColor = vec4(color, 1.0);
 				}

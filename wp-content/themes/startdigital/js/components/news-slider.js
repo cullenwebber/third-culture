@@ -19,6 +19,9 @@ function initNewsSwiper() {
 			1280: { slidesPerView: 3 },
 			// 1435: {},
 			1690: {
+				slidesPerView: 3,
+			},
+			1921: {
 				slidesPerView: 4,
 			},
 		},

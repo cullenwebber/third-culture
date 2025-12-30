@@ -3,6 +3,7 @@ import HeroScene from './scenes/home-scene'
 import HomeProjectsScene from './scenes/home-projects-scene'
 import { createCanvas } from './utils'
 import HomeCapabilitiesScene from './scenes/home-capabilities-scene'
+import NewsScene from './scenes/news-scene'
 import FooterScene from './scenes/footer-scene'
 
 function initThree() {
@@ -11,6 +12,7 @@ function initThree() {
 	const capabilitiesContainer = document.querySelector(
 		'#home-capabilities-container'
 	)
+	const newsContainer = document.querySelector('#news-scene')
 	const footerContainer = document.querySelector('footer')
 	const canvas = createCanvas()
 	const sceneManager = new SceneManager(canvas)
@@ -32,8 +34,11 @@ function initThree() {
 			2
 		)
 
+	if (newsContainer)
+		sceneManager.addScene(NewsScene, 'news', newsContainer, 3)
+
 	if (footerContainer)
-		sceneManager.addScene(FooterScene, 'footer', footerContainer, 3)
+		sceneManager.addScene(FooterScene, 'footer', footerContainer, 4)
 
 	sceneManager.start()
 }

@@ -16,7 +16,7 @@
 
 main {
 	section {
-		@apply relative py-10 lg:py-20 3xl:py-32;
+		@apply relative py-12 lg:py-20 3xl:py-32;
 	}
 }
 
@@ -51,4 +51,39 @@ main {
 /* REMOVE LOOM EXTENSION PADDING */
 section#shadow-host-companion {
 	@apply !py-0;
+}
+
+.pin-spacer {
+	@apply !pointer-events-none;
+}
+
+/* Header color inversion for dark-header sections */
+header .header-icon,
+header .header-text,
+header .menu-button-swap > div,
+header .menu-background,
+header nav,
+header .nav-menu-items:last-child {
+	@apply transition-colors duration-300 ease-out;
+}
+
+header.header-inverted .header-icon,
+header.header-inverted .header-text {
+	@apply text-navy;
+}
+
+header.header-inverted .menu-button-swap > div {
+	@apply bg-navy;
+}
+
+header.header-inverted .menu-background {
+	@apply bg-white/75;
+}
+
+header.header-inverted nav {
+	@apply text-navy;
+}
+
+header.header-inverted .nav-menu-items-wrapper:last-child .nav-menu-items {
+	@apply bg-navy text-white border-navy hover:bg-transparent hover:text-navy;
 }

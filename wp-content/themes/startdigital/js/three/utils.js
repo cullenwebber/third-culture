@@ -4,9 +4,10 @@ export function createCanvas() {
 	const canvas = document.createElement('canvas')
 
 	canvas.style.position = 'fixed'
-	canvas.style.left = 0
-	canvas.style.top = 0
-	canvas.style.zIndex = 35
+	canvas.style.left = '0'
+	canvas.style.top = '0'
+	canvas.style.zIndex = '35'
+	canvas.style.pointerEvents = 'none'
 
 	document.body.appendChild(canvas)
 

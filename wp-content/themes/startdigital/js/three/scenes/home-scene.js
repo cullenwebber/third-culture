@@ -13,6 +13,7 @@ import WebGLText from '../utils/webgl-text'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import WebGLManager from '../context-manager'
 import MeshTransmissionMaterial from '../materials/MeshTransmissionMaterial'
+import { isLowPowerDevice } from '../../utils/device-capability'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -23,9 +24,6 @@ class HomeScene extends BaseScene {
 		const pmremGenerator = new THREE.PMREMGenerator(this.context.renderer)
 		this.envMap = pmremGenerator.fromScene(environment).texture
 		this.scene.environment = this.envMap
-
-		// Add fog for the flowing rectangles to disappear into
-		this.scene.fog = new THREE.Fog(0x0a0a1a, 0, 35)
 
 		// Animation timescale for smooth transitions
 		this.animationSpeed = 1
@@ -40,26 +38,38 @@ class HomeScene extends BaseScene {
 			canvasHeight
 		)
 
-		this.transmissionMaterial = Object.assign(new MeshTransmissionMaterial(3), {
-			_transmission: 1.0,
-			chromaticAberration: 0.05,
-			roughness: 0.1,
-			thickness: 1.4,
-			ior: 1.4,
-			distortion: 1.75,
-			distortionScale: 0.8,
-			temporalDistortion: 0.1,
-			reflectivity: 0.1,
-			flatShading: false,
-		})
-
-		this.transmissionMaterial.color.set('#999999')
-
-		this.metalMaterial = new THREE.MeshStandardMaterial({
-			color: '#18154E',
-			metalness: 1,
-			roughness: 0.45,
-		})
+		// Use simpler material on low-power devices for performance
+		if (isLowPowerDevice()) {
+			this.transmissionMaterial = new THREE.MeshPhysicalMaterial({
+				color: '#999999',
+				transmission: 1.0,
+				roughness: 0.1,
+				thickness: 1.4,
+				ior: 1.4,
+				reflectivity: 0.1,
+			})
+		} else {
+			this.transmissionMaterial = Object.assign(
+				new MeshTransmissionMaterial(1),
+				{
+					_transmission: 1.0,
+					chromaticAberration: 0.05,
+					roughness: 0.0,
+					thickness: 1.4,
+					ior: 1.4,
+					distortion: 1.75,
+					distortionScale: 0.4,
+					temporalDistortion: 0.1,
+					reflectivity: 0.1,
+					flatShading: false,
+				}
+			)
+			this.transmissionMaterial.color.set('#999999')
+			this.transmissionMaterial.gritAmount = 0.1
+			this.transmissionMaterial.gritScale = 75.0
+			this.transmissionMaterial.gritScale = 75.0
+			this.transmissionMaterial.depthWrite = true
+		}
 	}
 
 	setupContainerTracking() {
@@ -499,6 +509,11 @@ class HomeScene extends BaseScene {
 					Math.sin(time * rotateSpeed + rotateOffset) * rotateAmount
 
 				// Subtle rotation on X axis
+				fragmentGroup.rotation.z =
+					initialRotation.z +
+					Math.cos(time * rotateSpeed * 0.7 + rotateOffset) *
+						(rotateAmount * 0.5)
+
 				fragmentGroup.rotation.x =
 					initialRotation.x +
 					Math.cos(time * rotateSpeed * 0.7 + rotateOffset) *
@@ -574,6 +589,44 @@ class HomeScene extends BaseScene {
 		const height = 2 * Math.tan(fov / 2) * distance
 		const width = height * aspect
 		return { width, height }
+	}
+
+	onResize(width, height) {
+		super.onResize(width, height)
+
+		const { width: canvasWidth, height: canvasHeight } =
+			this.container.getBoundingClientRect()
+
+		// Update gradient material resolution
+		if (this.gradientMaterial) {
+			this.gradientMaterial.uniforms.resolution.value.set(
+				canvasWidth,
+				canvasHeight
+			)
+		}
+
+		// Update background plane to fill viewport
+		if (this.background) {
+			const { width: frustumWidth, height: frustumHeight } =
+				this.getFrustumDimensions(0)
+			this.background.geometry.dispose()
+			this.background.geometry = new THREE.PlaneGeometry(
+				frustumWidth,
+				frustumHeight,
+				1,
+				1
+			)
+		}
+
+		// Update container tracker
+		if (this.containerTracker) {
+			this.containerTracker.updateAllPositions()
+		}
+
+		// Update text
+		if (this.text) {
+			this.text.resize()
+		}
 	}
 }
 

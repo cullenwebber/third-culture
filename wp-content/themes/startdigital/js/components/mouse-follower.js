@@ -1,9 +1,16 @@
 import gsap from 'gsap'
+import { isTouchDevice } from '../utils/device-capability'
 
 export default function initMouseFollower() {
 	const mouseEl = document.querySelector('#mouse-follower')
 
 	if (!mouseEl) return
+
+	// Remove mouse follower on touch devices
+	if (isTouchDevice()) {
+		mouseEl.remove()
+		return
+	}
 
 	const dataSpan = document.querySelector('[data-mouse-coordinates]')
 
@@ -95,7 +102,9 @@ export default function initMouseFollower() {
 	})
 
 	// Button hover effect - expand corners to button edges
-	const buttons = document.querySelectorAll('.button__small')
+	const buttons = document.querySelectorAll(
+		'.button__small, .menu__button, .nav-menu-items'
+	)
 
 	buttons.forEach((button) => {
 		button.addEventListener('mouseenter', () => {
@@ -188,37 +197,50 @@ export default function initMouseFollower() {
 	const defaultColor = '#ffffff'
 	const darkColor = '#02001b'
 
-	darkMouseEls.forEach((el) => {
-		el.addEventListener('mouseenter', () => {
-			gsap.to(innerEls, {
-				borderColor: darkColor,
+	const setMouseColor = (isDark) => {
+		gsap.to(innerEls, {
+			borderColor: isDark ? darkColor : defaultColor,
+			duration: 0.3,
+			ease: 'power2.out',
+		})
+		if (dataSpan) {
+			gsap.to(dataSpan, {
+				color: isDark ? darkColor : defaultColor,
 				duration: 0.3,
 				ease: 'power2.out',
 			})
-			if (dataSpan) {
-				gsap.to(dataSpan, {
-					color: darkColor,
-					duration: 0.3,
-					ease: 'power2.out',
-				})
+		}
+	}
+
+	darkMouseEls.forEach((el) => {
+		el.addEventListener('mouseenter', () => setMouseColor(true))
+		el.addEventListener('mouseleave', () => setMouseColor(false))
+	})
+
+	// Listen for header dark state changes
+	const header = document.querySelector('header')
+	let isMouseOverHeader = false
+
+	if (header) {
+		header.addEventListener('mouseenter', () => {
+			isMouseOverHeader = true
+			if (header.classList.contains('dark-mouse')) {
+				setMouseColor(true)
+			}
+		})
+		header.addEventListener('mouseleave', () => {
+			isMouseOverHeader = false
+			if (header.classList.contains('dark-mouse')) {
+				setMouseColor(false)
 			}
 		})
 
-		el.addEventListener('mouseleave', () => {
-			gsap.to(innerEls, {
-				borderColor: defaultColor,
-				duration: 0.3,
-				ease: 'power2.out',
-			})
-			if (dataSpan) {
-				gsap.to(dataSpan, {
-					color: defaultColor,
-					duration: 0.3,
-					ease: 'power2.out',
-				})
+		window.addEventListener('headerDarkChange', (e) => {
+			if (isMouseOverHeader) {
+				setMouseColor(e.detail.isDark)
 			}
 		})
-	})
+	}
 
 	// Post tease - force white, then back to dark on leave
 	const postTeaseEls = document.querySelectorAll('.post-tease')

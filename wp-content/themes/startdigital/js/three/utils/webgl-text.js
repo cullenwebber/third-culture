@@ -1,9 +1,6 @@
 import * as THREE from 'three'
-import { Text } from 'three-text/three'
 import { getLenis } from '../../utils/smooth-scroll'
-
-// Set HarfBuzz path once
-Text.setHarfBuzzPath('/wp-content/themes/startdigital/static/hb/hb.wasm')
+import { createText, createTextMesh, isUsingTroika } from './text-factory'
 
 class WebGLText {
 	constructor(scene, camera, element, container = null, config = {}) {
@@ -92,44 +89,60 @@ class WebGLText {
 			letterSpacing = parseFloat(letterSpacingValue) / fontSize
 		}
 
-		// Create text using three-text
+		// Create text using text factory (troika on mobile, three-text on desktop)
 		try {
-			const result = await Text.create({
+			// Scale factor to match DOM font size in world space
+			const worldSize = this.getWorldSizeFromPixels({ height: fontSize })
+			const scaleFactor = worldSize.height / fontSize
+
+			// Get color from computed style for troika
+			const textColor = new THREE.Color(this.computedStyle.color)
+
+			const result = await createText({
 				text: text,
 				font: this.config.fontPath,
-				size: fontSize,
+				size: isUsingTroika() ? fontSize * scaleFactor : fontSize, // Pre-scale for troika
 				depth: 0.01,
 				lineHeight: lineHeight * 0.83,
 				letterSpacing: letterSpacing,
+				color: textColor.getHex(), // Pass color for troika
 				layout: {
-					width: layoutWidth,
+					width: isUsingTroika() ? layoutWidth * scaleFactor : layoutWidth,
 					align: textAlign,
 				},
 			})
 
-			// Create or use provided material
+			// Create or use provided material (only used for three-text)
 			const material = this.config.material || this.createMaterial()
 
 			// Create mesh
-			const textMesh = new THREE.Mesh(result.geometry, material)
+			const textMesh = createTextMesh(result, material)
 
-			// Scale geometry to match DOM font size in world space
-			const worldSize = this.getWorldSizeFromPixels({ height: fontSize })
-			// Scale to match desired world size
-			const scaleFactor = worldSize.height / fontSize
+			if (result.isTroika) {
+				// Troika handles its own geometry - just get bounds from the mesh
+				const bounds = textMesh.textRenderInfo?.blockBounds
+				if (bounds) {
+					this.textWidth = bounds[2] - bounds[0]
+					this.textHeight = bounds[3] - bounds[1]
+				} else {
+					this.textWidth = 0
+					this.textHeight = 0
+				}
+			} else {
+				// For three-text, scale the geometry
+				result.geometry.scale(scaleFactor, scaleFactor, scaleFactor)
 
-			result.geometry.scale(scaleFactor, scaleFactor, scaleFactor)
+				// Compute bounding box after scaling
+				result.geometry.computeBoundingBox()
+				const bbox = result.geometry.boundingBox
+				this.textWidth = bbox.max.x - bbox.min.x
+				this.textHeight = bbox.max.y - bbox.min.y
 
-			// Compute bounding box after scaling
-			result.geometry.computeBoundingBox()
-			const bbox = result.geometry.boundingBox
-			this.textWidth = bbox.max.x - bbox.min.x
-			this.textHeight = bbox.max.y - bbox.min.y
-
-			// Center the text within the mesh group
-			const horizontalCenter = (bbox.max.x + bbox.min.x) / 2
-			const verticalCenter = (bbox.max.y + bbox.min.y) / 2
-			textMesh.position.set(-horizontalCenter, -verticalCenter, 0)
+				// Center the text within the mesh group
+				const horizontalCenter = (bbox.max.x + bbox.min.x) / 2
+				const verticalCenter = (bbox.max.y + bbox.min.y) / 2
+				textMesh.position.set(-horizontalCenter, -verticalCenter, 0)
+			}
 
 			this.mesh.add(textMesh)
 		} catch (error) {
@@ -217,8 +230,7 @@ class WebGLText {
 
 		// Update on resize
 		this.resizeHandler = () => {
-			this.computedStyle = window.getComputedStyle(this.element)
-			this.updateText()
+			this.resize()
 		}
 		window.addEventListener('resize', this.resizeHandler)
 	}
@@ -231,6 +243,18 @@ class WebGLText {
 	disable() {
 		this.enabled = false
 		this.mesh.visible = false
+	}
+
+	async resize() {
+		if (!this.isReady || !this.element) return
+
+		// Refresh computed styles (font size may have changed)
+		this.computedStyle = window.getComputedStyle(this.element)
+
+		// Force regenerate text geometry with new sizes
+		this.lastText = null
+		await this.updateTextGeometry()
+		this.updateText()
 	}
 
 	setElement(element) {

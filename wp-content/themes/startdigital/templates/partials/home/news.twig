@@ -1,94 +1,84 @@
 {% set news_posts = fn('get_news_posts', 4) %}
 
-<section class="flex flex-col gap-8 justify-center overflow-hidden bg-white relative z-40 text-navy dark-mouse">
-	<div class="container flex flex-col relative z-40 gap-20">
-		<div class="flex flex-row justify-between items-end">
-			<div class="block-content relative w-fit">
+<section id="news-scene-wrapper"
+	class="flex flex-col gap-8 justify-center !py-0 relative z-40 text-navy dark-mouse dark-header">
+	<div id="news-scene" class="sticky top-0 left-0 h-lvh w-full"></div>
+	<section class="pointer-events-none">
+		<div class="container flex flex-col relative z-40 gap-20 w-full -mt-[100lvh]">
+			<div class="block-content relative w-full items-center text-center">
 				<div class="supertitle text-paragraphDark flex flex-row items-center gap-2">
 					<div class="size-2.5 bg-paragraphDark blink"></div>Whats been happening
 				</div>
 				{{ post.news.title }}
-			</div>
-
-			<div class="block-content max-w-[500px] text-paragraphDark text-pretty">
-				{{ post.news.content }}
-				{% include 'partials/button.twig' with {
-					title: 'View all articles',
-					link: '/news',
-					target: '_self',
-					class: 'dark mt-4'
-				} %}
+				<div class="block-content max-w-[400px] 2xl:max-w-[600px] text-paragraphDark text-pretty">
+					{{ post.news.content }}
+				</div>
 			</div>
 		</div>
-		<div class="flex flex-col gap-8">
-			<div id="news-swiper-container" class="swiper w-full !overflow-visible">
-				{% include 'icons/mask.twig' with {
-					class: 'sr-only',
-					id: 'news-mask'
-				} %}
-				<div class="swiper-wrapper">
-					{% for news in news_posts %}
-						<div class="swiper-slide">
-							<a href="{{ news.link }}"
-								class="post-tease flex flex-col w-full gap-8 p-8 overflow-hidden aspect-3/4 relative"
-								style="clip-path: url('#news-mask');">
-								<img src="{{ get_image(news.thumbnail).src }}"
-									alt="{{ news.thumbnail.alt }}"
-									class="w-full object-cover absolute top-0 left-0 h-full" />
-								<div class="absolute bottom-0 left-0 bg-gradient-to-t from-darkBlue to bg-darkBlue/0 w-full h-1/2"></div>
+	</section>
+	<div style="height: 150lvh;" class="pointer-events-none"></div>
+	<div class="flex-col gap-8 hidden pointer-events-none">
+		{% include 'icons/mask.twig' with {
+			class: 'sr-only',
+			id: 'news-mask'
+		} %}
 
-								<div class="relative flex flex-col flex-grow justify-end gap-8 z-20">
-									{# <div class="flex flex-row gap-2 items-center date-content text-base">
-										<span class="bg-darkBlue rounded-sm py-1 px-4 text-white">
-											{{ news.terms('category')[0].name ? : 'News' }}
-										</span>
-										<span class="bg-white rounded-sm py-1 px-4 text-navy">{{ news.date|date('j M') }}</span>
-									</div> #}
-									<div class="w-3/4 flex flex-col gap-4">
-										<h5 class="is-h4 text-white text-balance">
-											{{ news.title }}
-										</h5>
-										<div class="button__small flex flex-row items-center justify-start gap-3 text-paragraphLight w-fit text-base group my-5 mt-4">
-											<div class="relative flex justify-start text-left">
-												<div class="relative w-fit overflow-hidden">
-													<div class="button__text indent-0">
-														Read more
-													</div>
-													<div class="button__text absolute top-full left-0 w-full">
-														Read more
-													</div>
-												</div>
-											</div>
-											<div class="button__icon-container size-5 bg-paragraphLight flex items-center justify-center rounded-sm relative overflow-hidden">
-												{% include 'icons/button-arrow.twig' with {
-													class: 'w-2.5 text-navy shrink-0 absolute top-1/2 -translate-y-1/2  -left-full group-hover:translate-x-[25px] duration-[400ms] ease-in-out'
-												} %}
-												{% include 'icons/button-arrow.twig' with {
-													class: 'w-2.5 text-navy shrink-0 group-hover:translate-x-[25px] duration-[400ms] ease-in-out'
-												} %}
-											</div>
-										</div>
-									</div>
-								</div>
-							</a>
+		{% for news in news_posts %}
+			<a href="{{ news.link }}"
+				class="post-tease flex flex-col w-full gap-8 p-6 2xl:p-8 overflow-hidden aspect-3/4 relative"
+				style="clip-path: url('#news-mask');">
+				<img data-news-image
+					src="{{ get_image(news.thumbnail).src }}"
+					alt="{{ news.thumbnail.alt }}"
+					class="w-full object-cover absolute top-0 left-0 h-full" />
+				<div class="absolute bottom-0 left-0 bg-gradient-to-t from-darkBlue to bg-darkBlue/0 w-full h-1/2"></div>
+
+				<div class="relative flex flex-col flex-grow justify-end gap-6 2xl:gap-8 z-20">
+					<span data-news-category class="bg-darkBlue rounded-sm py-1 px-4 text-white">
+						{{ news.terms('category')[0].name ? : 'News' }}
+					</span>
+					<div class="w-[85%] flex flex-col gap-4">
+						<h5 class="is-h4 text-white text-pretty">
+							{{ news.title }}
+						</h5>
+					</div>
+				</div>
+			</a>
+		{% endfor %}
+	</div>
+	<div id="news-scroller" class="absolute top-0 pointer-events-none h-lvh left-0 w-full z-40 dark-mouse">
+		<div class="w-full h-dvh flex flex-row justify-center sm:justify-between items-end py-6 md:py-8 xl:py-12 md:px-8 2xl:px-12 px-4">
+			{# <div style="background: radial-gradient(circle at center, #fff 63%, transparent 65%),#00000000; background-size: 3px 3px;  -webkit-mask: linear-gradient(to topa, #000, transparent);
+    mask: linear-gradient(to top, #000, transparent);"
+				class="absolute w-full left-0 bottom-0 h-24 xl:h-32 pointer-events-none"></div> #}
+			<div class="relative">
+				<div data-project-slider class="absolute aspect-3/4 h-[120%] -translate-x-[9%] -translate-y-[9%] z-10">
+					<div class="rounded-tl-sm border-l border-t size-2 border-paragraphDark absolute top-0 left-0"></div>
+					<div class="rounded-tr-sm border-r border-t size-2 border-paragraphDark absolute top-0 right-0"></div>
+					<div class="rounded-br-sm border-r border-b size-2 border-paragraphDark absolute bottom-0 right-0"></div>
+					<div class="rounded-bl-sm border-l border-b size-2 border-paragraphDark absolute bottom-0 left-0"></div>
+				</div>
+				{% include 'icons/mask.twig' with {
+					id: 'project-mask'
+				} %}
+				<div class="relative flex flex-row-reverse w-full gap-1">
+					{% for project in post.projects.projects %}
+						<div data-project-thumb="{{ loop.index0 }}"
+							class="aspect-3/4 overflow-hidden relative h-[54px]"
+							style="clip-path: url(#project-mask);">
+							<img src="{{ get_image(project.project_thumbnail) }}"
+								alt=""
+								class="absolute top-0 left-0 object-cover w-full h-full" />
 						</div>
 					{% endfor %}
 				</div>
 			</div>
-			<div class="flex flex-row gap-2">
-				<div id="news-swiper-prev"
-					class="cursor-pointer size-16 flex justify-center items-center bg-darkBlue rounded-md hover:bg-navy transition active:scale-95">
-					{% include 'icons/chevron.twig' with {
-						class: 'size-4 text-white rotate-180 -translate-x-0.5'
-					} %}
-				</div>
-				<div id="news-swiper-next"
-					class="cursor-pointer size-16 flex justify-center items-center bg-darkBlue rounded-md hover:bg-navy transition active:scale-95">
-					{% include 'icons/chevron.twig' with {
-						class: 'size-4 text-white translate-x-0.5'
-					} %}
-				</div>
-			</div>
+			{% include 'partials/button.twig' with {
+				title: 'View all articles',
+				link: '/projects',
+				target: '_self',
+				class: 'dark pointer-events-auto max-sm:hidden'
+			} %}
 		</div>
 	</div>
 </section>

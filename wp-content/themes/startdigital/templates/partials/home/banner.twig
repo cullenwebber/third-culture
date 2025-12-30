@@ -1,25 +1,26 @@
 <div id="hero-section-wrapper" class="relative bg-navy">
 	<div id="frontpage-hero" class="sticky top-0 left-0 h-lvh w-full"></div>
 	<section id="hero-section"
-		class="min-h-lvh w-full flex flex-col items-center justify-center -mt-[100lvh] pb-12 relative z-40">
+		class="min-h-lvh w-full flex flex-col items-center justify-center -mt-[100lvh] pb-8 2xl:pb-12 relative z-40">
 		<div class="container flex flex-col items-center gap-16 flex-grow w-full relative">
-			<div class="flex flex-col gap-16 flex-grow justify-center w-full items-center">
-				<div id="hero-svg" class="max-w-[1800px] w-full">
+			<div class="flex flex-col gap-4 sm:gap-8 lg:gap-10 2xl:gap-16 flex-grow justify-center w-full items-center">
+				<div id="hero-svg" class="max-w-[1800px] w-[90%]">
 					{% include 'icons/wordmark.twig' with {
 						class: 'w-full text-white'
 					} %}
 				</div>
 				<div id="hero-element"
-					class="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 size-[500px] 4xl:size-[650px] z-20"></div>
-				<div class="relative">
-					<h1 class="text-white w-full text-center max-w-[1500px] is-h3 normal-case">
-						is an independent agency that exists to help purposeful brands maximise their impact in an interconnected
-						world by designing experiences that influence action.
-					</h1>
-				</div>
+					class="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 size-[250px] sm:size-[300px] 2xl:size-[450px] 3xl:size-[500px] 4xl:size-[650px] z-20"></div>
+
+				<h1 class="text-white text-center max-w-[1500px] is-h3.5 normal-case w-[90%] sm:w-[80%]">
+					is an independent agency that exists to help purposeful brands maximise their impact in an interconnected
+					world by designing experiences that influence action.
+				</h1>
 			</div>
-			<div class="supertitle text-paragraphLight flex flex-row items-center gap-2">
-				<div class="size-2.5 bg-paragraphLight blink"></div>Scroll to Explore
+			<div class="flex flex-row justify-center items-center w-full">
+				<div class="supertitle text-paragraphLight flex flex-row items-center gap-2">
+					<div class="size-2.5 bg-paragraphLight blink"></div>Scroll to Explore
+				</div>
 			</div>
 		</div>
 	</section>

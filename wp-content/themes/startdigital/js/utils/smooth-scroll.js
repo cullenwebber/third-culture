@@ -7,7 +7,8 @@ export default function initSmoothScrolling() {
 		lerp: 0.1,
 		autoRaf: true,
 		syncTouch: true,
-		virtualScroll: true,
+		syncTouchLerp: 0.075,
+		// touchMultiplier: 1.2,
 	})
 }
 

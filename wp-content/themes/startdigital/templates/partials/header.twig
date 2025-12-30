@@ -1,9 +1,63 @@
-<header class="fixed top-0 left-0 w-full p-12 z-50">
-	<div class="flex flex-row items-center justify-between">
-		<a href="/">
-			{% include 'icons/wordmark.twig' with {
-				class: 'h-7 text-white'
-			} %}
-		</a>
+<header class="fixed top-3 md:top-6 2xl:top-12 z-50 w-full flex px-2 md:px-8 2xl:px-12 justify-between flex-row items-start">
+	<a href="{{ site.url }}" rel="home" class="hidden w-fit items-center sm:flex">
+		{% include 'icons/logo.twig' with {
+			class: 'h-4 text-white mt-2.5 header-icon'
+		} %}
+	</a>
+	<div class="sm:max-w-[350px] rounded-[5px] p-1 flex flex-col w-full relative">
+		<div class="menu-background w-full h-0 bg-navy/75 backdrop-blur-md absolute top-0 left-0 rounded-md"></div>
+		<div class="flex flex-row items-center justify-between relative z-20 overflow-hidden">
+			<a href="{{ site.url }}" rel="home">
+				{% include 'icons/logo.twig' with {
+					class: 'text-white h-4 sm:h-3 ml-2 menu-icon sm:-translate-y-6 header-icon'
+				} %}
+			</a>
+			<button data-menu-button
+				class="menu__button py-1 px-2 gap-2 rounded-sm flex flex-row justify-center items-center group transition-colors duration-300 ease-in-out self-end">
+				<div class="relative w-[50px] overflow-hidden is-supertitle text-white header-text flex justify-end">
+					<div class="menu__button-text">
+						Menu
+					</div>
+					<div class="menu__button-text absolute top-full right-0 w-full">
+						Close
+					</div>
+				</div>
+				<div class="flex flex-col gap-1 menu-button-swap">
+					{% for _ in 1..2 %}
+						<div class="bg-white size-[3px]"></div>
+					{% endfor %}
+				</div>
+			</button>
+		</div>
+
+		<div data-menu class="overflow-hidden h-0 relative z-20">
+			<nav class="flex flex-col p-2 text-white min-h-0">
+				{% for item in menu.get_items() %}
+					<div class="overflow-hidde nav-menu-items-wrapper">
+						<a href="{{ item.url }}"
+							class="nav-menu-items rounded-[2px] flex items-center gap-2 group {{
+							loop.last
+								? 'bg-white px-4 text-navy text-center mb-0.5 mt-1 py-2 border border-white hover:bg-transparent hover:text-white transition-colors duration-150 ease-in-out justify-center flex-row'
+								: 'py-3 justify-between flex-row'
+							}}  {{ item.classes|join(' ') }}">
+							<div class="relative overflow-hidden">
+								<span class="group-hover:-translate-y-full duration-500 transition-transform ease-in-out flex">
+									{{ item.title }}
+								</span>
+								<span class="absolute top-full left-0 group-hover:-translate-y-full duration-500 transition-transform ease-in-out">
+									{{ item.title }}
+								</span>
+							</div>
+							{% include 'icons/button-arrow.twig' with {
+								class: 'h-3 '
+									~ (loop.last
+										? 'hidden'
+										: 'opacity-10 group-hover:opacity-100 duration-500 transition-color ease-in-out')
+							} %}
+						</a>
+					</div>
+				{% endfor %}
+			</nav>
+		</div>
 	</div>
 </header>

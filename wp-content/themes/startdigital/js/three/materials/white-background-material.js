@@ -57,31 +57,34 @@ class WhiteBackgroundMaterial extends THREE.ShaderMaterial {
                 vec2 ddx_uv = dFdx(uv);
                 vec2 ddy_uv = dFdy(uv);
                 float aspectRatio = length(ddx_uv) / length(ddy_uv);
-                
+
+                // Center UV coordinates (0.5, 0.5 becomes origin)
+                vec2 centeredUv = uv - 0.5;
+
                 // Adjust UV coordinates to maintain square grid
                 vec2 adjustedUv;
-                
+
                 if (aspectRatio < 1.0) {
-                    adjustedUv = vec2(uv.x, uv.y * aspectRatio);
+                    adjustedUv = vec2(centeredUv.x, centeredUv.y * aspectRatio);
                 } else {
-                    adjustedUv = vec2(uv.x / aspectRatio, uv.y);
+                    adjustedUv = vec2(centeredUv.x / aspectRatio, centeredUv.y);
                 }
-                
+
                 // Scale by grid size
                 adjustedUv *= size;
-                
+
                 // Calculate derivatives for adaptive line width (prevents aliasing)
                 vec2 grid_uv = fract(adjustedUv);
                 vec2 ddx = dFdx(adjustedUv);
                 vec2 ddy = dFdy(adjustedUv);
-                
+
                 // Adaptive line width based on screen resolution
                 vec2 lineWidth = max(abs(ddx), abs(ddy)) * 0.75;
-                
+
                 // Create anti-aliased grid lines
                 vec2 gridLines = abs(grid_uv - 0.5);
                 vec2 grid_aa = smoothstep(0.5 - lineWidth, 0.5 - lineWidth * 0.5, gridLines);
-                
+
                 return max(grid_aa.x, grid_aa.y);
             }
 
@@ -93,12 +96,15 @@ class WhiteBackgroundMaterial extends THREE.ShaderMaterial {
 				vec2 ddy_uv = dFdy(uv);
 				float derivedAspectRatio = length(ddx_uv) / length(ddy_uv);
 
+                // Center UV coordinates (same as grid function)
+                vec2 centeredUv = uv - 0.5;
+
                 // Adjust UV coordinates to maintain square grid
                 vec2 adjustedUv;
                 if (derivedAspectRatio < 1.0) {
-                    adjustedUv = vec2(uv.x, uv.y * derivedAspectRatio);
+                    adjustedUv = vec2(centeredUv.x, centeredUv.y * derivedAspectRatio);
                 } else {
-                    adjustedUv = vec2(uv.x / derivedAspectRatio, uv.y);
+                    adjustedUv = vec2(centeredUv.x / derivedAspectRatio, centeredUv.y);
                 }
 
                 // Scale by grid size

@@ -33,7 +33,7 @@ class WebGLManager {
 			this.fullScreenDimensions.width,
 			this.fullScreenDimensions.height
 		)
-		this.renderer.setPixelRatio(Math.min(1.4))
+		this.renderer.setPixelRatio(Math.min(1.2))
 		this.renderer.outputEncoding = THREE.sRGBEncoding
 		this.renderer.toneMapping = THREE.ACESFilmicToneMapping
 		this.renderer.shadowMap.enabled = true

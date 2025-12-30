@@ -75,7 +75,11 @@ class FooterScene extends BaseScene {
 	}
 
 	adjustCamera() {
-		this.camera.position.z = this.cameraDistance
+		// Move camera back on mobile
+		const isMobile = window.innerWidth < 640
+		this.camera.position.z = isMobile
+			? this.cameraDistance + 1
+			: this.cameraDistance
 		this.camera.lookAt(0, 0, 0)
 	}
 
@@ -411,6 +415,40 @@ class FooterScene extends BaseScene {
 		const height = 2 * Math.tan(fov / 2) * distance
 		const width = height * aspect
 		return { width, height }
+	}
+
+	onResize(width, height) {
+		super.onResize(width, height)
+
+		// Adjust camera for mobile
+		this.adjustCamera()
+
+		const { width: canvasWidth, height: canvasHeight } =
+			this.container.getBoundingClientRect()
+
+		// Update gradient material resolution
+		if (this.gradientMaterial) {
+			this.gradientMaterial.uniforms.resolution.value.set(
+				canvasWidth,
+				canvasHeight
+			)
+		}
+
+		// Update background plane to fill viewport
+		if (this.background) {
+			const { width: frustumWidth, height: frustumHeight } =
+				this.getFrustumDimensions(0)
+			this.background.geometry.dispose()
+			this.background.geometry = new THREE.PlaneGeometry(
+				frustumWidth,
+				frustumHeight,
+				1,
+				1
+			)
+		}
+
+		// Refresh scroll trigger
+		ScrollTrigger.refresh()
 	}
 
 	dispose() {

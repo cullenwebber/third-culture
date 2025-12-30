@@ -1,19 +1,17 @@
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Text } from 'three-text/three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import BaseScene from '../base-scene'
 import ImageCylinderMaterial from '../materials/image-cylinder-material'
 import WhiteBackgroundMaterial from '../materials/white-background-material'
 import MeshTransmissionMaterial from '../materials/MeshTransmissionMaterial'
+import { isLowPowerDevice } from '../../utils/device-capability'
 import WebGLText from '../utils/webgl-text'
 import BentTextMaterial from '../materials/bent-text-material'
+import { createText, createTextMesh } from '../utils/text-factory'
 
 gsap.registerPlugin(ScrollTrigger)
-
-// Set HarfBuzz path for Text
-Text.setHarfBuzzPath('/wp-content/themes/startdigital/static/hb/hb.wasm')
 
 class HomeProjectsScene extends BaseScene {
 	setupScene() {
@@ -33,18 +31,31 @@ class HomeProjectsScene extends BaseScene {
 	}
 
 	createMaterials() {
-		// Material for the center cube
-		this.cubeMaterial = Object.assign(new MeshTransmissionMaterial(5), {
-			_transmission: 1.0,
-			chromaticAberration: 0.05,
-			roughness: 0.1,
-			thickness: 1.4,
-			ior: 1.4,
-			distortion: 0.5,
-			distortionScale: 0.8,
-			temporalDistortion: 0.1,
-			reflectivity: 0.2,
-		})
+		// Use simpler material on low-power devices for performance
+		if (isLowPowerDevice()) {
+			this.cubeMaterial = new THREE.MeshPhysicalMaterial({
+				color: '#ffffff',
+				transmission: 1.0,
+				roughness: 0.1,
+				thickness: 1.4,
+				ior: 1.4,
+				reflectivity: 0.2,
+			})
+		} else {
+			this.cubeMaterial = Object.assign(new MeshTransmissionMaterial(1), {
+				_transmission: 1.0,
+				chromaticAberration: 0.05,
+				roughness: 0.1,
+				thickness: 1.4,
+				ior: 1.4,
+				distortion: 0.5,
+				distortionScale: 0.8,
+				temporalDistortion: 0.1,
+				reflectivity: 0.2,
+			})
+			this.cubeMaterial.gritAmount = 0.1
+			this.cubeMaterial.gritScale = 100.0
+		}
 
 		this.backgroundMaterial = new WhiteBackgroundMaterial()
 	}
@@ -160,13 +171,6 @@ class HomeProjectsScene extends BaseScene {
 							link = linkElement ? linkElement.href : null
 						}
 
-						console.log('Project card created:', {
-							index,
-							link,
-							hasLink: !!link,
-							containerTag: container.tagName,
-						})
-
 						// Store plane for hover effect and click
 						this.projectPlanes.push({
 							plane,
@@ -189,27 +193,24 @@ class HomeProjectsScene extends BaseScene {
 								// === TITLE ===
 								const titleSize = 0.15
 
-								const titleResult = await Text.create({
+								const titleResult = await createText({
 									text: titleElement.textContent.trim(),
 									font: '/wp-content/themes/startdigital/static/fonts/montreal-medium.ttf',
 									size: titleSize,
 									letterSpacing: -0.05,
 									depth: 0.001,
-									embolden: 0.3, // Thicken the text (0.0 - 1.0)
+									embolden: 0.3,
+									color: 0xffffff,
 									layout: {
 										width: 1.5,
 										align: 'center',
 									},
 								})
 
-								const titleMaterial = new BentTextMaterial({
-									uRadius: 0.5,
-								})
+								// Use BentTextMaterial for 3D text (troika handles its own material)
+								const titleMaterial = new BentTextMaterial({ uRadius: 0.5 })
 
-								const titleMesh = new THREE.Mesh(
-									titleResult.geometry,
-									titleMaterial
-								)
+								const titleMesh = createTextMesh(titleResult, titleMaterial)
 
 								// Get title height
 								titleResult.geometry.computeBoundingBox()
@@ -219,14 +220,15 @@ class HomeProjectsScene extends BaseScene {
 								textGroup.add(titleMesh)
 
 								if (subtitleElement && subtitleElement.textContent) {
-									const subtitleSize = 0.06 // Smaller than title
+									const subtitleSize = 0.06
 
-									const subtitleResult = await Text.create({
+									const subtitleResult = await createText({
 										text: subtitleElement.textContent.trim().toUpperCase(),
 										font: '/wp-content/themes/startdigital/static/fonts/montreal-semibold.ttf',
 										size: subtitleSize,
 										letterSpacing: -0.02,
 										depth: 0.001,
+										color: 0xb7b6c8,
 										layout: {
 											width: 1.5,
 											align: 'center',
@@ -238,25 +240,21 @@ class HomeProjectsScene extends BaseScene {
 										uColor: new THREE.Color('#B7B6C8'),
 									})
 
-									const subtitleMesh = new THREE.Mesh(
-										subtitleResult.geometry,
+									const subtitleMesh = createTextMesh(
+										subtitleResult,
 										subtitleMaterial
 									)
 
-									// Get subtitle height
-									subtitleResult.geometry.computeBoundingBox()
-
 									// Position subtitle below title
-									subtitleMesh.position.y = -(titleHeight + 0.04) // Small gap between title and subtitle
+									subtitleMesh.position.y = -(titleHeight + 0.04)
 
 									textGroup.add(subtitleMesh)
 								}
 
 								// Position from bottom of text geometry
-								// Place the bottom of the text at the desired position
-								const titleOffset = -planeHeight / 2 + 0.3 // Where we want the bottom of text
-								textGroup.position.y = titleOffset + titleHeight // Offset by text height
-								textGroup.position.z = 0.1 // Forward for visibility
+								const titleOffset = -planeHeight / 2 + 0.3
+								textGroup.position.y = titleOffset + titleHeight
+								textGroup.position.z = 0.1
 
 								// Add to project group and store reference
 								projectGroup.add(textGroup)
@@ -513,6 +511,50 @@ class HomeProjectsScene extends BaseScene {
 		const height = 2 * Math.tan(fov / 2) * distance
 		const width = height * aspect
 		return { width, height }
+	}
+
+	adjustCamera() {
+		// Move camera back on mobile
+		const isMobile = window.innerWidth < 640
+		const cameraDistance = isMobile ? 5.5 : 5
+		this.camera.position.z = cameraDistance
+		this.camera.lookAt(0, 0, 0)
+	}
+
+	onResize(width, height) {
+		super.onResize(width, height)
+
+		// Adjust camera for mobile
+		this.adjustCamera()
+
+		// Update background plane to fill viewport
+		if (this.background) {
+			const { width: frustumWidth, height: frustumHeight } =
+				this.getFrustumDimensions(0)
+			this.background.geometry.dispose()
+			this.background.geometry = new THREE.PlaneGeometry(
+				frustumWidth,
+				frustumHeight,
+				1,
+				1
+			)
+		}
+
+		// Update background material aspect ratio
+		if (this.backgroundMaterial) {
+			this.backgroundMaterial.uniforms.aspectRatio.value =
+				window.innerWidth / window.innerHeight
+		}
+
+		// Update text
+		if (this.text) {
+			this.text.resize()
+		}
+
+		// Refresh scroll trigger to recalculate positions
+		if (this.tl && this.tl.scrollTrigger) {
+			this.tl.scrollTrigger.refresh()
+		}
 	}
 
 	dispose() {

@@ -241,8 +241,10 @@ class HomeCapabilitiesScene extends BaseScene {
 	}
 
 	adjustCamera() {
-		// Position camera to see particles better
-		this.camera.position.set(0, 0, 150)
+		// Move camera back on mobile
+		const isMobile = window.innerWidth < 640
+		const cameraDistance = isMobile ? 220 : 150
+		this.camera.position.set(0, 0, cameraDistance)
 		this.camera.lookAt(0, 0, 0)
 	}
 
@@ -333,6 +335,46 @@ class HomeCapabilitiesScene extends BaseScene {
 		const height = 2 * Math.tan(fov / 2) * distance
 		const width = height * aspect
 		return { width, height }
+	}
+
+	onResize(width, height) {
+		super.onResize(width, height)
+
+		// Adjust camera for mobile
+		this.adjustCamera()
+
+		const { width: canvasWidth, height: canvasHeight } =
+			this.container.getBoundingClientRect()
+
+		// Update gradient material resolution
+		if (this.gradientMaterial) {
+			this.gradientMaterial.uniforms.resolution.value.set(
+				canvasWidth,
+				canvasHeight
+			)
+		}
+
+		// Update background plane to fill viewport
+		if (this.background) {
+			const { width: frustumWidth, height: frustumHeight } =
+				this.getFrustumDimensions(0)
+			this.background.geometry.dispose()
+			this.background.geometry = new THREE.PlaneGeometry(
+				frustumWidth,
+				frustumHeight,
+				1,
+				1
+			)
+		}
+
+		// Update pinned particles with new frustum height
+		if (this.pinnedParticles) {
+			const { height: frustumHeight } = this.getFrustumDimensions()
+			this.pinnedParticles.updateOffsets(frustumHeight, 0, -frustumHeight)
+		}
+
+		// Refresh scroll triggers
+		ScrollTrigger.refresh()
 	}
 
 	dispose() {

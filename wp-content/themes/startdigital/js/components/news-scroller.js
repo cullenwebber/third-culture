@@ -3,13 +3,19 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-export default function initProjectScroller() {
-	const container = document.querySelector('#home-projects-inner')
-	const projectScroller = document.querySelector('#project-scroller')
-	const slider = document.querySelector('[data-project-slider]')
-	const thumbs = document.querySelectorAll('[data-project-thumb]')
+export default function initNewsScroller() {
+	const container = document.querySelector('#news-scene-wrapper')
+	const newsScroller = document.querySelector('#news-scroller')
+	const slider = newsScroller?.querySelector('[data-project-slider]')
+	const thumbs = newsScroller?.querySelectorAll('[data-project-thumb]')
 
-	if (!container || !projectScroller || !slider || thumbs.length === 0) {
+	if (
+		!container ||
+		!newsScroller ||
+		!slider ||
+		!thumbs ||
+		thumbs.length === 0
+	) {
 		return
 	}
 
@@ -20,7 +26,7 @@ export default function initProjectScroller() {
 			end: 'bottom bottom',
 			scrub: true,
 			ease: 'none',
-			pin: projectScroller,
+			pin: newsScroller,
 			pinSpacing: false,
 		},
 	})

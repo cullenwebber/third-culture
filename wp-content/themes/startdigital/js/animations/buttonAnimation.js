@@ -10,7 +10,6 @@ export default function buttonAnimations() {
 
 	buttons.forEach((button) => {
 		const texts = button.querySelectorAll('.button__text')
-		const lines = button.querySelectorAll('.button__lines div')
 
 		let tl
 		tl = gsap.timeline({ paused: true })

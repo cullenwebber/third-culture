@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 export default function initCapabilityScroller() {
-	const container = document.querySelector('#service-scroll-container')
+	const container = document.querySelector('#home-capabilities-section')
 	const capabilityScroller = document.querySelector('#capability-scroller')
 	const sections = document.querySelectorAll('[data-capability-section]')
 	const scrollers = document.querySelectorAll('.capability-scroller')
@@ -28,40 +28,12 @@ export default function initCapabilityScroller() {
 	// Show/hide the entire capability scroller based on service-scroll-container
 	ScrollTrigger.create({
 		trigger: container,
-		start: 'top bottom',
+		start: 'top top',
 		end: 'bottom bottom',
-		onEnter: () => {
-			gsap.to(capabilityScroller, {
-				yPercent: 0,
-				y: 0,
-				duration: 0.25,
-				ease: 'power2.out',
-			})
-		},
-		onLeave: () => {
-			gsap.to(capabilityScroller, {
-				yPercent: 100,
-				y: 64,
-				duration: 0.25,
-				ease: 'power2.in',
-			})
-		},
-		onEnterBack: () => {
-			gsap.to(capabilityScroller, {
-				yPercent: 0,
-				y: 0,
-				duration: 0.25,
-				ease: 'power2.out',
-			})
-		},
-		onLeaveBack: () => {
-			gsap.to(capabilityScroller, {
-				yPercent: 100,
-				y: 64,
-				duration: 0.25,
-				ease: 'power2.in',
-			})
-		},
+		scrub: true,
+		ease: 'none',
+		pin: capabilityScroller,
+		pinSpacing: false,
 	})
 
 	const transitionTo = (newIndex) => {

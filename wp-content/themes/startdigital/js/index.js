@@ -8,6 +8,7 @@ import initNewsSwiper from './components/news-slider'
 import initMouseFollower from './components/mouse-follower'
 import initCapabilityScroller from './components/capability-scroller'
 import initProjectScroller from './components/project-scroller'
+import initNewsScroller from './components/news-scroller'
 import ScrollProgress from './components/scroll-progress'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,4 +22,5 @@ document.addEventListener('DOMContentLoaded', () => {
 	initMouseFollower()
 	initCapabilityScroller()
 	initProjectScroller()
+	initNewsScroller()
 })

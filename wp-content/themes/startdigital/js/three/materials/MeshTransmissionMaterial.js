@@ -23,6 +23,9 @@ export default class MeshTransmissionMaterial extends THREE.MeshPhysicalMaterial
 			distortionScale: { value: 0.5 },
 			temporalDistortion: { value: 0.0 },
 			buffer: { value: null },
+			// Grit
+			gritAmount: { value: 0.0 },
+			gritScale: { value: 50.0 },
 		}
 
 		this.onBeforeCompile = (shader) => {
@@ -121,6 +124,17 @@ export default class MeshTransmissionMaterial extends THREE.MeshPhysicalMaterial
                 +0.2666667* snoise(2.0*m)
                 +0.1333333* snoise(4.0*m)
                 +0.0666667* snoise(8.0*m);
+        }
+
+        // Grit uniforms
+        uniform float gritAmount;
+        uniform float gritScale;
+
+        // Grit normal perturbation
+        vec3 getGritPerturbation(vec3 pos) {
+          float grit = snoiseFractal(pos * gritScale);
+          float grit2 = snoiseFractal(pos * gritScale + vec3(50.0));
+          return vec3(grit, grit2, 0.0) * gritAmount;
         }\n` + shader.fragmentShader
 
 			// Remove transmission
@@ -225,6 +239,11 @@ export default class MeshTransmissionMaterial extends THREE.MeshPhysicalMaterial
           vec3 pos = vWorldPosition;
           vec3 v = normalize( cameraPosition - pos );
           vec3 n = inverseTransformDirection( normal, viewMatrix );
+
+          // Apply grit perturbation to normal
+          n += getGritPerturbation(pos);
+          n = normalize(n);
+
           vec3 transmission = vec3(0.0);
           float transmissionR, transmissionB, transmissionG;
           float randomCoords = rand();
