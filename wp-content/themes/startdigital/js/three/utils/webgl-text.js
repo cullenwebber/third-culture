@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import { Text } from 'troika-three-text'
 import { getLenis } from '../../utils/smooth-scroll'
+import { createText, createTextMesh, isUsingTroika } from './text-factory'
 
 class WebGLText {
 	constructor(scene, camera, element, container = null, config = {}) {
@@ -15,51 +15,139 @@ class WebGLText {
 			hideOriginal: config.hideOriginal !== false,
 			fontPath:
 				config.fontPath ||
-				'/wp-content/themes/startdigital/static/fonts/Bagoss.ttf',
-			weightToFontMap: config.weightToFontMap || {},
+				'/wp-content/themes/startdigital/static/fonts/montreal-medium.ttf',
 			material: config.material,
-			zPosition: config.zPosition || 0, // Add configurable z position
+			zPosition: config.zPosition || 0,
 			...config,
 		}
 
 		this.enabled = true
 		this.computedStyle = window.getComputedStyle(this.element)
+		this.isReady = false
 
-		// Create text mesh
-		this.createMesh()
+		// Create group to hold text mesh
+		this.mesh = new THREE.Group()
 		this.scene.add(this.mesh)
 
-		this.setupListeners()
-		this.updateText()
+		// Create mesh asynchronously
+		this.createMesh().then(() => {
+			this.isReady = true
+			this.setupListeners()
+			this.updateText()
 
-		if (this.config.hideOriginal) {
-			this.element.style.opacity = 0
-		}
+			if (this.config.hideOriginal) {
+				this.element.style.opacity = 0
+			}
+		})
 	}
 
-	createMesh() {
-		// Get font from computed styles or config
-		const fontWeight = this.computedStyle.fontWeight
-		const font = this.config.weightToFontMap[fontWeight] || this.config.fontPath
+	async createMesh() {
+		// Create initial text geometry
+		await this.updateTextGeometry()
+	}
 
-		// Create Troika text mesh
-		this.mesh = new Text()
-		this.mesh.text = this.element.innerText
-		this.mesh.font = font
-
-		// Anchor from top-left like DOM elements
-		this.mesh.anchorX = 'left'
-		this.mesh.anchorY = 'top'
-
-		// Create or use provided material
-		if (this.config.material) {
-			this.mesh.material = this.config.material
-		} else {
-			this.mesh.material = this.createMaterial()
+	async updateTextGeometry() {
+		// Clear existing text meshes
+		while (this.mesh.children.length > 0) {
+			const child = this.mesh.children[0]
+			if (child.geometry) child.geometry.dispose()
+			if (child.material && !this.config.material) child.material.dispose()
+			this.mesh.remove(child)
 		}
 
-		// Apply text styling from computed styles
-		this.applyTextStyles()
+		const text = this.element.innerText
+		if (!text || text.trim().length === 0) return
+
+		// Get font size and element width in pixels
+		const fontSize = parseFloat(this.computedStyle.fontSize)
+		const rect = this.element.getBoundingClientRect()
+
+		// Calculate layout width - since we're using fontSize as the size,
+		// the layout width should be in the same pixel units
+		const layoutWidth = rect.width
+
+		// Get text alignment
+		const textAlign = this.computedStyle.textAlign || 'left'
+
+		// Get line height from computed styles
+		const lineHeightValue = this.computedStyle.lineHeight
+		let lineHeight = 1.0 // default
+		if (lineHeightValue && lineHeightValue !== 'normal') {
+			// lineHeight could be in pixels or unitless
+			if (lineHeightValue.endsWith('px')) {
+				lineHeight = parseFloat(lineHeightValue) / fontSize
+			} else {
+				lineHeight = parseFloat(lineHeightValue)
+			}
+		}
+
+		// Get letter spacing from computed styles (in em units for three-text)
+		const letterSpacingValue = this.computedStyle.letterSpacing
+		let letterSpacing = 0
+		if (letterSpacingValue && letterSpacingValue !== 'normal') {
+			// Convert pixel value to em
+			letterSpacing = parseFloat(letterSpacingValue) / fontSize
+		}
+
+		// Create text using text factory (troika on mobile, three-text on desktop)
+		try {
+			// Scale factor to match DOM font size in world space
+			const worldSize = this.getWorldSizeFromPixels({ height: fontSize })
+			const scaleFactor = worldSize.height / fontSize
+
+			// Get color from computed style for troika
+			const textColor = new THREE.Color(this.computedStyle.color)
+
+			const result = await createText({
+				text: text,
+				font: this.config.fontPath,
+				size: isUsingTroika() ? fontSize * scaleFactor : fontSize, // Pre-scale for troika
+				depth: 0.01,
+				lineHeight: lineHeight * 0.83,
+				letterSpacing: letterSpacing,
+				color: textColor.getHex(), // Pass color for troika
+				layout: {
+					width: isUsingTroika() ? layoutWidth * scaleFactor : layoutWidth,
+					align: textAlign,
+				},
+			})
+
+			// Create or use provided material (only used for three-text)
+			const material = this.config.material || this.createMaterial()
+
+			// Create mesh
+			const textMesh = createTextMesh(result, material)
+
+			if (result.isTroika) {
+				// Troika handles its own geometry - just get bounds from the mesh
+				const bounds = textMesh.textRenderInfo?.blockBounds
+				if (bounds) {
+					this.textWidth = bounds[2] - bounds[0]
+					this.textHeight = bounds[3] - bounds[1]
+				} else {
+					this.textWidth = 0
+					this.textHeight = 0
+				}
+			} else {
+				// For three-text, scale the geometry
+				result.geometry.scale(scaleFactor, scaleFactor, scaleFactor)
+
+				// Compute bounding box after scaling
+				result.geometry.computeBoundingBox()
+				const bbox = result.geometry.boundingBox
+				this.textWidth = bbox.max.x - bbox.min.x
+				this.textHeight = bbox.max.y - bbox.min.y
+
+				// Center the text within the mesh group
+				const horizontalCenter = (bbox.max.x + bbox.min.x) / 2
+				const verticalCenter = (bbox.max.y + bbox.min.y) / 2
+				textMesh.position.set(-horizontalCenter, -verticalCenter, 0)
+			}
+
+			this.mesh.add(textMesh)
+		} catch (error) {
+			console.error('Error creating text:', error)
+		}
 	}
 
 	createMaterial() {
@@ -80,48 +168,13 @@ class WebGLText {
 			// Simple material
 			return new THREE.MeshBasicMaterial({
 				color: color,
-				transparent: true,
+				transparent: false,
 			})
 		}
 	}
 
-	applyTextStyles() {
-		const styles = this.computedStyle
-		const rect = this.element.getBoundingClientRect()
-
-		// Font size in pixels
-		const fontSize = parseFloat(styles.fontSize)
-
-		// Convert pixel font size to world units using the configured z position
-		const worldSize = this.getWorldSizeFromPixels({ height: fontSize })
-		this.mesh.fontSize = worldSize.height
-
-		// Text alignment
-		this.mesh.textAlign = styles.textAlign || 'left'
-
-		// Letter spacing (convert to em units)
-		const letterSpacing = parseFloat(styles.letterSpacing) || 0
-		this.mesh.letterSpacing = letterSpacing / fontSize
-
-		// Line height (convert to em units)
-		const lineHeight = parseFloat(styles.lineHeight) || fontSize
-		this.mesh.lineHeight = lineHeight / fontSize
-
-		// Max width in world units
-		const worldDimensions = this.getWorldSizeFromPixels({ width: rect.width })
-		this.mesh.maxWidth = worldDimensions.width
-
-		// White space handling
-		this.mesh.whiteSpace = styles.whiteSpace || 'normal'
-
-		// Color
-		if (!this.config.material) {
-			this.mesh.color = new THREE.Color(styles.color)
-		}
-	}
-
-	updateText() {
-		if (!this.enabled || !this.element) {
+	async updateText() {
+		if (!this.enabled || !this.element || !this.isReady) {
 			this.mesh.visible = false
 			return
 		}
@@ -130,20 +183,30 @@ class WebGLText {
 
 		// Update text content if changed
 		const currentText = this.element.innerText
-		if (this.mesh.text !== currentText) {
-			this.mesh.text = currentText
+		const existingMesh = this.mesh.children[0]
+		if (!existingMesh || this.lastText !== currentText) {
+			this.lastText = currentText
+			await this.updateTextGeometry()
 		}
 
 		// Get element and container rectangles
 		const rect = this.element.getBoundingClientRect()
 		const containerRect = this.getContainerRect()
 
-		// Update text styles (in case they changed)
-		this.applyTextStyles()
-
 		// Calculate position relative to container
-		const relativeLeft = rect.left - containerRect.left
-		const relativeTop = rect.top - containerRect.top
+		let relativeLeft = rect.left - containerRect.left
+		let relativeTop = rect.top - containerRect.top
+
+		// For centered text, position at element center instead of left edge
+		const textAlign = this.computedStyle.textAlign || 'left'
+		if (textAlign === 'center') {
+			relativeLeft += rect.width / 2
+		} else if (textAlign === 'right') {
+			relativeLeft += rect.width
+		}
+
+		// Add half the element height to position at vertical center of the element
+		relativeTop += rect.height / 2
 
 		// Convert to NDC coordinates
 		const ndcX = (relativeLeft / containerRect.width) * 2 - 1
@@ -154,11 +217,8 @@ class WebGLText {
 		const worldX = ndcX * (width / 2)
 		const worldY = ndcY * (height / 2)
 
-		// Set position with configured z position
+		// Set position
 		this.mesh.position.set(worldX, worldY, this.config.zPosition)
-
-		// Trigger sync to ensure text geometry is updated
-		this.mesh.sync()
 	}
 
 	setupListeners() {
@@ -170,8 +230,7 @@ class WebGLText {
 
 		// Update on resize
 		this.resizeHandler = () => {
-			this.computedStyle = window.getComputedStyle(this.element)
-			this.updateText()
+			this.resize()
 		}
 		window.addEventListener('resize', this.resizeHandler)
 	}
@@ -184,6 +243,18 @@ class WebGLText {
 	disable() {
 		this.enabled = false
 		this.mesh.visible = false
+	}
+
+	async resize() {
+		if (!this.isReady || !this.element) return
+
+		// Refresh computed styles (font size may have changed)
+		this.computedStyle = window.getComputedStyle(this.element)
+
+		// Force regenerate text geometry with new sizes
+		this.lastText = null
+		await this.updateTextGeometry()
+		this.updateText()
 	}
 
 	setElement(element) {
@@ -202,16 +273,19 @@ class WebGLText {
 		}
 
 		// Update text and styles
-		this.mesh.text = element.innerText
+		this.lastText = null
 		this.updateText()
 	}
 
 	setMaterial(material) {
-		this.mesh.material = material
+		if (this.mesh.children[0]) {
+			this.mesh.children[0].material = material
+		}
+		this.config.material = material
 	}
 
 	getMaterial() {
-		return this.mesh.material
+		return this.mesh.children[0]?.material
 	}
 
 	// Method to update z position after instantiation
@@ -226,22 +300,25 @@ class WebGLText {
 
 	// Animation methods
 	show(duration = 1.8, ease = [0.25, 1, 0.5, 1]) {
-		if (this.mesh.material.uniforms && this.mesh.material.uniforms.uProgress) {
-			this.mesh.material.uniforms.uProgress.value = 1
+		const material = this.getMaterial()
+		if (!material) return
+
+		if (material.uniforms && material.uniforms.uProgress) {
+			material.uniforms.uProgress.value = 1
 		} else {
-			this.mesh.material.opacity = 1
+			material.opacity = 1
 		}
 		this.mesh.visible = true
 	}
 
 	hide(duration = 1.8) {
-		if (this.mesh.material.uniforms && this.mesh.material.uniforms.uProgress) {
-			// Animate shader uniform if available
-			// Example: animate(this.mesh.material.uniforms.uProgress, { value: 0 }, { duration })
-			this.mesh.material.uniforms.uProgress.value = 0
+		const material = this.getMaterial()
+		if (!material) return
+
+		if (material.uniforms && material.uniforms.uProgress) {
+			material.uniforms.uProgress.value = 0
 		} else {
-			// Animate opacity for standard materials
-			this.mesh.material.opacity = 0
+			material.opacity = 0
 		}
 		// Optionally hide after animation
 		setTimeout(() => {
@@ -249,7 +326,7 @@ class WebGLText {
 		}, duration * 1000)
 	}
 
-	// Helper methods (same as TrackedPlane)
+	// Helper methods
 	getFrustumDimensions(zPosition = 0) {
 		const distance = Math.abs(this.camera.position.z - zPosition)
 		const fov = this.camera.fov * (Math.PI / 180)
@@ -261,7 +338,6 @@ class WebGLText {
 
 	getWorldSizeFromPixels(options) {
 		const containerRect = this.getContainerRect()
-		// Use the configured z position for calculations
 		const { width: frustumWidth, height: frustumHeight } =
 			this.getFrustumDimensions(this.config.zPosition)
 		const result = {}
@@ -299,13 +375,11 @@ class WebGLText {
 		// Remove from scene
 		this.scene.remove(this.mesh)
 
-		// Dispose of mesh and material
-		if (this.mesh.dispose) {
-			this.mesh.dispose()
-		}
-		if (this.mesh.material && this.mesh.material.dispose) {
-			this.mesh.material.dispose()
-		}
+		// Dispose of meshes and materials
+		this.mesh.children.forEach((child) => {
+			if (child.geometry) child.geometry.dispose()
+			if (child.material && !this.config.material) child.material.dispose()
+		})
 
 		// Remove event listeners
 		if (this.scrollHandler) {

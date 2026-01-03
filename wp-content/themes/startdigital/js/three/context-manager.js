@@ -33,7 +33,7 @@ class WebGLManager {
 			this.fullScreenDimensions.width,
 			this.fullScreenDimensions.height
 		)
-		this.renderer.setPixelRatio(Math.min(1.4))
+		this.renderer.setPixelRatio(Math.min(1.2))
 		this.renderer.outputEncoding = THREE.sRGBEncoding
 		this.renderer.toneMapping = THREE.ACESFilmicToneMapping
 		this.renderer.shadowMap.enabled = true
@@ -152,6 +152,11 @@ class WebGLManager {
 			viewport.height
 		)
 
+		// Call preRender hook for shadow maps, etc.
+		if (scene.preRender) {
+			scene.preRender(this.renderer)
+		}
+
 		const postProcessor = this.postProcessing.get(sceneId)
 
 		if (postProcessor) {
@@ -212,10 +217,20 @@ class WebGLManager {
 	dispose() {
 		this.postProcessing.forEach((postProcessor) => postProcessor.dispose())
 		this.postProcessing.clear()
-		this.scenes.forEach((scene) => scene.dispose?.())
+		this.scenes.forEach(({ scene }) => scene.dispose?.())
 		this.scenes.clear()
 		this.visibleScenes.clear()
-		this.renderer?.dispose()
+
+		if (this.renderer) {
+			this.renderer.dispose()
+			this.renderer.forceContextLoss()
+			this.renderer = null
+		}
+
+		this.canvas = null
+
+		// Clear singleton so it can be recreated
+		WebGLManager.instance = null
 	}
 }
 

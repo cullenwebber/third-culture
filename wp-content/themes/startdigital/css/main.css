@@ -16,7 +16,7 @@
 
 main {
 	section {
-		@apply relative py-10 lg:py-20 3xl:py-32;
+		@apply relative py-12 lg:py-20 3xl:py-32;
 	}
 }
 
@@ -53,31 +53,37 @@ section#shadow-host-companion {
 	@apply !py-0;
 }
 
-#home-projects {
-	transform: translateZ(0); /* Force hardware acceleration */
-	backface-visibility: hidden;
+.pin-spacer {
+	@apply !pointer-events-none;
 }
 
-.project-container:nth-of-type(2n) {
-	@apply self-end;
+/* Header color inversion for dark-header sections */
+header .header-icon,
+header .header-text,
+header .menu-button-swap > div,
+header .menu-background,
+header nav,
+header .nav-menu-items:last-child {
+	@apply transition-colors duration-300 ease-out;
 }
 
-.project-container {
-	@apply w-[75%] md:w-1/3;
+header.header-inverted .header-icon,
+header.header-inverted .header-text {
+	@apply text-navy;
 }
 
-.project-container:nth-of-type(3n-1) {
-	@apply w-[80%] md:w-[40%] mr-[4%];
-
-	.image-container {
-		@apply aspect-square;
-	}
+header.header-inverted .menu-button-swap > div {
+	@apply bg-navy;
 }
 
-.project-container:nth-of-type(4n-1) {
-	@apply w-[65%] md:w-[30%] ml-[8%];
+header.header-inverted .menu-background {
+	@apply bg-white/75;
 }
 
-.post-teases .post-tease:not(:last-of-type) {
-	@apply border-b border-black border-dashed;
+header.header-inverted nav {
+	@apply text-navy;
+}
+
+header.header-inverted .nav-menu-items-wrapper:last-child .nav-menu-items {
+	@apply bg-navy text-white border-navy hover:bg-transparent hover:text-navy;
 }

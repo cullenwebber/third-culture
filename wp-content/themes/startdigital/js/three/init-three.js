@@ -1,84 +1,108 @@
 import SceneManager from './scene-manager'
 import HeroScene from './scenes/home-scene'
-import LogoPhysicsScene from './scenes/logo-physics-scene'
-import ProjectsGridScene from './scenes/projects-grid-scene'
-import ServicesScene from './scenes/services-scene'
-import WindowScene from './scenes/window-scene'
-import NewsScene from './scenes/news-scene'
+import HomeProjectsScene from './scenes/home-projects-scene'
 import { createCanvas } from './utils'
+import HomeCapabilitiesScene from './scenes/home-capabilities-scene'
+import NewsScene from './scenes/news-scene'
 import FooterScene from './scenes/footer-scene'
 import ContactScene from './scenes/contact-scene'
-import CapabilityScene from './scenes/capabilities-scene'
-import CaseStudiesScene from './scenes/case-studies.scene'
-import PageScene from './scenes/page-scene'
+import PageInnerScene from './scenes/page-inner-scene'
+import AboutScene from './scenes/about-scene'
+import PageInnerSceneAlt from './scenes/page-inner-scene-alt'
+import NotFoundScene from './scenes/404-scene'
+import ProjectScene from './scenes/project-scene'
+import CapabilityHeaderScene from './scenes/capability-header-scene'
+import CapabilitiesArchiveScene from './scenes/capabilities-archive-scene'
 
-function initThree() {
-	const heroContainer = document.querySelector('#home-hero')
-	const logoContainer = document.querySelector('#home-about')
-	const projectsContainer = document.querySelector('#project-grid')
-	const servicesContainer = document.querySelector('#page-capabilities')
-	const newsContainer = document.querySelector('#home-news-trigger')
-	const innerPageContainer = document.querySelector('#page-inner')
+let sceneManager = null
+
+// Progress callback for loading
+let onProgressCallback = null
+
+export function setLoadingProgressCallback(callback) {
+	onProgressCallback = callback
+}
+
+async function initThree() {
+	const heroContainer = document.querySelector('#frontpage-hero')
+	const projectsContainer = document.querySelector('#home-projects-container')
+	const capabilitiesContainer = document.querySelector(
+		'#home-capabilities-container'
+	)
+	const newsContainer = document.querySelector('#news-scene')
+	const footerContainer = document.querySelector('footer')
 	const contactContainer = document.querySelector('#contact-container')
-	const capabilityContainer = document.querySelector('#capabilities-hero')
-	const caseStudiesContainer = document.querySelector('#case-studies-hero')
-	const entireContainer = document.querySelector('#white-page')
-
+	const pageInnerContainer = document.querySelector('#white-page')
+	const pageInnerAltContainer = document.querySelector('#no-grid-white-page')
+	const aboutContainer = document.querySelector('#about-scene')
+	const projectContainer = document.querySelector('#project-scene')
+	const notFoundContainer = document.querySelector('#not-found-scene')
+	const capabilitiesHeaderContainer =
+		document.querySelector('#capability-scene')
+	const capabilitiesArchiveContainer = document.querySelector(
+		'#capabilities-archive-scene'
+	)
 	const canvas = createCanvas()
-	const sceneManager = new SceneManager(canvas)
+	sceneManager = new SceneManager(canvas)
 
-	// Home page
-	if (heroContainer) sceneManager.addScene(HeroScene, 'hero', heroContainer, 0)
-
-	if (logoContainer)
-		sceneManager.addScene(LogoPhysicsScene, 'logo', logoContainer, 4)
+	// Build list of scenes to load
+	const scenesToLoad = []
 
 	if (heroContainer)
-		sceneManager.addScene(WindowScene, 'window', heroContainer, 5)
-
+		scenesToLoad.push({ Scene: HeroScene, id: 'hero', container: heroContainer, priority: 0 })
 	if (projectsContainer)
-		sceneManager.addScene(
-			ProjectsGridScene,
-			'projectsHome',
-			projectsContainer,
-			3
-		)
-
-	if (heroContainer)
-		sceneManager.addScene(ServicesScene, 'services', heroContainer, 2)
-
-	if (newsContainer) sceneManager.addScene(NewsScene, 'news', newsContainer, 2)
-
-	// Pages that are all stone
-	if (entireContainer)
-		sceneManager.addScene(PageScene, 'page', entireContainer, 0)
-
-	// Case Studies page
-	if (caseStudiesContainer)
-		sceneManager.addScene(
-			CaseStudiesScene,
-			'caseStudies',
-			caseStudiesContainer,
-			2
-		)
-
-	// Capability page
-	if (capabilityContainer)
-		sceneManager.addScene(CapabilityScene, 'capability', capabilityContainer, 2)
-
-	// Contact page
+		scenesToLoad.push({ Scene: HomeProjectsScene, id: 'home-projects', container: projectsContainer, priority: 1 })
+	if (capabilitiesContainer)
+		scenesToLoad.push({ Scene: HomeCapabilitiesScene, id: 'home-capabilities', container: capabilitiesContainer, priority: 2 })
+	if (newsContainer)
+		scenesToLoad.push({ Scene: NewsScene, id: 'news', container: newsContainer, priority: 3 })
+	if (footerContainer)
+		scenesToLoad.push({ Scene: FooterScene, id: 'footer', container: footerContainer, priority: 7 })
 	if (contactContainer)
-		sceneManager.addScene(ContactScene, 'contact', contactContainer, 1)
+		scenesToLoad.push({ Scene: ContactScene, id: 'contact', container: contactContainer, priority: 5 })
+	if (pageInnerContainer)
+		scenesToLoad.push({ Scene: PageInnerScene, id: 'page-inner', container: pageInnerContainer, priority: 1 })
+	if (pageInnerAltContainer)
+		scenesToLoad.push({ Scene: PageInnerSceneAlt, id: 'page-inner-alt', container: pageInnerAltContainer, priority: 1 })
+	if (aboutContainer)
+		scenesToLoad.push({ Scene: AboutScene, id: 'about', container: aboutContainer, priority: 2 })
+	if (projectContainer)
+		scenesToLoad.push({ Scene: ProjectScene, id: 'project', container: projectContainer, priority: 2 })
+	if (capabilitiesHeaderContainer)
+		scenesToLoad.push({ Scene: CapabilityHeaderScene, id: 'capability-header', container: capabilitiesHeaderContainer, priority: 3 })
+	if (capabilitiesArchiveContainer)
+		scenesToLoad.push({ Scene: CapabilitiesArchiveScene, id: 'capabilities-archive', container: capabilitiesArchiveContainer, priority: 2 })
+	if (notFoundContainer)
+		scenesToLoad.push({ Scene: NotFoundScene, id: '404', container: notFoundContainer, priority: 1 })
 
-	// Capabilities page
-	if (servicesContainer)
-		sceneManager.addScene(ServicesScene, 'services', servicesContainer, 2)
+	// Load scenes with progress tracking
+	const totalScenes = scenesToLoad.length
+	let loadedScenes = 0
 
-	// Inner Pages
-	if (innerPageContainer)
-		sceneManager.addScene(FooterScene, 'footer', innerPageContainer, 0)
+	for (const { Scene, id, container, priority } of scenesToLoad) {
+		await sceneManager.addScene(Scene, id, container, priority)
+		loadedScenes++
+		if (onProgressCallback) {
+			onProgressCallback(loadedScenes / totalScenes)
+		}
+	}
 
 	sceneManager.start()
+
+	// Dispatch event when all scenes are loaded
+	window.dispatchEvent(new CustomEvent('threeReady'))
+}
+
+export function destroyThree() {
+	if (sceneManager) {
+		sceneManager.dispose()
+		sceneManager = null
+	}
+	// Remove existing canvas
+	const existingCanvas = document.querySelector('#webgl-canvas')
+	if (existingCanvas) {
+		existingCanvas.remove()
+	}
 }
 
 export default initThree

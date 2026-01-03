@@ -1,66 +1,56 @@
 {% extends 'page.twig' %}
 {% block content %}
 	{% set length = post.services|length %}
-	<section id="page-inner" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
-	<section id="page-capabilities" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
-
-	<section id="capabilities-hero" class="min-h-lvh text-white flex flex-col justify-end pt-24 py-12">
-		<div class="container flex flex-col gap-12 relative z-40">
-			<div class="block-content max-w-[600px] w-full indent-16 self-end">
-				<span class="is-h2 leading-none">{{ '(' ~ length ~ ')' }}</span>
-				{{ post.heading_content }}
-			</div>
-			<div class="flex flex-col justify-end gap-4 sm:gap-8 xl:gap-16 w-full self-center">
+	<div id="entire-page" class="flex flex-col !py-0 dark-header dark-mouse">
+		<section id="capabilities-archive-scene" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></section>
+		<section class="-mt-[100lvh] flex flex-col justify-center text-navy pt-24 pb-16 md:py-3 min-h-lvh">
+			<div class="container flex flex-col gap-4 md:gap-12 items-center text-center relative z-40">
 				<div split-type="chars" class="block-content relative w-fit">
-					{{ post.heading }}
+					<div class="sm:*:text-[10vw]">
+						{{ post.heading }}
+					</div>
+					<h6 class="is-superscript absolute left-full top-[15%] w-fit whitespace-nowrap">
+						{{ length }}
+					</h6>
 				</div>
-			</div>
-		</div>
-	</section>
-	<section id="home-capabilities-trigger" class="min-h-lvh text-white pt-0">
-		<div class="container flex flex-col gap-8 lg:gap-16 xl:gap-32 relative items-center">
-			<div class="flex flex-col gap-4 sm:gap-8 xl:gap-16 relative z-40 max-w-[1900px] w-full">
-				<div class="flex flex-row self-end">
-					<div class="block-content max-w-[700px] xl:max-w-[1150px] indent-16 sm:indent-32">
-						{{ post.block_content }}
+				<div class="flex flex-col gap-12">
+					<div class="block-content block-intro max-w-[500px] 2xl:max-w-[700px] *:text-balance text-navy">
+						{{ post.heading_content }}
 					</div>
 				</div>
 			</div>
-
-			<div id="service-scroll-container" class="flex flex-col items-center z-40 relative w-full">
-				<div id="service-0"
-					class="aspect-square p-8 w-1/2 md:w-1/3 xl:w-1/4 4xl:w-1/5 absolute top-[37.5lvh] left-1/2 -translate-y-1/2 -translate-x-1/2 z-40 pointer-events-none"></div>
+		</section>
+		<div class="container dark-mouse">
+			<div id="service-scroll-container" class="flex flex-col md:items-center z-40 relative w-full">
 				{% for service in post.services %}
-					{% set subservices = service.subservice %}
-					{% set length = subservices|length %}
-					<a href="{{ service.link.url }}"
-						id="service-text-{{ loop.index0 }}"
-						class="min-h-[75lvh] flex items-center justify-center flex-col">
-						<div class="capability-text opacity-25 relative">
-							{{ service.title }}
-							<h6 class="is-superscript absolute left-full top-1/4 w-fit whitespace-nowrap">
-								(
-								{{ length }}
-								)
-							</h6>
-							<div class="flex flex-row items-center absolute left-0 top-full w-full overflow-hidden"
-								style="mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);">
-								{% for _ in 1..3 %}
-									<div class="infinite-scroll flex flex-row items-center shrink-0">
-										{% for subservice in service.subservice %}
-											<div class="shrink-0 ml-3 sm:ml-8">
-												{{ subservice.title }}
-											</div>
-											<div class="size-2 bg-white rounded-[1px] shrink-0 ml-3 sm:ml-8"></div>
-										{% endfor %}
-									</div>
-								{% endfor %}
+					<div id="service-text-{{ loop.index0 }}"
+						data-capability-section="{{ loop.index0 }}"
+						class="min-h-lvh flex items-center justify-center flex-col max-w-[400px] 4xl:max-w-[550px] w-full {{
+						loop.index is odd
+							? 'md:self-end 2xl:mr-[5%]'
+							: 'md:self-start 2xl:ml-[5%]'
+						}}">
+						<div class="capability-text block-content text-navy">
+							<div class="supertitle text-paragraphDark flex flex-row items-center gap-2">
+								<div class="size-2.5 bg-paragraphDark blink"></div> {{ '0' ~ loop.index }}
 							</div>
+							{{ service.title }}
+
+							<div class="block-content text-paragraphDark text-pretty">
+								{{ service.content }}
+							</div>
+
+							{% include 'partials/button.twig' with {
+								title: 'Learn more',
+								link: service.link.url,
+								target: '_self',
+								class: 'mt-4 dark'
+							} %}
 						</div>
-					</a>
+					</div>
 				{% endfor %}
 			</div>
-			<div class="relative z-40 pb-[25lvh]"></div>
+			<div class="h-[10lvh]"></div>
 		</div>
-	</section>
+	</div>
 {% endblock %}

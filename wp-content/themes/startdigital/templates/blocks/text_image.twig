@@ -1,15 +1,22 @@
-<section class="relative z-40">
-    <div class="container flex flex-col-reverse lg:flex-row gap-16">
-        <div class="flex w-full items-center">
-            <div class="block-content !grid grid-cols-1 md:grid-cols-2 gap-8 md:!gap-16 max-w-[400px] md:max-w-[800px] 2xl:max-w-[1000px] indent-16 justify-end">
-                {{ block.content }}
-                {% if block.link %}
-                    {% include "partials/button.twig" with { title: block.link.title , link: block.link.url, target: block.link.target } %}
-                {% endif %}
-            </div>
-        </div>
-        <div class="image-container aspect-3/4 w-full sm:hidden lg:flex lg:w-1/2 relative">
-            <img src="{{ get_image(block.image).src }}" alt="{{ block.image.alt }}" class="absolute inset-0 w-full h-full object-cover object-center" />
-        </div>
-    </div>
+<section class="relative z-40 text-navy">
+	<div class="container flex flex-col-reverse lg:flex-row gap-16">
+		<div class="flex w-full items-center">
+			<div class="block-content !grid grid-cols-1 md:grid-cols-2 gap-8 md:!gap-16 max-w-[400px] md:max-w-[800px] 2xl:max-w-[1000px] justify-end *:text-pretty">
+				{{ block.content }}
+				{% if block.link %}
+					{% include 'partials/button.twig' with {
+						title: block.link.title,
+						link: block.link.url,
+						target: block.link.target,
+						class: 'dark'
+					} %}
+				{% endif %}
+			</div>
+		</div>
+		<div class="image-container aspect-3/4 w-full sm:hidden lg:flex lg:w-1/2 relative rounded-md overflow-hidden">
+			<img src="{{ get_image(block.image).src }}"
+				alt="{{ block.image.alt }}"
+				class="absolute inset-0 w-full h-full object-cover object-center" />
+		</div>
+	</div>
 </section>

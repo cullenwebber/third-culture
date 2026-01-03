@@ -1,53 +1,74 @@
-{% set length = post.projects.projects|length %}
+{% set length = (post.projects|length) + 3 %}
 
-<section id="project-grid" class="text-white relative">
-	<div class="sticky top-0 left-0 w-full h-lvh flex flex-col justify-center z-50 pointer-events-none">
-		<div class="container project-text-container flex flex-col items-center relative z-40">
-			<div class="flex flex-col items-center gap-4 sm:gap-8 lg:gap-16 relative z-40 w-fit">
-				<div class="project-title lg:text-center relative">
-					{{ post.projects.title }}
-					<h6 class="is-superscript absolute left-full top-1/4 w-fit whitespace-nowrap">
-						(
-						{{ length }}
-						)
-					</h6>
-				</div>
+<section id="home-projects-inner"
+	class="text-navy relative z-40 !py-0 flex flex-col dark-mouse dark-header"
+	style="height: {{ 100 * length ~ 'lvh' }}">
+	<div id="home-projects-container" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></div>
+	<div class="container flex flex-col items-center relative z-40 max-sm:py-12 sm:h-[50lvh] justify-center -mt-[100lvh]">
+		<div class="project-title relative max-w-[250px] md:max-w-[300px] xl:max-w-[500px] 2xl:max-w-[600px] 4xl:max-w-[700px] text-center items-center flex flex-col block-content">
+			<div class="supertitle text-paragraphDark flex flex-row items-center gap-2">
+				<div class="size-2.5 bg-paragraphDark blink"></div>In Focus
 			</div>
+			{{ post.projects.title }}
 		</div>
 	</div>
-	<div class="container w-full xl:w-[90%] 4xl:w-[80%] flex flex-col relative z-40 gap-16">
+	<div class="container flex-grow w-full flex flex-col relative z-40">
 		{% for project in post.projects.projects %}
 			<a href="{{ project.link }}"
 				id="project-container-{{ loop.index }}"
-				class="project-container flex flex-col gap-4 -mt-[0%]">
+				data-project-section="{{ loop.index0 }}"
+				class="project-container flex flex-col gap-4 pointer-events-none sr-only top-0">
 				<div class="image-container w-full aspect-3/4 relative">
 					<img src="{{ get_image(project.project_thumbnail) }}"
 						alt="Image of the project {{ project.title }}"
 						class="sr-only" />
 				</div>
 				<div class="flex flex-col gap-1">
-					<h4 project-grid-title class="is-h5">
+					<h4 project-grid-title class="is-h5 text-white">
 						{{ project.title }}
 					</h4>
 					{% if project.featured_deliverable %}
 						<div class="2xl:text-xl flex flex-col">
-							<p project-grid-title class="">
-								(
+							<p project-grid-subtitle class="">
 								{{ project.featured_deliverable.name }}
-								)
 							</p>
 						</div>
 					{% endif %}
 				</div>
 			</a>
 		{% endfor %}
-		<div class="h-lvh"></div>
 	</div>
-	<div class="container flex flex-col items-center relative z-40">
-		{% include 'partials/big-button.twig' with {
-			title: 'All Projects',
-			link: '/projects',
-			class: 'text-white'
-		} %}
+	<div id="project-scroller" class="absolute top-0 pointer-events-none h-lvh left-0 w-full z-40 dark-mouse">
+		<div class="w-full h-dvh flex flex-row justify-center sm:justify-between items-end py-6 md:py-8 xl:py-12 md:px-8 2xl:px-12 px-4">
+			{# <div class="bg-gradient-to-t from-white to-white/0 absolute w-full left-0 bottom-0 h-24 xl:h-48 pointer-events-none"></div> #}
+			<div class="relative">
+				<div data-project-slider class="absolute aspect-3/4 h-[120%] -translate-x-[9%] -translate-y-[9%] z-10">
+					<div class="rounded-tl-sm border-l border-t size-2 border-paragraphDark absolute top-0 left-0"></div>
+					<div class="rounded-tr-sm border-r border-t size-2 border-paragraphDark absolute top-0 right-0"></div>
+					<div class="rounded-br-sm border-r border-b size-2 border-paragraphDark absolute bottom-0 right-0"></div>
+					<div class="rounded-bl-sm border-l border-b size-2 border-paragraphDark absolute bottom-0 left-0"></div>
+				</div>
+				{% include 'icons/mask.twig' with {
+					id: 'project-mask'
+				} %}
+				<div class="relative flex flex-row-reverse w-full gap-1">
+					{% for project in post.projects.projects %}
+						<div data-project-thumb="{{ loop.index0 }}"
+							class="aspect-3/4 overflow-hidden relative h-[54px]"
+							style="clip-path: url(#project-mask);">
+							<img src="{{ get_image(project.project_thumbnail) }}"
+								alt=""
+								class="absolute top-0 left-0 object-cover w-full h-full" />
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+			{% include 'partials/button.twig' with {
+				title: 'View all projects',
+				link: '/projects',
+				target: '_self',
+				class: 'dark pointer-events-auto max-sm:hidden border-button'
+			} %}
+		</div>
 	</div>
 </section>

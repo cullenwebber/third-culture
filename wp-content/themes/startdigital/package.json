@@ -11,6 +11,7 @@
 		"browser-sync": "cross-env NODE_ENV=development browser-sync start --proxy \"third-culture.test\" --host=\"third-culture.test\" --no-inject-changes --files=\"./\""
 	},
 	"dependencies": {
+		"@dgreenheck/three-pinata": "^2.0.1",
 		"autoprefixer": "^10.4.17",
 		"browser-sync": "^2.29.3",
 		"cannon-es": "^0.20.0",
@@ -27,11 +28,16 @@
 		"postcss-nested": "^6.0.1",
 		"swiper": "^10.3.1",
 		"three": "^0.179.1",
+		"three-text": "^0.2.16",
 		"troika-three-text": "^0.52.4"
 	},
 	"devDependencies": {
+		"@gltf-transform/core": "^4.2.1",
+		"@gltf-transform/extensions": "^4.2.1",
+		"@gltf-transform/functions": "^4.2.1",
 		"@tailwindcss/typography": "^0.5.10",
 		"cssnano": "^5.1.15",
+		"draco3dgltf": "^1.5.7",
 		"esbuild-serve": "^1.0.1",
 		"prettier": "^2.8.8",
 		"prettier-plugin-twig-melody": "^0.4.6",

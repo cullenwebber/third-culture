@@ -1,5 +1,5 @@
 .infinite-scroll {
-	animation: scroll-left 15s linear infinite;
+	animation: scroll-left 25s linear infinite;
 }
 
 @keyframes scroll-left {
@@ -8,5 +8,22 @@
 	}
 	100% {
 		transform: translateX(-100%);
+	}
+}
+
+.blink {
+	animation: blink 1s infinite;
+}
+
+@keyframes blink {
+	0%,
+	50% {
+		opacity: 1;
+		scale: 1;
+	}
+	51%,
+	100% {
+		opacity: 0;
+		scale: 0.8;
 	}
 }

@@ -1,27 +1,23 @@
 {% extends 'base.twig' %}
 
 {% block content %}
-    <section id="page-inner" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
-    <section id="contact-container" class="min-h-lvh w-full text-white flex flex-col justify-center z-40">
-        <div class="container py-12 pb-32 flex flex-col items-center justify-center flex-grow gap-6 is-h7">
-            {% include "icons/full-logo.twig" with { class: 'h-5 2xl:h-6' } %}
-            <div class="text-center">
-                {{ block.heading }}
-            </div>
-            <div class="flex flex-col md:flex-row justify-end md:justify-center gap-4 md:gap-8 items-center">
-                <div class="flex flex-col md:items-end w-[250px] max-md:text-center">
-                    <a href="mailto:{{ options.company_details.email }}">
-                        {{ options.company_details.email }}
-                    </a>
-                    <a href="tel:{{ options.company_details.phone }}">
-                        {{ options.company_details.phone }}
-                    </a>
-                </div>
-                {% include "icons/repeat-arrows.twig" with { class: 'w-14 shrink-0'} %}
-                <div class="flex flex-col items-center max-md:text-center md:items-start w-[250px]">
-                    {{ options.company_details.address }}
-                </div>
-            </div>
-        </div>
-    </section>
+	{# <section id="page-inner" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section> #}
+	<section id="contact-container"
+		class="white-background-material min-h-lvh w-full text-navy flex flex-col justify-center z-40 dark-mouse dark-header">
+		<div class="container py-12 pb-32 flex flex-col items-center justify-center flex-grow gap-6 is-h7">
+			{% include 'icons/wordmark.twig' with {
+				class: 'max-w-[200px] md:max-w-[300px] w-full'
+			} %}
+
+			<div class="flex flex-col md:flex-row justify-end md:justify-center gap-4 md:gap-20 items-center">
+				<div class="flex flex-col md:items-end w-[250px] max-md:text-center">
+					<a href="mailto:{{ options.company_details.email }}">{{ options.company_details.email }}</a>
+					<a href="tel:{{ options.company_details.phone }}">{{ options.company_details.phone }}</a>
+				</div>
+				<div class="flex flex-col items-center max-md:text-center md:items-start w-[250px]">
+					{{ options.company_details.address }}
+				</div>
+			</div>
+		</div>
+	</section>
 {% endblock %}

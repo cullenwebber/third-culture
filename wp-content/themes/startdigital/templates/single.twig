@@ -1,86 +1,84 @@
-{% extends "base.twig" %}
+{% extends 'base.twig' %}
 
 {% block content %}
-	<section	id="white-page"	class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
-	<article	class="container post-type-{{ post.post_type }} relative z-40"	id="post-{{ post.ID }}">
-		<section	id="entire-page"	class="flex flex-col gap-8 sm:gap-16 justify-center items-center overflow-hidden pt-24 pb-24 lg:pb-48">
-			<div	class="flex flex-col gap-8 items-center">
-				<span	class="is-supertitle">
-					{{ '(' ~ post.category.name ~ ')' }}
-				</span>
-				<h1	class="is-h2 xl:text-[64px] text-center max-w-[1100px]">
-					{{ post.title }}
-				</h1>
-				<div	class="block-content max-w-[650px] *:text-xl text-center">
-					{{ post.introduction }}
+	<section id="no-grid-white-page" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></section>
+	<article class="container dark-header dark-mouse post-type-{{ post.post_type }} relative z-40 -mt-[100lvh]"
+		id="post-{{ post.ID }}">
+		<section id="entire-page"
+			class="flex flex-col gap-8 sm:gap-16 justify-center items-center overflow-hidden pt-20 sm:pt-24 pb-24 lg:pb-48">
+			<div class="flex flex-col gap-4 sm:gap-8 items-center">
+				<div class="flex flex-row items-center gap-2 text-paragraphDark">
+					<a href="/news"
+						class="button__small flex flex-row items-center justify-start gap-3 text-white w-fit text-base group">
+						<div class="button__icon-container size-5 bg- flex items-center justify-center rounded-sm relative overflow-hidden bg-paragraphDark">
+							{% include 'icons/button-arrow.twig' with {
+								class: 'w-2.5 text-white shrink-0 absolute top-1/2 -translate-y-1/2  -right-full group-hover:-translate-x-[25px] duration-[400ms] ease-in-out rotate-180'
+							} %}
+							{% include 'icons/button-arrow.twig' with {
+								class: 'w-2.5 text-white shrink-0 group-hover:-translate-x-[25px] duration-[400ms] ease-in-out rotate-180'
+							} %}
+						</div>
+						<div class="relative flex justify-start text-left">
+							<div class="relative w-fit overflow-hidden">
+								<div class="button__text indent-0 text-paragraphDark">
+									News
+								</div>
+								<div class="button__text absolute top-full left-0 w-full text-paragraphDark">
+									News
+								</div>
+							</div>
+						</div>
+					</a>
+					<div class="text-base">
+						/
+					</div>
+					<span class="text-base">{{ post.category.name }}</span>
 				</div>
 
-			</div>
-			<div	class="max-w-[1100px] flex flex-col gap-6 sm:flex-row justify-between w-full border-t border-dashed border-black/30 pt-6">
-				<div	class="flex flex-col items-center gap-1 w-full">
-					<span	class="is-supertitle text-black/30">
-						Date
-					</span>
-					<p	class="text-lg">
-						{{ post.date }}
-					</p>
-				</div>
-				<div	class="flex flex-col items-center gap-1 w-full">
-					<span	class="is-supertitle text-black/30">
-						Author
-					</span>
-					<p	class="text-lg">
-						{{ post.author.name }}
-					</p>
-				</div>
-				<div	class="flex flex-col items-center gap-1 w-full">
-					<span	class="is-supertitle text-black/30">
-						Read
-					</span>
-					<p	class="text-lg">
-						{{ post.reading_length }}
-						mins
-					</p>
+				<h1 class="post-title-typography text-center text-balance max-w-[936px] text-navy">
+					{{ post.title }}
+				</h1>
+
+				<div class="flex flex-row items-center gap-3 sm:text-lg max-sm:mt-6">
+					<div class="image-container aspect-square relative rounded-[4px] size-[40px] sm:size-[28px] overflow-hidden border border-navy/20">
+						<img src="{{ get_image(post.author.profile_picture).src }}"
+							alt="{{ 'Image of ' ~ post.author.name }}"
+							class="absolute inset-0 object-cover" />
+					</div>
+					<div class="flex flex-col sm:flex-row sm:items-center sm:gap-3 leading-tight">
+						<p class="text-navy">
+							{{ post.author.name }}
+						</p>
+						<div class="size-1.5 bg-paragraphDark blink hidden sm:flex"></div>
+						<span class="text-navy">{{ post.author.role }}</span>
+					</div>
 				</div>
 			</div>
-			<div	class="max-w-[1200px] aspect-16/9 w-full relative overflow-hidden rounded-lg">
-				<img	src="{{ get_image(post.thumbnail).src }}"	alt="{{ post.thumbnail.alt }}"	class="absolute top-0 left-0 w-full h-full object-cover" />
+
+			<div class="max-w-[1000px] w-full flex flex-col gap-4">
+				<div class="max-w-[1000px] aspect-16/9 w-full relative overflow-hidden rounded-lg">
+					<img src="{{ get_image(post.thumbnail).src }}"
+						alt="{{ post.thumbnail.alt }}"
+						class="absolute top-0 left-0 w-full h-full object-cover" />
+				</div>
+				{# <div class="flex flex-row items-center justify-center gap-4 text-paragraphDark text-base w-full">
+					<div class="flex flex-row items-center gap-2 bg-paragraphLight rounded-md py-1 px-3 text-navy text-base z-20 relative">
+						{% include 'icons/time.twig' with {
+							class: 'size-4'
+						} %}
+						<span>{{ post.reading_length ~ ' min read' }}</span>
+					</div>
+					<div class="flex flex-row items-center gap-2 bg-navy rounded-md py-1 px-3 text-white text-base z-20 relative">
+						{% include 'icons/calendar.twig' with {
+							class: 'size-4'
+						} %}
+						<span>{{ post.date|date('j M, Y') }}</span>
+					</div>
+				</div> #}
 			</div>
-			<div	class="prose lg:prose-xl max-w-[800px]">
+			<div class="prose lg:prose-xl max-w-[936px] w-full">
 				{{ post.content }}
 			</div>
 		</section>
 	</article>
-	<section	class="flex flex-col overflow-hidden border-t border-black/30 border-dashed relative z-40">
-		<div	class="container flex flex-col gap-8 lg:gap-16 xl:gap-24 items-center">
-			<div	class="flex flex-col lg:flex-row justify-between sm:items-end relative z-40 gap-8 w-full">
-				<div	class="flex flex-col gap-4 sm:gap-8 xl:gap-16 w-full">
-					<div	split-type="chars"	class="block-content">
-						<h5	class="is-h2">
-							Related Articles
-						</h5>
-					</div>
-					<div	class="flex flex-row xl:ml-[10%]">
-						<div	class="block-content max-w-[500px] 2xl:max-w-[1000px] w-full indent-16 *:leading-snug">
-							{{ options.related_articles_content }}
-						</div>
-					</div>
-				</div>
-				{% include "partials/button.twig" with { title: 'All Articles' , link: '/news', class: 'w-fit shrink-0' } %}
-			</div>
-			<div	id="home-swiper-trigger"	class="w-full 4xl:w-3/4 self-end relative z-40">
-				<div	class="flex w-full">
-					<div	id="news-swiper-container"	class="swiper !overflow-visible w-full">
-						<div	class="swiper-wrapper">
-							{% for news in fn('get_news_posts', 6) %}
-								<div	class="swiper-slide">
-									{% include "partials/posts/post-tease.twig" with { post: news } %}
-								</div>
-							{% endfor %}
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
 {% endblock %}

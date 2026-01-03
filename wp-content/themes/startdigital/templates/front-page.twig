@@ -1,8 +1,8 @@
 {% extends 'page.twig' %}
 {% block content %}
+	{% include 'partials/page-loader.twig' %}
 	{% include 'partials/home/banner.twig' %}
-	{% include "partials/home/about.twig" %}
-	{% include "partials/home/projects-grid.twig" %}
-	{% include "partials/home/capabilities.twig" %}
-	{% include "partials/home/news.twig" %}
+	{% include 'partials/home/projects-grid.twig' %}
+	{% include 'partials/home/capabilities.twig' %}
+	{% include 'partials/home/news.twig' %}
 {% endblock %}

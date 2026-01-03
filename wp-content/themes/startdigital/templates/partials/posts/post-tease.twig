@@ -1,11 +1,51 @@
-<a class="post-tease" href="{{ post.link }}">
-    <article class="flex flex-col gap-4">
-        <img src="{{ get_image(post.thumbnail).src }}" alt="{{ post.thumbnail.alt }}" class="w-full object-cover aspect-3/4" />
-        <div class="flex flex-row gap-4">
-            {% include "partials/posts/post-date.twig" with { title: post.date|date('j M')} %}
-            <h5 class="is-h7">
-                {{ post.title }}
-            </h5>
-        </div>
-    </article>
+{% set news = news ? : post %}
+
+{% include 'icons/mask.twig' with {
+	class: 'sr-only',
+	id: 'news-mask'
+} %}
+<a href="{{ news.link }}" class="flex flex-col w-full gap-6 dark-mouse">
+	<div class="overflow-hidden aspect-video relative rounded-lg p-4">
+		<img data-news-image
+			src="{{ get_image(news.thumbnail).src }}"
+			alt="{{ news.thumbnail.alt }}"
+			class="w-full object-cover absolute top-0 left-0 h-full" />
+	</div>
+
+	<div class="relative flex flex-col flex-grow justify-between items-start gap-6 2xl:gap-8 z-20">
+		<div class="w-full md:w-[90%] max-w-[700px] flex flex-col gap-4 items-start">
+			<div class="flex flex-row gap-1 items-center">
+				<span data-news-category class="bg-paragraphLight rounded-md py-1 px-3 text-navy text-base z-20 relative">
+					{{ news.terms('category')[0].name ? : 'Article' }}
+				</span>
+				<span class="bg-navy rounded-md py-1 px-3 text-white text-base z-20 relative">{{ post.date|date('j M') }}</span>
+			</div>
+			<h5 class="is-h3.9 text-navy text-pretty">
+				{{ news.title }}
+			</h5>
+			<div class="block-content text-base text-paragraphDark text-balance">
+				{{ news.introduction|raw|truncate(20) }}
+			</div>
+			<div class="button__small flex flex-row items-center justify-start gap-3 text-paragraphDark w-fit text-base group my-2 xl:my-3">
+				<div class="relative flex justify-start text-left">
+					<div class="relative w-fit overflow-hidden">
+						<div class="button__text indent-0">
+							Read more
+						</div>
+						<div class="button__text absolute top-full left-0 w-full">
+							Read more
+						</div>
+					</div>
+				</div>
+				<div class="button__icon-container size-5 bg-paragraphDark flex items-center justify-center rounded-sm relative overflow-hidden">
+					{% include 'icons/button-arrow.twig' with {
+						class: 'w-2.5 text-white shrink-0 absolute top-1/2 -translate-y-1/2  -left-full group-hover:translate-x-[25px] duration-[400ms] ease-in-out'
+					} %}
+					{% include 'icons/button-arrow.twig' with {
+						class: 'w-2.5 text-white shrink-0 group-hover:translate-x-[25px] duration-[400ms] ease-in-out'
+					} %}
+				</div>
+			</div>
+		</div>
+	</div>
 </a>

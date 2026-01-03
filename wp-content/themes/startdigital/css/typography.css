@@ -1,36 +1,11 @@
 @font-face {
-	font-family: 'Palace';
-	src: url('/wp-content/themes/startdigital/static/fonts/PalaceRegular.woff2');
-}
-
-@font-face {
-	font-family: 'PalaceItalic';
-	src: url('/wp-content/themes/startdigital/static/fonts/PalaceItalic.woff2');
-}
-
-@font-face {
-	font-family: 'Bagoss';
-	src: url('/wp-content/themes/startdigital/static/fonts/Bagoss.woff2');
-}
-
-@font-face {
-	font-family: 'Burgesss';
-	src: url('/wp-content/themes/startdigital/static/fonts/burgesss.woff2');
-}
-
-/* @font-face {
 	font-family: 'Montreal';
 	src: url('/wp-content/themes/startdigital/static/fonts/montreal.woff2');
+}
+
+/* *::selection {
+	@apply bg-navy text-white;
 } */
-
-@font-face {
-	font-family: 'Montreal Semibold';
-	src: url('/wp-content/themes/startdigital/static/fonts/montreal-semibold.woff2');
-}
-
-*::selection {
-	@apply bg-black text-white;
-}
 
 html,
 body {
@@ -38,7 +13,7 @@ body {
 }
 
 body {
-	@apply text-base 2xl:text-2xl 3xl:leading-normal;
+	@apply text-base 2xl:text-xl 4xl:text-2xl 3xl:leading-normal;
 }
 
 h1,
@@ -48,27 +23,39 @@ h4,
 h5,
 h6,
 .is-h7 {
-	@apply font-heading !leading-[1.3];
+	@apply font-heading !leading-[1.1] tracking-[-0.04em];
 }
 
 h1,
 .is-h1 {
-	@apply text-[50px] sm:text-[100px] lg:text-[150px] xl:text-[180px] 2xl:text-[220px] 4xl:text-[300px];
+	@apply text-[48px] md:text-[64px] lg:text-[72px] xl:text-[100px] 3xl:text-[130px] 4xl:text-[160px];
 }
 
 h2,
 .is-h2 {
-	@apply text-[36px] sm:text-[48px] lg:text-[64px] xl:text-[80px] 2xl:text-[120px];
+	@apply text-[36px] sm:text-[40px] md:text-[48px] xl:text-[64px] 2xl:text-[72px] 3xl:text-[92px] 4xl:text-[100px];
 }
 
 h3,
 .is-h3 {
-	@apply text-[20px] sm:text-[24px] lg:text-[32px] xl:text-[40px] 2xl:text-[48px] leading-[1.3];
+	@apply text-[30px] sm:text-[34px] md:text-[36px] xl:text-[38px] 2xl:text-[48px] 3xl:text-[56px] 4xl:text-[64px] leading-[1.3];
+}
+
+.is-h3\.5 {
+	@apply text-[24px] sm:text-[24px] md:text-[28px] xl:text-[38px] 2xl:text-[48px] 3xl:text-[56px] 4xl:text-[64px] leading-[1.3];
+}
+
+.is-h3\.75 {
+	@apply text-[24px] xl:text-[38px] 2xl:text-[48px] !leading-[1.2];
+}
+
+.is-h3\.9 {
+	@apply text-[28px] md:text-[32px] 2xl:text-[36px] 3xl:text-[42px] !leading-[1.2];
 }
 
 h4,
 .is-h4 {
-	@apply text-[24px] xl:text-[32px] 2xl:text-[40px];
+	@apply text-[24px] xl:text-[28px] 2xl:text-[32px] !leading-[1.2];
 }
 
 h5,
@@ -79,6 +66,22 @@ h5,
 h6,
 .is-h6 {
 	@apply text-[18px] sm:text-[20px] 2xl:text-[24px];
+}
+
+.post-title-typography {
+	@apply text-[36px] sm:text-[48px] md:text-[54px] xl:text-[64px] 2xl:text-[64px] 3xl:text-[64px] 4xl:text-[64px] leading-[1.3] normal-case;
+}
+
+.is-h3,
+.is-h3\.5,
+.is-h4,
+.is-h5,
+.is-h6 {
+	@apply normal-case;
+}
+
+.block-intro .is-h3 {
+	@apply text-[24px] sm:text-[28px] md:text-[36px] xl:text-[38px] 2xl:text-[48px];
 }
 
 /* List styles inside WYSIWYG editors */
@@ -124,54 +127,62 @@ h6,
 /* Add these custom styles to your CSS file using Tailwind's @apply directive */
 
 .prose :where(h1):not(:where([class~='not-prose'] *)) {
-	@apply text-4xl font-extrabold mt-0 mb-6;
+	@apply text-4xl !font-normal mt-0 mb-6;
 }
 
 .prose :where(h2):not(:where([class~='not-prose'] *)) {
-	@apply text-3xl font-bold mt-10 mb-5;
+	@apply text-3xl !font-normal mt-10 mb-5;
 }
 
 .prose :where(h3):not(:where([class~='not-prose'] *)) {
-	@apply text-2xl font-semibold mt-8 mb-4;
+	@apply text-2xl !font-normal mt-8 mb-4;
 }
 
 .prose :where(h4):not(:where([class~='not-prose'] *)) {
-	@apply text-xl font-semibold mt-6 mb-3;
+	@apply text-xl !font-normal mt-6 mb-3;
 }
 
 .prose :where(h5):not(:where([class~='not-prose'] *)) {
-	@apply text-lg font-semibold mt-6 mb-3;
+	@apply text-lg !font-normal mt-6 mb-3;
 }
 
 .prose :where(h6):not(:where([class~='not-prose'] *)) {
-	@apply text-base font-semibold mt-5 mb-2;
+	@apply text-base !font-normal mt-5 mb-2;
 }
 
 /* Large screen adjustments for lg:prose-xl */
 .prose.lg\:prose-xl :where(h1):not(:where([class~='not-prose'] *)) {
-	@apply lg:text-5xl lg:mb-8;
+	@apply lg:text-5xl lg:mb-8 !font-normal;
 }
 
 .prose.lg\:prose-xl :where(h2):not(:where([class~='not-prose'] *)) {
-	@apply lg:text-4xl lg:mt-12;
+	@apply lg:text-4xl lg:mt-12 !font-normal;
 }
 
 .prose.lg\:prose-xl :where(h3):not(:where([class~='not-prose'] *)) {
-	@apply lg:text-3xl lg:mt-10;
+	@apply lg:text-3xl lg:mt-10 !font-normal;
 }
 
 .prose.lg\:prose-xl :where(h4):not(:where([class~='not-prose'] *)) {
-	@apply lg:text-2xl lg:mt-8;
+	@apply lg:text-2xl lg:mt-8 !font-normal;
 }
 
 .prose.lg\:prose-xl :where(h5):not(:where([class~='not-prose'] *)) {
-	@apply lg:text-xl lg:mt-8;
+	@apply lg:text-xl lg:mt-8 !font-normal;
 }
 
 .prose.lg\:prose-xl :where(h6):not(:where([class~='not-prose'] *)) {
-	@apply lg:text-lg lg:mt-6;
+	@apply lg:text-lg lg:mt-6 !font-normal;
 }
 
 .terms-content.prose * {
-	@apply !text-white;
+	@apply !text-paragraphDark;
+}
+
+.terms-content.prose *:is(h1, h2, h3, h4, h5, h6) {
+	@apply !text-navy;
+}
+
+.prose *:is(h1, h2, h3, h4, h5, h6) strong {
+	@apply !font-normal;
 }

@@ -1,29 +1,26 @@
-<section class="">
-    <div class="container flex flex-col">
-        <div class="w-full 4xl:w-3/4 self-end relative z-40 flex flex-col gap-8 md:gap-16">
-            <div class="block-content">
-                {{ block.title }}
-            </div>
-            <div class="flex flex-col gap-8">
-                <div class="hidden md:grid grid-cols-2 gap-12">
-                    <h4 class="is-h5">
-                        Service
-                    </h4>
-                    <h4 class="is-h5">
-                        Details
-                    </h4>
-                </div>
-                {% for service in block.service %}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 py-8 md:py-12 border-t border-dashed border-black/50">
-                        <div class="block-content">
-                            {{ service.title }}
-                        </div>
-                        <div class="block-content indent-16 max-w-[400px] md:max-w-[650px]">
-                            {{ service.content }}
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
+<section class="text-navy">
+	<div class="container flex flex-col items-center">
+		<div class="w-full 3xl:w-[90%] relative z-40 flex flex-col gap-4 sm:gap-8 3xl:gap-12">
+			<div class="block-content">
+				{{ block.title }}
+			</div>
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+				{% for service in block.service %}
+					<div class="bg-white p-7 md:p-12 flex flex-col gap-4 md:gap-8 rounded-lg">
+						<div class="flex flex-row gap-4">
+							<div class="flex flex-row gap-1 lg:*:text-[40px]">
+								{{ service.title }}
+								<p class="is-supertitle mt-[2%]">
+									{{ loop.index }}
+								</p>
+							</div>
+						</div>
+						<div class="block-content max-w-[400px] md:max-w-[750px] text-paragraphDark">
+							{{ service.content }}
+						</div>
+					</div>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
 </section>

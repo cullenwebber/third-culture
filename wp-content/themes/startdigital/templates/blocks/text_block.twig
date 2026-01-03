@@ -1,15 +1,20 @@
 <section class="relative z-40">
-    <div class="container flex flex-col gap-8 sm:gap-24 md:gap-48 xl:gap-64 max-sm:min-h-lvh max-sm:justify-center">
-        <div class="block-content max-w-[900px] xl:max-w-[1350px] indent-16 sm:indent-32">
-            {{ block.heading }}
-        </div>
-        <div class="flex w-full lg:justify-end">
-            <div class="block-content !grid grid-cols-1 md:grid-cols-2 gap-8 md:!gap-16 max-w-[400px] md:max-w-[800px] 2xl:max-w-[1000px] indent-16 justify-end">
-                {{ block.content }}
-                {% if block.link %}
-                    {% include "partials/button.twig" with { title: block.link.title , link: block.link.url, target: block.link.target } %}
-                {% endif %}
-            </div>
-        </div>
-    </div>
+	<div class="container flex flex-col gap-8 sm:gap-16 lg:gap-48 xl:gap-64 w-full 3xl:w-[90%]">
+		<div class="block-content xl:max-w-[1200px] 3xl:max-w-[1450px] sm:text-balance">
+			{{ block.heading }}
+		</div>
+		<div class="flex w-full 2xl:justify-end">
+			<div class="block-content !grid grid-cols-1 lg:grid-cols-2 gap-8 lg:!gap-24 2xl:max-w-[1200px] *:text-pretty text-paragraphDark">
+				{{ block.content }}
+				{% if block.link %}
+					{% include 'partials/button.twig' with {
+						title: block.link.title,
+						link: block.link.url,
+						target: block.link.target,
+						class: 'dark'
+					} %}
+				{% endif %}
+			</div>
+		</div>
+	</div>
 </section>
