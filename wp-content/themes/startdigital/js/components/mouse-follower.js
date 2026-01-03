@@ -94,12 +94,12 @@ export default function initMouseFollower() {
 			'<='
 		)
 
-	window.addEventListener('mousedown', () => {
-		clickTl.play()
-	})
-	window.addEventListener('mouseup', () => {
-		clickTl.reverse()
-	})
+	// window.addEventListener('mousedown', () => {
+	// 	clickTl.play()
+	// })
+	// window.addEventListener('mouseup', () => {
+	// 	clickTl.reverse()
+	// })
 
 	// Button hover effect - expand corners to button edges
 	const buttons = document.querySelectorAll(
