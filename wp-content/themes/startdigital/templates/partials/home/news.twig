@@ -1,4 +1,4 @@
-{% set news_posts = fn('get_news_posts', 4) %}
+{% set news_posts = fn('get_news_posts', 6) %}
 
 <section id="news-scene-wrapper"
 	class="flex flex-col gap-8 justify-center !py-0 relative z-40 text-navy dark-mouse dark-header">
@@ -16,34 +16,12 @@
 			</div>
 		</div>
 	</section>
-	<div style="height: 150lvh;" class="pointer-events-none"></div>
+	<div style="height: 100lvh;" class="pointer-events-none"></div>
 	<div class="flex-col gap-8 hidden pointer-events-none">
-		{% include 'icons/mask.twig' with {
-			class: 'sr-only',
-			id: 'news-mask'
-		} %}
-
 		{% for news in news_posts %}
-			<a href="{{ news.link }}"
-				class="post-tease flex flex-col w-full gap-8 p-6 2xl:p-8 overflow-hidden aspect-3/4 relative"
-				style="clip-path: url('#news-mask');">
-				<img data-news-image
-					src="{{ get_image(news.thumbnail).src }}"
-					alt="{{ news.thumbnail.alt }}"
-					class="w-full object-cover absolute top-0 left-0 h-full" />
-				<div class="absolute bottom-0 left-0 bg-gradient-to-t from-darkBlue to bg-darkBlue/0 w-full h-1/2"></div>
-
-				<div class="relative flex flex-col flex-grow justify-end gap-6 2xl:gap-8 z-20">
-					<span data-news-category class="bg-darkBlue rounded-sm py-1 px-4 text-white">
-						{{ news.terms('category')[0].name ? : 'News' }}
-					</span>
-					<div class="w-[85%] flex flex-col gap-4">
-						<h5 class="is-h4 text-white text-pretty">
-							{{ news.title }}
-						</h5>
-					</div>
-				</div>
-			</a>
+			{% include 'partials/posts/post-tease.twig' with {
+				news: news
+			} %}
 		{% endfor %}
 	</div>
 	<div id="news-scroller" class="absolute top-0 pointer-events-none h-lvh left-0 w-full z-40 dark-mouse">
@@ -62,11 +40,11 @@
 					id: 'project-mask'
 				} %}
 				<div class="relative flex flex-row-reverse w-full gap-1">
-					{% for project in post.projects.projects %}
+					{% for news in news_posts %}
 						<div data-project-thumb="{{ loop.index0 }}"
 							class="aspect-3/4 overflow-hidden relative h-[54px]"
 							style="clip-path: url(#project-mask);">
-							<img src="{{ get_image(project.project_thumbnail) }}"
+							<img src="{{ get_image(news.thumbnail) }}"
 								alt=""
 								class="absolute top-0 left-0 object-cover w-full h-full" />
 						</div>
@@ -77,7 +55,7 @@
 				title: 'View all articles',
 				link: '/projects',
 				target: '_self',
-				class: 'dark pointer-events-auto max-sm:hidden'
+				class: 'dark pointer-events-auto max-sm:hidden border-button'
 			} %}
 		</div>
 	</div>

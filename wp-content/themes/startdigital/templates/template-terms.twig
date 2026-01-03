@@ -1,15 +1,17 @@
 {% extends 'base.twig' %}
 
 {% block content %}
-	<section id="page-inner" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
-	<section class="terms-conditions z-40 relative text-white pb-48 pt-28">
-		<div class="container flex flex-col items-center">
-			<h1 class="is-h2 w-full max-w-[1200px]">
-				{{ post.title }}
-			</h1>
-			<div class="terms-content prose max-w-[1200px] *:!text-white">
-				{{ post.content|raw }}
+	<div id="entire-page" class="flex flex-col dark-mouse dark-header">
+		<section id="no-grid-white-page" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></section>
+		<section class="terms-conditions z-40 relative text-navy pb-48 pt-28 -mt-[100lvh]">
+			<div class="container flex flex-col items-center">
+				<h1 class="is-h2 w-full max-w-[1000px]">
+					{{ post.title }}
+				</h1>
+				<div class="terms-content prose max-w-[1000px] *:!text-navy">
+					{{ post.content|raw }}
+				</div>
 			</div>
-		</div>
-	</section>
+		</section>
+	</div>
 {% endblock %}

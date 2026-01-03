@@ -1,30 +1,28 @@
-{% set news = news ? : post %}
-
-{% include 'icons/mask.twig' with {
-	class: 'sr-only',
-	id: 'news-mask'
-} %}
-<a href="{{ news.link }}" class="flex flex-col w-full gap-6 dark-mouse">
+<a href="{{ post.link }}" class="flex flex-col w-full gap-6 dark-mouse">
 	<div class="overflow-hidden aspect-video relative rounded-lg p-4">
 		<img data-news-image
-			src="{{ get_image(news.thumbnail).src }}"
-			alt="{{ news.thumbnail.alt }}"
+			src="{{ get_image(post.project_thumbnail).src }}"
+			alt="{{ post.project_thumbnail.alt }}"
 			class="w-full object-cover absolute top-0 left-0 h-full" />
 	</div>
 
 	<div class="relative flex flex-col flex-grow justify-between items-start gap-6 2xl:gap-8 z-20">
 		<div class="w-full md:w-[90%] max-w-[700px] flex flex-col gap-4 items-start">
 			<div class="flex flex-row gap-1 items-center">
-				<span data-news-category class="bg-paragraphLight rounded-md py-1 px-3 text-navy text-base z-20 relative">
-					{{ news.terms('category')[0].name ? : 'Article' }}
+				{% if post.featured_deliverable %}
+					<span project-grid-subtitle class="bg-paragraphLight rounded-md py-1 px-3 text-navy text-base z-20 relative">
+						{{ post.featured_deliverable.name }}
+					</span>
+				{% endif %}
+				<span data-news-category class="bg-navy rounded-md py-1 px-3 text-white text-base z-20 relative">
+					{{ post.date|date('j M') }}
 				</span>
-				<span class="bg-navy rounded-md py-1 px-3 text-white text-base z-20 relative">{{ post.date|date('j M') }}</span>
 			</div>
 			<h5 class="is-h3.9 text-navy text-pretty">
-				{{ news.title }}
+				{{ post.title }}
 			</h5>
 			<div class="block-content text-base text-paragraphDark text-balance">
-				{{ news.introduction|raw|truncate(20) }}
+				{{ post.introduction|raw|truncate(20) }}
 			</div>
 			<div class="button__small flex flex-row items-center justify-start gap-3 text-paragraphDark w-fit text-base group my-2 xl:my-3">
 				<div class="relative flex justify-start text-left">

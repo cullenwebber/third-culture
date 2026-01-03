@@ -91,9 +91,6 @@ async function createThreeText(options) {
 		},
 		geometryOptimization = {
 			enabled: true,
-			areaThreshold: 10.0,
-			colinearThreshold: 0.25,
-			minSegmentLength: 50,
 		},
 	} = options
 

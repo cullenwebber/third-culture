@@ -36,14 +36,16 @@ function initDarkHeaderTriggers(header) {
 		} else {
 			header.classList.remove('header-inverted', 'dark-mouse')
 		}
-		window.dispatchEvent(new CustomEvent('headerDarkChange', { detail: { isDark } }))
+		window.dispatchEvent(
+			new CustomEvent('headerDarkChange', { detail: { isDark } })
+		)
 	}
 
 	darkSections.forEach((section) => {
 		ScrollTrigger.create({
 			trigger: section,
-			start: 'top top',
-			end: 'bottom top',
+			start: 'top top+=64px',
+			end: 'bottom top+=64px',
 			onEnter: () => setDarkHeader(true),
 			onLeave: () => setDarkHeader(false),
 			onEnterBack: () => setDarkHeader(true),

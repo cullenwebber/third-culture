@@ -1,15 +1,14 @@
 <section class="">
-    <div class="container lg:w-[90%] grid grid-cols-2 md:flex md:flex-row gap-12 justify-between">
-        {% for statistic in block.statistics %}
-            <div class="flex flex-col items-center text-center gap-1">
-                {% include "icons/double-arrow.twig" with { class: 'w-10 ' ~ (loop.index % 2 == 0 ? 'rotate-180' : '') } %}
-                <div class="block-content">
-                    {{ statistic.title }}
-                </div>
-                <p class="is-supertitle text-black/50">
-                    {{ statistic.description }}
-                </p>
-            </div>
-        {% endfor %}
-    </div>
+	<div class="container lg:w-[90%] grid grid-cols-2 md:flex md:flex-row gap-12 justify-between text-navy">
+		{% for statistic in block.statistics %}
+			<div class="flex flex-col items-center text-center gap-1">
+				<div class="block-content">
+					{{ statistic.title }}
+				</div>
+				<p class="text-paragraphDark">
+					{{ statistic.description }}
+				</p>
+			</div>
+		{% endfor %}
+	</div>
 </section>

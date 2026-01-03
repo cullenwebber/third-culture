@@ -11,7 +11,7 @@ module.exports = {
 			},
 			colors: {
 				white: '#F7F7F7',
-				black: '#232323',
+				black: '#02001B',
 				darkBlue: '#030030',
 				navy: '#02001B',
 				overlay: '#1A1835',

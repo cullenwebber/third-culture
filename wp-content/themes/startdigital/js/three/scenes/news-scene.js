@@ -2,9 +2,11 @@ import * as THREE from 'three'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import BaseScene from '../base-scene'
+import WebGLManager from '../context-manager'
 import ImageCylinderMaterial from '../materials/image-cylinder-material'
 import WhiteBackgroundMaterial from '../materials/white-background-material'
 import BentTextMaterial from '../materials/bent-text-material'
+import NewsPostProcessor from '../post-processing/news-post-processor'
 import { getLenis } from '../../utils/smooth-scroll'
 import { createText, createTextMesh } from '../utils/text-factory'
 
@@ -21,11 +23,11 @@ class NewsScene extends BaseScene {
 		this.lenis = getLenis()
 
 		// Ring configuration
-		this.ringCount = 4
-		this.ringRadius = 4.5
-		this.ringSpacing = 2.85
-		this.rotationSpeeds = [0.2, 0.1, 0.2, 0.1]
-		this.duplicateImages = 3
+		this.ringCount = 2
+		this.ringRadius = 4
+		this.ringSpacing = 3.25
+		this.rotationSpeeds = [0.1, 0.15, 0.1, 0.15]
+		this.duplicateImages = 2 // 6 posts × 2 = 12 per ring
 
 		// Mouse tracking
 		this.mouse = new THREE.Vector2(9999, 9999)
@@ -92,6 +94,7 @@ class NewsScene extends BaseScene {
 			const ringY = (ringIndex - (this.ringCount - 1) / 2) * this.ringSpacing
 			ring.position.y = ringY
 			ring.rotation.y = (ringIndex * Math.PI) / this.ringCount
+			// Tilt alternating directions
 
 			for (
 				let imageIndex = 0;
@@ -246,6 +249,17 @@ class NewsScene extends BaseScene {
 
 		this.setupScrollAnimation()
 		this.createMouseListeners()
+		this.setupPostProcessing()
+	}
+
+	setupPostProcessing() {
+		const webglManager = WebGLManager.instance
+		this.postProcessor = new NewsPostProcessor(
+			this.scene,
+			this.camera,
+			webglManager.renderer
+		)
+		webglManager.addPostProcessing(this.id, this.postProcessor)
 	}
 
 	setupScrollAnimation() {
@@ -258,15 +272,15 @@ class NewsScene extends BaseScene {
 		const viewportHeight = window.innerHeight
 		const containerHeight = container.offsetHeight
 
-		const phase1Duration = viewportHeight
+		const phase1Duration = viewportHeight * 1.125
 		const phase2Duration = containerHeight - viewportHeight
 		const phase3Duration = viewportHeight
 
 		this.tl = gsap.timeline({
 			scrollTrigger: {
 				trigger: container,
-				start: 'top bottom',
-				end: 'bottom top',
+				start: 'top top',
+				end: 'bottom bottom',
 				scrub: true,
 				ease: 'none',
 			},
@@ -274,26 +288,17 @@ class NewsScene extends BaseScene {
 
 		this.tl.fromTo(
 			this.ringsContainer.position,
-			{ y: -totalRingHeight * 0.35 },
-			{ y: -totalRingHeight * 0.35, ease: 'none', duration: phase1Duration },
-			0
+			{ y: -totalRingHeight * 0.25 },
+			{
+				y: totalRingHeight * 0.25,
+				ease: 'none',
+
+				onUpdate: function () {
+					const progress = this.progress()
+					that.backgroundMaterial.uniforms.uScroll.value = -progress * 1.0
+				},
+			}
 		)
-
-		this.tl.to(this.ringsContainer.position, {
-			y: totalRingHeight * 0.3,
-			ease: 'none',
-			duration: phase2Duration,
-			onUpdate: function () {
-				const progress = this.progress()
-				that.backgroundMaterial.uniforms.uScroll.value = -progress * 1.0
-			},
-		})
-
-		this.tl.to(this.ringsContainer.position, {
-			y: totalRingHeight * 0.35,
-			ease: 'none',
-			duration: phase3Duration,
-		})
 	}
 
 	createMouseListeners() {

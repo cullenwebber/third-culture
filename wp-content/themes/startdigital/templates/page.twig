@@ -1,12 +1,14 @@
 {% extends 'base.twig' %}
 
 {% block content %}
-	<section	id="white-page"	class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
-	<section	id="entire-page"	class="flex flex-col !py-0 overflow-hidden">
-		{% for block in post.meta('page_builder') %}
-			<div	data-block="{{ block.acf_fc_layout }}">
-				{{ include('blocks/' ~ block.acf_fc_layout ~ '.twig', ignore_missing = true) }}
-			</div>
-		{% endfor %}
+	<section id="entire-page" class="flex flex-col !py-0">
+		<section id="white-page" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></section>
+		<div class="-mt-[100lvh]">
+			{% for block in post.meta('page_builder') %}
+				<div data-block="{{ block.acf_fc_layout }}">
+					{{ include('blocks/' ~ block.acf_fc_layout ~ '.twig', ignore_missing = true) }}
+				</div>
+			{% endfor %}
+		</div>
 	</section>
 {% endblock %}

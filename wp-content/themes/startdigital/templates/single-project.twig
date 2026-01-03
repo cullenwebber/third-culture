@@ -1,13 +1,15 @@
-{% extends "base.twig" %}
+{% extends 'base.twig' %}
 
 {% block content %}
-    <section id="white-page" class="fixed top-0 left-0 h-lvh w-full pointer-events-none"></section>
-    <div id="entire-page" class="relative z-40">
-        {% include "partials/projects/project-banner.twig" %}
-        {% for block in post.meta('page_builder') %}
-            <div data-block="{{ block.acf_fc_layout }}">
-                {{ include('blocks/' ~ block.acf_fc_layout ~ '.twig', ignore_missing = true) }}
-            </div>
-        {% endfor %}
-    </div>
+	<div id="entire-page" class="relative z-40">
+		<section id="white-page" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></section>
+		<div class="-mt-[100lvh]">
+			{% include 'partials/projects/project-banner.twig' %}
+		</div>
+		{% for block in post.meta('page_builder') %}
+			<div data-block="{{ block.acf_fc_layout }}">
+				{{ include('blocks/' ~ block.acf_fc_layout ~ '.twig', ignore_missing = true) }}
+			</div>
+		{% endfor %}
+	</div>
 {% endblock %}

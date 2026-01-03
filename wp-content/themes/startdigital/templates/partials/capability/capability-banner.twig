@@ -1,24 +1,53 @@
-<section class="min-h-lvh text-black relative flex flex-col justify-center z-40 pt-32">
-    <div class="container 3xl:w-[90%] flex flex-col gap-8 md:gap-12 lg:gap-24">
-        <h1 class="is-h1 !leading-[1.1]">
-            {{ post.title }}
-        </h1>
-        <div class="flex flex-col gap-8 lg:gap-16 max-w-[400px] lg:max-w-[600px] xl:max-w-[700px] 2xl:max-w-[800px] self-end">
-            <div class="block-content indent-16 sm:indent-32">
-                {{ post.introduction }}
-            </div>
-            <div class="flex flex-col max-lg:self-end gap-2 w-full max-w-[500px]">
-                {% for subservice in post.subservice %}
-                    <div class="border-t border-black/50 border-dashed flex flex-row justify-between py-4">
-                        <h2 class="is-h6 text-black">
-                            {{ subservice.title }}
-                        </h2>
-                        <p class="">
-                            {{ '(' ~ loop.index ~ ')' }}
-                        </p>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
+<section id="project-scene" class="min-h-lvh relative flex flex-col justify-center z-40 pt-32 text-white">
+	<div class="container flex flex-col gap-8 md:gap-12 lg:gap-24">
+		<div class="flex flex-col items-center text-center gap-8">
+			{# <a href="/capabilities"
+				class="button__small flex flex-row items-center justify-start gap-3 text-white w-fit text-base group">
+				<div class="button__icon-container size-5 bg- flex items-center justify-center rounded-sm relative overflow-hidden bg-paragraphLight text-navy">
+					{% include 'icons/button-arrow.twig' with {
+						class: 'w-2.5 shrink-0 absolute top-1/2 -translate-y-1/2  -right-full group-hover:-translate-x-[25px] duration-[400ms] ease-in-out rotate-180'
+					} %}
+					{% include 'icons/button-arrow.twig' with {
+						class: 'w-2.5 shrink-0 group-hover:-translate-x-[25px] duration-[400ms] ease-in-out rotate-180'
+					} %}
+				</div>
+				<div class="relative flex justify-start text-left">
+					<div class="relative w-fit overflow-hidden">
+						<div class="button__text indent-0 text-paragraphLight">
+							Capabilities
+						</div>
+						<div class="button__text absolute top-full left-0 w-full text-paragraphLight">
+							Capabilities
+						</div>
+					</div>
+				</div>
+			</a> #}
+			<h1 class="sm:text-[10vw]">
+				{{ post.title }}
+			</h1>
+			<div class="block-content max-w-[800px] text-paragraphLight">
+				{{ post.introduction }}
+			</div>
+
+			<div class="bg-[#0D0B25] text-white max-w-[350px] rounded-sm relative w-full mt-8">
+				<div class="rounded-tl-sm border-l border-t size-2 border-paragraphLight absolute -top-2 -left-2"></div>
+				<div class="rounded-tr-sm border-r border-t size-2 border-paragraphLight absolute -top-2 -right-2"></div>
+				<div class="rounded-br-sm border-r border-b size-2 border-paragraphLight absolute -bottom-2 -right-2"></div>
+				<div class="rounded-bl-sm border-l border-b size-2 border-paragraphLight absolute -bottom-2 -left-2"></div>
+
+				<div class="relative overflow-hidden w-full h-[40px] flex flex-row items-center">
+					{% for _ in 1..2 %}
+						<div class="flex flex-row items-center infinite-scroll">
+							{% for subservice in post.subservice %}
+								<div class="subservice shrink-0 is-supertitle whitespace-nowrap ml-8">
+									{{ subservice.title }}
+								</div>
+								<div class="size-2.5 bg-paragraphLight shrink-0 ml-8"></div>
+							{% endfor %}
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
 </section>

@@ -10,4 +10,12 @@
 			}
 		}
 	}
+
+	&.border-button {
+		@apply border border-white rounded-[4px] p-3 px-4 bg-navy;
+	}
+
+	&.border-button.dark {
+		@apply border-navy bg-white;
+	}
 }
