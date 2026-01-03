@@ -1,10 +1,10 @@
 <section class="relative z-40">
 	<div class="container flex flex-col gap-8 sm:gap-16 lg:gap-48 xl:gap-64 w-full 3xl:w-[90%]">
-		<div class="block-content xl:max-w-[1200px] 3xl:max-w-[1450px] text-balance">
+		<div class="block-content xl:max-w-[1200px] 3xl:max-w-[1450px] sm:text-balance">
 			{{ block.heading }}
 		</div>
 		<div class="flex w-full 2xl:justify-end">
-			<div class="block-content !grid grid-cols-1 lg:grid-cols-2 gap-8 lg:!gap-24 2xl:max-w-[1200px] *:text-pretty">
+			<div class="block-content !grid grid-cols-1 lg:grid-cols-2 gap-8 lg:!gap-24 2xl:max-w-[1200px] *:text-pretty text-paragraphDark">
 				{{ block.content }}
 				{% if block.link %}
 					{% include 'partials/button.twig' with {

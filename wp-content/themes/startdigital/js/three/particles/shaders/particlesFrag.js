@@ -11,6 +11,7 @@ varying float vMorphProgress;
 varying vec3 vWorldPosition;
 uniform vec3 color1;
 uniform vec3 color2;
+uniform vec4 shadowColor;
 
 void main() {
     // Convert gl_PointCoord (0-1) to centered coordinates (-1 to 1)
@@ -25,17 +26,12 @@ void main() {
 
     // Faux sphere lighting with two lights
     float light1 = 0.8 - distance(uv, vec2(-0.3, -0.3)) * 0.1;
-    float light2 = 0.6 - distance(uv, vec2(0.4, 0.5)) * 0.8;
-    vec3 sphere = baseColor * max(light1 + light2, 0.5);
+    float light2 = 0.6 - distance(uv, vec2(0.4, 0.5)) * 0.4;
+    vec3 sphere = baseColor * max(light1 + light2, 0.9);
 
-    // Smooth edges
-    float edge = 1.0 - smoothstep(0.9, 1.0, d);
-    sphere *= edge;
-
-    // Apply shadow
-    vec3 shadowColor = vec3(0.008, 0.0, 0.07); // #02001B
+    // Apply shadow using uniform (rgb = color, a = not used currently)
     float shadow = getShadowMask();
-    sphere = mix(shadowColor, sphere, max(shadow, 0.0));
+    sphere = mix(shadowColor.rgb, sphere, max(shadow, 0.0));
 
     // Morph flash - color interpolated by life
     vec3 morphColorStart = vec3(0.8, 0.8, 1.0) * 1.5; // White for low life

@@ -13,6 +13,7 @@ class Particles {
 		this.container = new THREE.Object3D()
 		this.color1 = new THREE.Color(0xb0aec9)
 		this.color2 = new THREE.Color(0x030030)
+		this.shadowColor = new THREE.Vector4(0.008, 0.0, 0.07, 1.0) // #02001B default
 		this.textureWidth = textureWidth
 		this.textureHeight = textureHeight
 		this.amount = textureWidth * textureHeight
@@ -44,6 +45,7 @@ class Particles {
 					morphProgress: { value: 0.0 },
 					color1: { value: this.color1 },
 					color2: { value: this.color2 },
+					shadowColor: { value: this.shadowColor },
 				},
 			]),
 			vertexShader: particlesVert,
@@ -114,6 +116,21 @@ class Particles {
 			if (this.mesh.motionMaterial) {
 				this.mesh.motionMaterial.uniforms.flipRatio.value ^= 1
 			}
+		}
+	}
+
+	dispose() {
+		if (this.mesh) {
+			this.mesh.geometry?.dispose()
+			this.mesh.material?.dispose()
+			this.mesh.customDistanceMaterial?.dispose()
+			this.mesh.customDepthMaterial?.dispose()
+			if (this.mesh.motionMaterial) {
+				this.mesh.motionMaterial.dispose()
+			}
+		}
+		if (this.simulator) {
+			this.simulator.dispose()
 		}
 	}
 }

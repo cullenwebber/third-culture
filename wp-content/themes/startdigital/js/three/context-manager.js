@@ -217,10 +217,20 @@ class WebGLManager {
 	dispose() {
 		this.postProcessing.forEach((postProcessor) => postProcessor.dispose())
 		this.postProcessing.clear()
-		this.scenes.forEach((scene) => scene.dispose?.())
+		this.scenes.forEach(({ scene }) => scene.dispose?.())
 		this.scenes.clear()
 		this.visibleScenes.clear()
-		this.renderer?.dispose()
+
+		if (this.renderer) {
+			this.renderer.dispose()
+			this.renderer.forceContextLoss()
+			this.renderer = null
+		}
+
+		this.canvas = null
+
+		// Clear singleton so it can be recreated
+		WebGLManager.instance = null
 	}
 }
 

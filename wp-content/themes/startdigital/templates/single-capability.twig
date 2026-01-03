@@ -6,10 +6,12 @@
 		<div class="-mt-[100lvh]">
 			{% include 'partials/capability/capability-banner.twig' %}
 		</div>
-		{% for block in post.meta('page_builder') %}
-			<div data-block="{{ block.acf_fc_layout }}">
-				{{ include('blocks/' ~ block.acf_fc_layout ~ '.twig', ignore_missing = true) }}
-			</div>
-		{% endfor %}
+		<div class="dark-header dark-mouse">
+			{% for block in post.meta('page_builder') %}
+				<div data-block="{{ block.acf_fc_layout }}">
+					{{ include('blocks/' ~ block.acf_fc_layout ~ '.twig', ignore_missing = true) }}
+				</div>
+			{% endfor %}
+		</div>
 	</div>
 {% endblock %}

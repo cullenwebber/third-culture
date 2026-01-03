@@ -13,9 +13,9 @@ class SceneManager {
 		this.bindEvents()
 	}
 
-	addScene(sceneClass, id, container, priority = 0, options = {}) {
+	async addScene(sceneClass, id, container, priority = 0, options = {}) {
 		const scene = new sceneClass(id, container, options)
-		scene.init()
+		await scene.init()
 
 		this.scenes.set(id, scene)
 		this.webglManager.registerScene(id, scene, priority)
@@ -73,21 +73,27 @@ class SceneManager {
 	}
 
 	bindEvents() {
-		this.lenis.on('scroll', this.handleScroll.bind(this))
+		this.scrollHandler = this.handleScroll.bind(this)
+		this.lenis?.on('scroll', this.scrollHandler)
 		this.resizeObserver = new ResizeObserver(this.handleResize.bind(this))
 		this.resizeObserver.observe(document.body)
 	}
 
 	eventCleanup() {
 		this.resizeObserver?.disconnect()
+		// Remove lenis scroll handler
+		if (this.lenis && this.scrollHandler) {
+			this.lenis.off('scroll', this.scrollHandler)
+		}
 	}
 
 	dispose() {
 		this.stop()
-		this.eventCleanup?.()
+		this.eventCleanup()
 		this.scenes.forEach((scene) => scene.dispose())
 		this.scenes.clear()
 		this.webglManager.dispose()
+		this.lenis = null
 	}
 }
 

@@ -3,9 +3,9 @@
 	src: url('/wp-content/themes/startdigital/static/fonts/montreal.woff2');
 }
 
-*::selection {
-	@apply bg-transparent;
-}
+/* *::selection {
+	@apply bg-navy text-white;
+} */
 
 html,
 body {

@@ -1,17 +1,46 @@
-<section id="project-scene" class="min-h-lvh text-white relative flex flex-col justify-center z-40 pt-32">
-	<div class="container flex flex-col gap-12 lg:gap-24">
-		<h1 class="is-h2 max-w-[450px] lg:max-w-[800px] 2xl:max-w-[1200px] !leading-[1.1]">
+<section class="min-h-lvh text-black relative flex flex-col justify-center z-40 pt-24 md:pt-32">
+	<div class="container flex flex-col gap-8 sm:gap-12">
+		<div class="text-paragraphDark flex flex-row items-center gap-2">
+			<a href="/" class="button__small">
+				<div class="relative flex justify-start text-left">
+					<div class="relative w-fit overflow-hidden">
+						<div class="button__text indent-0">
+							Home
+						</div>
+						<div class="button__text absolute top-full left-0 w-full">
+							Home
+						</div>
+					</div>
+				</div>
+			</a>
+			<p>
+				/
+			</p>
+			<a href="/projects" class="button__small">
+				<div class="relative flex justify-start text-left">
+					<div class="relative w-fit overflow-hidden">
+						<div class="button__text indent-0">
+							Projects
+						</div>
+						<div class="button__text absolute top-full left-0 w-full">
+							Projects
+						</div>
+					</div>
+				</div>
+			</a>
+		</div>
+		<h1 class="is-h2 max-w-[450px] lg:max-w-[800px] 2xl:max-w-[1200px] !leading-[1.1] text-balance">
 			{{ post.hero_title ? : post.title }}
 		</h1>
-		<div class="flex flex-col lg:flex-row justify-between gap-16">
-			<div class="block-content max-w-[450px] 2xl:max-w-[800px] text-paragraphLight">
+		<div class="flex flex-col lg:flex-row justify-between gap-20">
+			<div class="block-content max-w-[500px] 2xl:max-w-[800px] text-paragraphDark *:text-balance">
 				{{ post.introduction }}
 				{% if post.external_link %}
 					{% include 'partials/button.twig' with {
 						title: post.external_link.title,
 						link: post.external_link.url,
 						target: post.external_link.targe,
-						class: 'mt-8'
+						class: 'mt-4 dark'
 					} %}
 				{% endif %}
 			</div>
@@ -21,7 +50,7 @@
 				</h2>
 
 				{% if post.year %}
-					<div class="border-t border-black/50 border-dashed flex flex-row justify-between py-4">
+					<div class="border-t border-paragraphDark flex flex-row justify-between py-4">
 						<span class="is-supertitle text-paragraphDark">Year</span>
 						<p>
 							{{ post.year|date('Y') }}
@@ -29,7 +58,7 @@
 					</div>
 				{% endif %}
 				{% if post.industry %}
-					<div class="border-t border-black/50 border-dashed flex flex-row justify-between py-4">
+					<div class="border-t border-paragraphDark flex flex-row justify-between py-4">
 						<span class="is-supertitle text-paragraphDark">Industry</span>
 						<p>
 							{{ post.industry }}
@@ -37,7 +66,7 @@
 					</div>
 				{% endif %}
 				{% if post.deliverables %}
-					<div class="border-t border-black/50 border-dashed flex flex-row justify-between py-4">
+					<div class="border-t border-paragraphDark flex flex-row justify-between py-4">
 						<span class="is-supertitle text-paragraphDark">deliverables</span>
 						<div class="flex flex-col gap-2 items-end text-end">
 							{% for item in post.deliverables %}

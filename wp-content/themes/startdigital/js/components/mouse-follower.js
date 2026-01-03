@@ -103,7 +103,7 @@ export default function initMouseFollower() {
 
 	// Button hover effect - expand corners to button edges
 	const buttons = document.querySelectorAll(
-		'.button__small, .menu__button, .nav-menu-items'
+		'.button__small, .menu__button, .nav-menu-items, .logo-hover'
 	)
 
 	buttons.forEach((button) => {
