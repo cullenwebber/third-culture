@@ -21,6 +21,7 @@ class NewsScene extends BaseScene {
 		this.time = 0
 		this.direction = 1
 		this.lenis = getLenis()
+		this.isTransitioning = false
 
 		// Ring configuration
 		this.ringCount = 2
@@ -33,6 +34,12 @@ class NewsScene extends BaseScene {
 		this.mouse = new THREE.Vector2(9999, 9999)
 		this.raycaster = new THREE.Raycaster()
 		this.hoveredNews = null
+
+		// Listen for page transition to suppress velocity
+		this.onPageTransitionOut = (e) => {
+			this.isTransitioning = e.detail?.active ?? false
+		}
+		window.addEventListener('pageTransitionOut', this.onPageTransitionOut)
 	}
 
 	createMaterials() {
@@ -380,7 +387,8 @@ class NewsScene extends BaseScene {
 
 		this.time += deltaTime
 
-		const velocity = this.lenis?.velocity || 0
+		// Suppress velocity during page transition
+		const velocity = this.isTransitioning ? 0 : this.lenis?.velocity || 0
 		this.direction = velocity < 0 ? -1 : velocity > 0 ? 1 : this.direction
 
 		this.rings.forEach((ring, index) => {
@@ -433,6 +441,9 @@ class NewsScene extends BaseScene {
 		}
 		if (this.onClick) {
 			this.container?.removeEventListener('click', this.onClick)
+		}
+		if (this.onPageTransitionOut) {
+			window.removeEventListener('pageTransitionOut', this.onPageTransitionOut)
 		}
 
 		document.body.style.cursor = ''

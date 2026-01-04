@@ -1,6 +1,5 @@
 import gsap from 'gsap'
 import { getLenis } from '../utils/smooth-scroll'
-import WebGLManager from '../three/context-manager'
 
 class PageLoader {
 	constructor() {
@@ -142,10 +141,22 @@ class PageLoader {
 		gsap.set(this.third, { xPercent: -50 })
 		gsap.set(this.culture, { xPercent: 50 })
 
+		// Reset digits to 0
+		this.progress = 0
+		this.digitTracks.forEach((track) => {
+			gsap.set(track, { yPercent: 0 })
+		})
+
 		return new Promise((resolve) => {
 			gsap
 				.timeline()
-
+				.call(() => {
+					window.dispatchEvent(
+						new CustomEvent('pageTransitionOut', {
+							detail: { active: true },
+						})
+					)
+				})
 				.set(this.innerParent, {
 					marginTop: -scrollY,
 				})
@@ -184,7 +195,21 @@ class PageLoader {
 					},
 					'<='
 				)
-
+				// Animate counter to 100%
+				.call(
+					() => {
+						this.setProgress(1)
+					},
+					null,
+					'<='
+				)
+				.call(() => {
+					window.dispatchEvent(
+						new CustomEvent('pageTransitionOut', {
+							detail: { active: false },
+						})
+					)
+				})
 				.call(() => resolve())
 		})
 	}
