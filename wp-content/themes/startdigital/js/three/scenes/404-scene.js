@@ -1,7 +1,600 @@
 import * as THREE from 'three'
 import BaseScene from '../base-scene.js'
-import WebGLManager from '../context-manager'
-import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js'
+
+// FLIP Fluid Simulation based on Matthias Müller's implementation
+class FlipFluid {
+	constructor(density, width, height, spacing, particleRadius, maxParticles) {
+		this.density = density
+		this.fNumX = Math.floor(width / spacing) + 1
+		this.fNumY = Math.floor(height / spacing) + 1
+		this.h = Math.max(width / this.fNumX, height / this.fNumY)
+		this.fInvSpacing = 1.0 / this.h
+		this.fNumCells = this.fNumX * this.fNumY
+
+		// Velocity fields (staggered grid)
+		this.u = new Float32Array(this.fNumCells)
+		this.v = new Float32Array(this.fNumCells)
+		this.du = new Float32Array(this.fNumCells)
+		this.dv = new Float32Array(this.fNumCells)
+		this.prevU = new Float32Array(this.fNumCells)
+		this.prevV = new Float32Array(this.fNumCells)
+		this.p = new Float32Array(this.fNumCells)
+		this.s = new Float32Array(this.fNumCells) // 0 = solid, 1 = fluid
+		this.cellType = new Int32Array(this.fNumCells) // 0 = air, 1 = fluid, 2 = solid
+		this.particleDensity = new Float32Array(this.fNumCells)
+
+		// Particle data
+		this.maxParticles = maxParticles
+		this.particlePos = new Float32Array(maxParticles * 2)
+		this.particleVel = new Float32Array(maxParticles * 2)
+		this.particleColor = new Float32Array(maxParticles * 3)
+		this.numParticles = 0
+
+		this.particleRadius = particleRadius
+		this.pInvSpacing = 1.0 / (2.2 * particleRadius)
+		this.pNumX = Math.floor(width * this.pInvSpacing) + 1
+		this.pNumY = Math.floor(height * this.pInvSpacing) + 1
+		this.pNumCells = this.pNumX * this.pNumY
+
+		this.numCellParticles = new Int32Array(this.pNumCells)
+		this.firstCellParticle = new Int32Array(this.pNumCells + 1)
+		this.cellParticleIds = new Int32Array(maxParticles)
+
+		this.particleRestDensity = 0
+
+		// Obstacles (square and triangle)
+		this.obstacles = []
+	}
+
+	addObstacle(type, params) {
+		this.obstacles.push({ type, ...params })
+	}
+
+	// Set text mask from canvas for obstacle detection
+	setTextMask(maskData, maskWidth, maskHeight, simWidth, simHeight) {
+		this.textMask = maskData
+		this.textMaskWidth = maskWidth
+		this.textMaskHeight = maskHeight
+		this.textMaskSimWidth = simWidth
+		this.textMaskSimHeight = simHeight
+	}
+
+	isInsideObstacle(x, y) {
+		// Check text mask first
+		if (this.textMask) {
+			// Convert simulation coords to mask coords
+			const maskX = Math.floor((x / this.textMaskSimWidth) * this.textMaskWidth)
+			const maskY = Math.floor(
+				((this.textMaskSimHeight - y) / this.textMaskSimHeight) *
+					this.textMaskHeight
+			)
+
+			if (
+				maskX >= 0 &&
+				maskX < this.textMaskWidth &&
+				maskY >= 0 &&
+				maskY < this.textMaskHeight
+			) {
+				const idx = (maskY * this.textMaskWidth + maskX) * 4 + 3 // Alpha channel
+				if (this.textMask[idx] > 128) return true
+			}
+		}
+
+		// Check rectangle obstacles
+		for (const obs of this.obstacles) {
+			if (obs.type === 'square') {
+				if (x >= obs.minX && x <= obs.maxX && y >= obs.minY && y <= obs.maxY) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	setupGrid(domainWidth, domainHeight) {
+		const n = this.fNumY
+		// Mark boundary cells as solid
+		for (let i = 0; i < this.fNumX; i++) {
+			for (let j = 0; j < this.fNumY; j++) {
+				let s = 1.0 // fluid
+				if (i === 0 || i === this.fNumX - 1 || j === 0 || j === this.fNumY - 1)
+					s = 0.0 // solid boundary
+
+				// Check obstacles
+				const x = (i + 0.5) * this.h
+				const y = (j + 0.5) * this.h
+				if (this.isInsideObstacle(x, y)) s = 0.0
+
+				this.s[i * n + j] = s
+			}
+		}
+	}
+
+	integrateParticles(dt, gravity) {
+		for (let i = 0; i < this.numParticles; i++) {
+			this.particleVel[2 * i + 1] += dt * gravity
+			this.particlePos[2 * i] += this.particleVel[2 * i] * dt
+			this.particlePos[2 * i + 1] += this.particleVel[2 * i + 1] * dt
+		}
+	}
+
+	pushParticlesApart(numIters) {
+		const colorDiffusionCoeff = 0.001
+
+		// Count particles per cell
+		this.numCellParticles.fill(0)
+
+		for (let i = 0; i < this.numParticles; i++) {
+			const x = this.particlePos[2 * i]
+			const y = this.particlePos[2 * i + 1]
+
+			const xi = Math.floor(x * this.pInvSpacing)
+			const yi = Math.floor(y * this.pInvSpacing)
+			const cellNr =
+				Math.max(0, Math.min(xi, this.pNumX - 1)) * this.pNumY +
+				Math.max(0, Math.min(yi, this.pNumY - 1))
+			this.numCellParticles[cellNr]++
+		}
+
+		// Compute prefix sum
+		let first = 0
+		for (let i = 0; i < this.pNumCells; i++) {
+			first += this.numCellParticles[i]
+			this.firstCellParticle[i] = first
+		}
+		this.firstCellParticle[this.pNumCells] = first
+
+		// Fill particle ids
+		for (let i = 0; i < this.numParticles; i++) {
+			const x = this.particlePos[2 * i]
+			const y = this.particlePos[2 * i + 1]
+
+			const xi = Math.floor(x * this.pInvSpacing)
+			const yi = Math.floor(y * this.pInvSpacing)
+			const cellNr =
+				Math.max(0, Math.min(xi, this.pNumX - 1)) * this.pNumY +
+				Math.max(0, Math.min(yi, this.pNumY - 1))
+			this.firstCellParticle[cellNr]--
+			this.cellParticleIds[this.firstCellParticle[cellNr]] = i
+		}
+
+		// Push particles apart
+		const minDist = 2.0 * this.particleRadius
+		const minDist2 = minDist * minDist
+
+		for (let iter = 0; iter < numIters; iter++) {
+			for (let i = 0; i < this.numParticles; i++) {
+				const px = this.particlePos[2 * i]
+				const py = this.particlePos[2 * i + 1]
+
+				const pxi = Math.floor(px * this.pInvSpacing)
+				const pyi = Math.floor(py * this.pInvSpacing)
+				const x0 = Math.max(pxi - 1, 0)
+				const y0 = Math.max(pyi - 1, 0)
+				const x1 = Math.min(pxi + 1, this.pNumX - 1)
+				const y1 = Math.min(pyi + 1, this.pNumY - 1)
+
+				for (let xi = x0; xi <= x1; xi++) {
+					for (let yi = y0; yi <= y1; yi++) {
+						const cellNr = xi * this.pNumY + yi
+						const first = this.firstCellParticle[cellNr]
+						const last = this.firstCellParticle[cellNr + 1]
+
+						for (let j = first; j < last; j++) {
+							const id = this.cellParticleIds[j]
+							if (id === i) continue
+
+							const qx = this.particlePos[2 * id]
+							const qy = this.particlePos[2 * id + 1]
+
+							const dx = qx - px
+							const dy = qy - py
+							const d2 = dx * dx + dy * dy
+
+							if (d2 > minDist2 || d2 === 0) continue
+
+							const d = Math.sqrt(d2)
+							const s = (0.5 * (minDist - d)) / d
+							const moveX = dx * s
+							const moveY = dy * s
+
+							this.particlePos[2 * i] -= moveX
+							this.particlePos[2 * i + 1] -= moveY
+							this.particlePos[2 * id] += moveX
+							this.particlePos[2 * id + 1] += moveY
+
+							// Color diffusion
+							for (let k = 0; k < 3; k++) {
+								const color0 = this.particleColor[3 * i + k]
+								const color1 = this.particleColor[3 * id + k]
+								const avgColor = (color0 + color1) * 0.5
+								this.particleColor[3 * i + k] +=
+									colorDiffusionCoeff * (avgColor - color0)
+								this.particleColor[3 * id + k] +=
+									colorDiffusionCoeff * (avgColor - color1)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	handleParticleCollisions(
+		obstacleX,
+		obstacleY,
+		obstacleRadius,
+		domainWidth,
+		domainHeight
+	) {
+		const minDist = obstacleRadius + this.particleRadius
+		const minDist2 = minDist * minDist
+		const minX = this.h + this.particleRadius
+		const maxX = domainWidth - this.h - this.particleRadius
+		const minY = this.h + this.particleRadius
+		const maxY = domainHeight - this.h - this.particleRadius
+
+		for (let i = 0; i < this.numParticles; i++) {
+			let x = this.particlePos[2 * i]
+			let y = this.particlePos[2 * i + 1]
+
+			// Mouse interaction - apply velocity impulse instead of hard push
+			if (obstacleX < 9000) {
+				const dx = x - obstacleX
+				const dy = y - obstacleY
+				const d2 = dx * dx + dy * dy
+				const influenceRadius = obstacleRadius * 3
+				const influenceRadius2 = influenceRadius * influenceRadius
+				if (d2 < influenceRadius2 && d2 > 0.0001) {
+					const d = Math.sqrt(d2)
+					// Smooth falloff - stronger close to mouse
+					const strength = 1.0 - d / influenceRadius
+					const pushStrength = strength * strength * 15.0
+					this.particleVel[2 * i] += (dx / d) * pushStrength
+					this.particleVel[2 * i + 1] += (dy / d) * pushStrength
+				}
+			}
+
+			// Text mask obstacle collision
+			if (this.textMask && this.isInsideObstacle(x, y)) {
+				// Find direction to push particle out (sample surrounding points)
+				const step = this.particleRadius * 2
+				let bestDx = 0
+				let bestDy = 0
+				let minDepth = Infinity
+
+				// Sample 8 directions to find closest exit
+				const directions = [
+					[1, 0],
+					[-1, 0],
+					[0, 1],
+					[0, -1],
+					[0.707, 0.707],
+					[-0.707, 0.707],
+					[0.707, -0.707],
+					[-0.707, -0.707],
+				]
+
+				for (const [ddx, ddy] of directions) {
+					for (let dist = step; dist < step * 20; dist += step) {
+						const testX = x + ddx * dist
+						const testY = y + ddy * dist
+						if (!this.isInsideObstacle(testX, testY)) {
+							if (dist < minDepth) {
+								minDepth = dist
+								bestDx = ddx
+								bestDy = ddy
+							}
+							break
+						}
+					}
+				}
+
+				// Push particle out
+				if (minDepth < Infinity) {
+					x += bestDx * (minDepth + this.particleRadius)
+					y += bestDy * (minDepth + this.particleRadius)
+					// Dampen velocity toward obstacle
+					this.particleVel[2 * i] *= 0.5
+					this.particleVel[2 * i + 1] *= 0.5
+				}
+			}
+
+			// Rectangle obstacles
+			for (const obs of this.obstacles) {
+				if (obs.type === 'square') {
+					const pad = this.particleRadius
+					if (
+						x > obs.minX - pad &&
+						x < obs.maxX + pad &&
+						y > obs.minY - pad &&
+						y < obs.maxY + pad
+					) {
+						const dLeft = x - (obs.minX - pad)
+						const dRight = obs.maxX + pad - x
+						const dBottom = y - (obs.minY - pad)
+						const dTop = obs.maxY + pad - y
+						const minD = Math.min(dLeft, dRight, dBottom, dTop)
+
+						if (minD === dLeft) x = obs.minX - pad
+						else if (minD === dRight) x = obs.maxX + pad
+						else if (minD === dBottom) y = obs.minY - pad
+						else y = obs.maxY + pad
+					}
+				}
+			}
+
+			// Boundary collisions
+			if (x < minX) {
+				x = minX
+				this.particleVel[2 * i] = 0
+			}
+			if (x > maxX) {
+				x = maxX
+				this.particleVel[2 * i] = 0
+			}
+			if (y < minY) {
+				y = minY
+				this.particleVel[2 * i + 1] = 0
+			}
+			if (y > maxY) {
+				y = maxY
+				this.particleVel[2 * i + 1] = 0
+			}
+
+			this.particlePos[2 * i] = x
+			this.particlePos[2 * i + 1] = y
+		}
+	}
+
+	updateParticleDensity() {
+		const n = this.fNumY
+		const h = this.h
+		const h1 = this.fInvSpacing
+		const h2 = 0.5 * h
+
+		this.particleDensity.fill(0)
+
+		for (let i = 0; i < this.numParticles; i++) {
+			const x = this.particlePos[2 * i]
+			const y = this.particlePos[2 * i + 1]
+
+			const x0 = Math.floor((x - h2) * h1)
+			const y0 = Math.floor((y - h2) * h1)
+
+			const tx = (x - h2 - x0 * h) * h1
+			const ty = (y - h2 - y0 * h) * h1
+			const sx = 1.0 - tx
+			const sy = 1.0 - ty
+
+			if (x0 >= 0 && x0 < this.fNumX - 1 && y0 >= 0 && y0 < this.fNumY - 1) {
+				this.particleDensity[x0 * n + y0] += sx * sy
+				this.particleDensity[(x0 + 1) * n + y0] += tx * sy
+				this.particleDensity[(x0 + 1) * n + (y0 + 1)] += tx * ty
+				this.particleDensity[x0 * n + (y0 + 1)] += sx * ty
+			}
+		}
+
+		if (this.particleRestDensity === 0) {
+			let sum = 0
+			let numFluidCells = 0
+			for (let i = 0; i < this.fNumCells; i++) {
+				if (this.cellType[i] === 1) {
+					sum += this.particleDensity[i]
+					numFluidCells++
+				}
+			}
+			if (numFluidCells > 0) this.particleRestDensity = sum / numFluidCells
+		}
+	}
+
+	transferVelocities(toGrid, flipRatio) {
+		const n = this.fNumY
+		const h = this.h
+		const h1 = this.fInvSpacing
+		const h2 = 0.5 * h
+
+		if (toGrid) {
+			this.prevU.set(this.u)
+			this.prevV.set(this.v)
+
+			this.du.fill(0)
+			this.dv.fill(0)
+			this.u.fill(0)
+			this.v.fill(0)
+
+			for (let i = 0; i < this.fNumCells; i++)
+				this.cellType[i] = this.s[i] === 0 ? 2 : 0
+
+			for (let i = 0; i < this.numParticles; i++) {
+				const x = this.particlePos[2 * i]
+				const y = this.particlePos[2 * i + 1]
+				const xi = Math.floor(x * h1)
+				const yi = Math.floor(y * h1)
+				const cellNr =
+					Math.max(0, Math.min(xi, this.fNumX - 1)) * n +
+					Math.max(0, Math.min(yi, this.fNumY - 1))
+				if (this.cellType[cellNr] === 0) this.cellType[cellNr] = 1
+			}
+		}
+
+		for (let component = 0; component < 2; component++) {
+			const dx = component === 0 ? 0 : h2
+			const dy = component === 0 ? h2 : 0
+			const f = component === 0 ? this.u : this.v
+			const prevF = component === 0 ? this.prevU : this.prevV
+			const d = component === 0 ? this.du : this.dv
+
+			for (let i = 0; i < this.numParticles; i++) {
+				const x = this.particlePos[2 * i]
+				const y = this.particlePos[2 * i + 1]
+
+				const x0 = Math.min(Math.floor((x - dx) * h1), this.fNumX - 2)
+				const y0 = Math.min(Math.floor((y - dy) * h1), this.fNumY - 2)
+
+				const tx = (x - dx - x0 * h) * h1
+				const ty = (y - dy - y0 * h) * h1
+				const sx = 1.0 - tx
+				const sy = 1.0 - ty
+
+				const d0 = sx * sy
+				const d1 = tx * sy
+				const d2 = tx * ty
+				const d3 = sx * ty
+
+				const nr0 = x0 * n + y0
+				const nr1 = (x0 + 1) * n + y0
+				const nr2 = (x0 + 1) * n + (y0 + 1)
+				const nr3 = x0 * n + (y0 + 1)
+
+				if (toGrid) {
+					const pv = this.particleVel[2 * i + component]
+					f[nr0] += pv * d0
+					d[nr0] += d0
+					f[nr1] += pv * d1
+					d[nr1] += d1
+					f[nr2] += pv * d2
+					d[nr2] += d2
+					f[nr3] += pv * d3
+					d[nr3] += d3
+				} else {
+					const valid0 = this.cellType[nr0] !== 0 || this.cellType[nr0] !== 2
+					const valid1 = this.cellType[nr1] !== 0 || this.cellType[nr1] !== 2
+					const valid2 = this.cellType[nr2] !== 0 || this.cellType[nr2] !== 2
+					const valid3 = this.cellType[nr3] !== 0 || this.cellType[nr3] !== 2
+
+					const v =
+						valid0 * d0 * f[nr0] +
+						valid1 * d1 * f[nr1] +
+						valid2 * d2 * f[nr2] +
+						valid3 * d3 * f[nr3]
+					const weight = valid0 * d0 + valid1 * d1 + valid2 * d2 + valid3 * d3
+
+					if (weight > 0) {
+						const picV = v / weight
+						const corr =
+							valid0 * d0 * (f[nr0] - prevF[nr0]) +
+							valid1 * d1 * (f[nr1] - prevF[nr1]) +
+							valid2 * d2 * (f[nr2] - prevF[nr2]) +
+							valid3 * d3 * (f[nr3] - prevF[nr3])
+						const flipV = this.particleVel[2 * i + component] + corr / weight
+
+						this.particleVel[2 * i + component] =
+							(1.0 - flipRatio) * picV + flipRatio * flipV
+					}
+				}
+			}
+
+			if (toGrid) {
+				for (let i = 0; i < f.length; i++) {
+					if (d[i] > 0) f[i] /= d[i]
+				}
+
+				// Restore solid cell velocities
+				for (let i = 0; i < this.fNumX; i++) {
+					for (let j = 0; j < this.fNumY; j++) {
+						const solid = this.cellType[i * n + j] === 2
+						if (solid || (i > 0 && this.cellType[(i - 1) * n + j] === 2))
+							this.u[i * n + j] = this.prevU[i * n + j]
+						if (solid || (j > 0 && this.cellType[i * n + (j - 1)] === 2))
+							this.v[i * n + j] = this.prevV[i * n + j]
+					}
+				}
+			}
+		}
+	}
+
+	solveIncompressibility(numIters, overRelaxation, compensateDrift) {
+		this.p.fill(0)
+		this.prevU.set(this.u)
+		this.prevV.set(this.v)
+
+		const n = this.fNumY
+		const cp = (this.density * this.h) / dt
+
+		for (let iter = 0; iter < numIters; iter++) {
+			for (let i = 1; i < this.fNumX - 1; i++) {
+				for (let j = 1; j < this.fNumY - 1; j++) {
+					if (this.cellType[i * n + j] !== 1) continue
+
+					const center = i * n + j
+					const left = (i - 1) * n + j
+					const right = (i + 1) * n + j
+					const bottom = i * n + (j - 1)
+					const top = i * n + (j + 1)
+
+					const sx0 = this.s[left]
+					const sx1 = this.s[right]
+					const sy0 = this.s[bottom]
+					const sy1 = this.s[top]
+					const s = sx0 + sx1 + sy0 + sy1
+
+					if (s === 0) continue
+
+					let div =
+						this.u[right] - this.u[center] + this.v[top] - this.v[center]
+
+					if (compensateDrift) {
+						const k = 1.0
+						const compression =
+							this.particleDensity[center] - this.particleRestDensity
+						if (compression > 0) div -= k * compression
+					}
+
+					const p = (-div / s) * overRelaxation
+					this.p[center] += cp * p
+
+					this.u[center] -= sx0 * p
+					this.u[right] += sx1 * p
+					this.v[center] -= sy0 * p
+					this.v[top] += sy1 * p
+				}
+			}
+		}
+	}
+
+	simulate(
+		dt,
+		gravity,
+		flipRatio,
+		numPressureIters,
+		numParticleIters,
+		overRelaxation,
+		compensateDrift,
+		separateParticles,
+		obstacleX,
+		obstacleY,
+		obstacleRadius,
+		domainWidth,
+		domainHeight
+	) {
+		const numSubSteps = 1
+		const sdt = dt / numSubSteps
+
+		for (let step = 0; step < numSubSteps; step++) {
+			this.integrateParticles(sdt, gravity)
+			if (separateParticles) this.pushParticlesApart(numParticleIters)
+			this.handleParticleCollisions(
+				obstacleX,
+				obstacleY,
+				obstacleRadius,
+				domainWidth,
+				domainHeight
+			)
+			this.transferVelocities(true, flipRatio)
+			this.updateParticleDensity()
+			this.solveIncompressibility(
+				numPressureIters,
+				overRelaxation,
+				compensateDrift
+			)
+			this.transferVelocities(false, flipRatio)
+		}
+	}
+}
+
+// Global dt for pressure solver
+let dt = 1 / 60
 
 class NotFoundScene extends BaseScene {
 	constructor(id, container) {
@@ -11,7 +604,7 @@ class NotFoundScene extends BaseScene {
 
 	setupScene() {
 		this.time = 0
-		this.shapeSize = 1.9
+		this.shapeSize = 1.5
 	}
 
 	adjustCamera() {
@@ -19,538 +612,209 @@ class NotFoundScene extends BaseScene {
 		this.camera.lookAt(0, 0, 0)
 	}
 
-	createMaterials() {
-		// Will be created after GPU compute is initialized
-	}
-
 	async createObjects() {
 		this.adjustCamera()
-		this.initGPUCompute()
+		await this.initFluidSimulation()
 		this.createParticleMesh()
 		this.createMouseListeners()
 	}
 
-	initGPUCompute() {
-		const { width, height } = this.getFrustumDimensions(0)
+	async loadFont(fontUrl, fontFamily) {
+		try {
+			const font = new FontFace(fontFamily, `url(${fontUrl})`)
+			await font.load()
+			document.fonts.add(font)
+			return true
+		} catch (error) {
+			console.warn('Failed to load font:', error)
+			return false
+		}
+	}
+
+	getResponsiveTextScale() {
+		// Scale text smaller on mobile
+		const viewportWidth = window.innerWidth
+		if (viewportWidth < 480) return 0.22 // Small mobile
+		if (viewportWidth < 768) return 0.22 // Mobile
+		if (viewportWidth < 1024) return 0.28 // Tablet
+		return 0.35 // Desktop
+	}
+
+	async createTextMask(text, width, height) {
+		// Load custom font (Montreal Bold)
+		const fontFamily = 'Montreal404'
+		const fontUrl =
+			'/wp-content/themes/startdigital/static/fonts/montreal-bold.ttf'
+		await this.loadFont(fontUrl, fontFamily)
+
+		// Create high-res canvas for text rendering
+		const scale = 4 // Higher resolution for smooth edges
+		const canvas = document.createElement('canvas')
+		canvas.width = Math.floor(width * scale * 10)
+		canvas.height = Math.floor(height * scale * 10)
+		const ctx = canvas.getContext('2d')
+
+		// Clear canvas
+		ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+		// Draw text centered - scale smaller on mobile
+		const textScale = this.getResponsiveTextScale()
+		const fontSize = canvas.height * textScale
+		ctx.font = `${fontSize}px "${fontFamily}", "PP Montreal", "Montreal", Arial, sans-serif`
+		ctx.textAlign = 'center'
+		ctx.textBaseline = 'middle'
+		ctx.fillStyle = 'white'
+		ctx.fillText(text, canvas.width / 2, canvas.height / 2)
+
+		// Get pixel data
+		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+
+		return {
+			data: imageData.data,
+			width: canvas.width,
+			height: canvas.height,
+		}
+	}
+
+	async initFluidSimulation() {
+		const { width, height } = this.getFrustumDimensions(-0.25)
 		this.simWidth = width
 		this.simHeight = height
 
-		// Particle count - balance between visual density and performance
-		this.textureSize = 100
-		this.particleCount = this.textureSize * this.textureSize // 10000 particles
+		// Simulation parameters
+		const res = 30
+		const spacing = height / res
+		const particleRadius = 0.065 * spacing
+		const maxParticles = 100000
 
-		// Get renderer from WebGLManager
-		const renderer = WebGLManager.instance.renderer
-		if (!renderer) {
-			console.error('No renderer available for GPU computation')
-			return
-		}
-		this.renderer = renderer
-
-		this.gpuCompute = new GPUComputationRenderer(
-			this.textureSize,
-			this.textureSize,
-			renderer
+		this.fluid = new FlipFluid(
+			1000,
+			width,
+			height,
+			spacing,
+			particleRadius,
+			maxParticles
 		)
 
-		if (!renderer.capabilities.isWebGL2) {
-			this.gpuCompute.setDataType(THREE.HalfFloatType)
-		}
-
-		// Create initial position texture
-		const positionTexture = this.gpuCompute.createTexture()
-		const velocityTexture = this.gpuCompute.createTexture()
-		this.fillPositionTexture(positionTexture)
-		this.fillVelocityTexture(velocityTexture)
-
-		// Position computation shader
-		this.positionVariable = this.gpuCompute.addVariable(
-			'texturePosition',
-			this.getPositionShader(),
-			positionTexture
+		// Create text mask from font
+		const textMask = await this.createTextMask('404', width, height)
+		this.fluid.setTextMask(
+			textMask.data,
+			textMask.width,
+			textMask.height,
+			width,
+			height
 		)
 
-		// Velocity computation shader
-		this.velocityVariable = this.gpuCompute.addVariable(
-			'textureVelocity',
-			this.getVelocityShader(),
-			velocityTexture
-		)
+		this.fluid.setupGrid(width, height)
 
-		// Set dependencies
-		this.gpuCompute.setVariableDependencies(this.positionVariable, [
-			this.positionVariable,
-			this.velocityVariable,
-		])
-		this.gpuCompute.setVariableDependencies(this.velocityVariable, [
-			this.positionVariable,
-			this.velocityVariable,
-		])
+		// Initialize particles in a dam-break configuration
+		const h = this.fluid.h
+		const dx = 2.0 * particleRadius
+		const dy = (Math.sqrt(3.0) / 2.0) * dx
 
-		// Add uniforms to position shader
-		const posUniforms = this.positionVariable.material.uniforms
-		posUniforms.uDelta = { value: 0.016 }
-		posUniforms.uBounds = {
-			value: new THREE.Vector4(-width / 2, -height / 2, width / 2, height / 2),
+		let numX = Math.floor((width * 0.8) / dx)
+		let numY = Math.floor((height * 0.4) / dy)
+
+		let count = 0
+		for (let i = 0; i < numX && count < maxParticles; i++) {
+			for (let j = 0; j < numY && count < maxParticles; j++) {
+				const x =
+					h + particleRadius + dx * i + (j % 2 === 0 ? 0 : particleRadius)
+				const y = h + particleRadius + dy * j
+
+				// Skip if inside obstacle
+				if (this.fluid.isInsideObstacle(x, y)) continue
+
+				this.fluid.particlePos[2 * count] = x
+				this.fluid.particlePos[2 * count + 1] = y
+				this.fluid.particleVel[2 * count] = 0
+				this.fluid.particleVel[2 * count + 1] = 0
+
+				// Gradient from navy (#02001B) to white
+				const t = j / numY
+				this.fluid.particleColor[3 * count] = 0.008 + 0.3 * t // R: 0.008 -> 1.0
+				this.fluid.particleColor[3 * count + 1] = 0.0 + 0.3 * t // G: 0.0 -> 1.0
+				this.fluid.particleColor[3 * count + 2] = 0.106 + 0.35 * t // B: 0.106 -> 1.0
+
+				count++
+			}
 		}
-		posUniforms.uSquareMin = { value: new THREE.Vector2() }
-		posUniforms.uSquareMax = { value: new THREE.Vector2() }
-		posUniforms.uTriangleA = { value: new THREE.Vector2() }
-		posUniforms.uTriangleB = { value: new THREE.Vector2() }
-		posUniforms.uTriangleC = { value: new THREE.Vector2() }
-		posUniforms.uMouse = { value: new THREE.Vector3(9999, 9999, 0) }
-		posUniforms.uParticleRadius = { value: 0.025 }
+		this.fluid.numParticles = count
 
-		const velUniforms = this.velocityVariable.material.uniforms
-		velUniforms.uDelta = { value: 0.016 }
-		velUniforms.uTime = { value: 0 }
-		velUniforms.uGravity = { value: new THREE.Vector2(0, -9.81) }
-		velUniforms.uBounds = {
-			value: new THREE.Vector4(-width / 2, -height / 2, width / 2, height / 2),
-		}
-		velUniforms.uSquareMin = { value: new THREE.Vector2() }
-		velUniforms.uSquareMax = { value: new THREE.Vector2() }
-		velUniforms.uTriangleA = { value: new THREE.Vector2() }
-		velUniforms.uTriangleB = { value: new THREE.Vector2() }
-		velUniforms.uTriangleC = { value: new THREE.Vector2() }
-		velUniforms.uMouse = { value: new THREE.Vector3(9999, 9999, 0) }
-		velUniforms.uPrevMouse = { value: new THREE.Vector3(9999, 9999, 0) }
-		velUniforms.uParticleRadius = { value: 0.01 }
-		velUniforms.uRepulsionRadius = { value: 3.12 }
-		velUniforms.uRepulsionStrength = { value: 30.0 }
-
-		// Set shape uniforms
-		this.updateShapeUniforms()
-
-		const error = this.gpuCompute.init()
-		if (error !== null) {
-			console.error('GPUComputationRenderer error:', error)
-		}
+		// Scene parameters
+		this.gravity = -9.81
+		this.flipRatio = 0.9
+		this.numPressureIters = 50
+		this.numParticleIters = 2
+		this.overRelaxation = 1.9
+		this.compensateDrift = true
+		this.separateParticles = true
+		this.obstacleX = 9999
+		this.obstacleY = 9999
+		this.updateObstacleRadius()
 	}
 
-	updateShapeUniforms() {
-		const posUniforms = this.positionVariable.material.uniforms
-		const velUniforms = this.velocityVariable.material.uniforms
-
-		// Square vertices
-		const gap = 0.3
-		const size = this.shapeSize
-		const sqOffsetX = -size - gap / 2
-		const sqOffsetY = -size / 2
-
-		posUniforms.uSquareMin.value.set(sqOffsetX, sqOffsetY)
-		posUniforms.uSquareMax.value.set(sqOffsetX + size, sqOffsetY + size)
-		velUniforms.uSquareMin.value.set(sqOffsetX, sqOffsetY)
-		velUniforms.uSquareMax.value.set(sqOffsetX + size, sqOffsetY + size)
-
-		// Triangle vertices
-		const triOffsetX = gap / 2
-		const triOffsetY = -size / 2
-
-		posUniforms.uTriangleA.value.set(triOffsetX, triOffsetY + size)
-		posUniforms.uTriangleB.value.set(triOffsetX, triOffsetY)
-		posUniforms.uTriangleC.value.set(triOffsetX + size, triOffsetY)
-		velUniforms.uTriangleA.value.set(triOffsetX, triOffsetY + size)
-		velUniforms.uTriangleB.value.set(triOffsetX, triOffsetY)
-		velUniforms.uTriangleC.value.set(triOffsetX + size, triOffsetY)
+	updateObstacleRadius() {
+		// Scale mouse interaction radius based on simulation height
+		const baseRadius = 0.4
+		const baseHeight = 5
+		this.obstacleRadius = baseRadius * (this.simHeight / baseHeight)
 	}
 
-	fillPositionTexture(texture) {
-		const data = texture.image.data
-		const { width, height } = this.getFrustumDimensions(0)
-		const gap = 0.3
-		const size = this.shapeSize
-
-		// Shape bounds for rejection sampling
-		const sqMinX = -size - gap / 2
-		const sqMaxX = sqMinX + size
-		const sqMinY = -size / 2
-		const sqMaxY = sqMinY + size
-
-		const triAx = gap / 2,
-			triAy = sqMaxY
-		const triBx = gap / 2,
-			triBy = sqMinY
-		const triCx = gap / 2 + size,
-			triCy = sqMinY
-
-		const isInsideSquare = (x, y) =>
-			x >= sqMinX && x <= sqMaxX && y >= sqMinY && y <= sqMaxY
-
-		const isInsideTriangle = (px, py) => {
-			const sign = (p1x, p1y, p2x, p2y, p3x, p3y) =>
-				(p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y)
-			const d1 = sign(px, py, triAx, triAy, triBx, triBy)
-			const d2 = sign(px, py, triBx, triBy, triCx, triCy)
-			const d3 = sign(px, py, triCx, triCy, triAx, triAy)
-			const hasNeg = d1 < 0 || d2 < 0 || d3 < 0
-			const hasPos = d1 > 0 || d2 > 0 || d3 > 0
-			return !(hasNeg && hasPos)
-		}
-
-		const margin = 0.1
-		const minX = -width / 2 + margin
-		const maxX = width / 2 - margin
-		const minY = -height / 2 + margin
-		const maxY = height / 2 - margin
-
-		for (let i = 0; i < data.length; i += 4) {
-			let x, y
-			let attempts = 0
-			do {
-				x = minX + Math.random() * (maxX - minX)
-				y = minY + Math.random() * (maxY - minY)
-				attempts++
-			} while (
-				(isInsideSquare(x, y) || isInsideTriangle(x, y)) &&
-				attempts < 50
-			)
-
-			data[i] = x
-			data[i + 1] = y
-			data[i + 2] = 0
-			data[i + 3] = 1
-		}
-	}
-
-	fillVelocityTexture(texture) {
-		const data = texture.image.data
-		for (let i = 0; i < data.length; i += 4) {
-			data[i] = (Math.random() - 0.5) * 0.5
-			data[i + 1] = (Math.random() - 0.5) * 0.5
-			data[i + 2] = 0
-			data[i + 3] = 1
-		}
-	}
-
-	getPositionShader() {
-		return `
-			uniform float uDelta;
-			uniform vec4 uBounds;
-			uniform vec2 uSquareMin;
-			uniform vec2 uSquareMax;
-			uniform vec2 uTriangleA;
-			uniform vec2 uTriangleB;
-			uniform vec2 uTriangleC;
-			uniform vec3 uMouse;
-			uniform float uParticleRadius;
-
-			float sign2D(vec2 p1, vec2 p2, vec2 p3) {
-				return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
-			}
-
-			bool isInsideTriangle(vec2 pt) {
-				float d1 = sign2D(pt, uTriangleA, uTriangleB);
-				float d2 = sign2D(pt, uTriangleB, uTriangleC);
-				float d3 = sign2D(pt, uTriangleC, uTriangleA);
-				bool hasNeg = (d1 < 0.0) || (d2 < 0.0) || (d3 < 0.0);
-				bool hasPos = (d1 > 0.0) || (d2 > 0.0) || (d3 > 0.0);
-				return !(hasNeg && hasPos);
-			}
-
-			bool isInsideSquare(vec2 pt) {
-				return pt.x >= uSquareMin.x && pt.x <= uSquareMax.x &&
-					   pt.y >= uSquareMin.y && pt.y <= uSquareMax.y;
-			}
-
-			vec2 closestPointOnSegment(vec2 p, vec2 a, vec2 b) {
-				vec2 ab = b - a;
-				float len2 = dot(ab, ab);
-				if (len2 < 0.0001) return a;
-				float t = clamp(dot(p - a, ab) / len2, 0.0, 1.0);
-				return a + t * ab;
-			}
-
-			vec2 closestPointOnSquare(vec2 p) {
-				vec2 c0 = uSquareMin;
-				vec2 c1 = vec2(uSquareMax.x, uSquareMin.y);
-				vec2 c2 = uSquareMax;
-				vec2 c3 = vec2(uSquareMin.x, uSquareMax.y);
-
-				vec2 cp0 = closestPointOnSegment(p, c0, c1);
-				vec2 cp1 = closestPointOnSegment(p, c1, c2);
-				vec2 cp2 = closestPointOnSegment(p, c2, c3);
-				vec2 cp3 = closestPointOnSegment(p, c3, c0);
-
-				float d0 = length(p - cp0);
-				float d1 = length(p - cp1);
-				float d2 = length(p - cp2);
-				float d3 = length(p - cp3);
-
-				float minD = min(min(d0, d1), min(d2, d3));
-				if (minD == d0) return cp0;
-				if (minD == d1) return cp1;
-				if (minD == d2) return cp2;
-				return cp3;
-			}
-
-			vec2 closestPointOnTriangle(vec2 p) {
-				vec2 cp1 = closestPointOnSegment(p, uTriangleA, uTriangleB);
-				vec2 cp2 = closestPointOnSegment(p, uTriangleB, uTriangleC);
-				vec2 cp3 = closestPointOnSegment(p, uTriangleC, uTriangleA);
-
-				float d1 = length(p - cp1);
-				float d2 = length(p - cp2);
-				float d3 = length(p - cp3);
-
-				if (d1 < d2 && d1 < d3) return cp1;
-				if (d2 < d3) return cp2;
-				return cp3;
-			}
-
-			void main() {
-				vec2 uv = gl_FragCoord.xy / resolution.xy;
-				vec4 pos = texture2D(texturePosition, uv);
-				vec4 vel = texture2D(textureVelocity, uv);
-
-				// Update position with velocity
-				vec2 newPos = pos.xy + vel.xy * uDelta;
-				float margin = uParticleRadius + 0.02;
-
-				// Boundary collisions - clamp to bounds
-				newPos.x = clamp(newPos.x, uBounds.x + margin, uBounds.z - margin);
-				newPos.y = clamp(newPos.y, uBounds.y + margin, uBounds.w - margin);
-
-				// Shape collisions - push out of shapes
-				if (isInsideSquare(newPos)) {
-					vec2 closest = closestPointOnSquare(newPos);
-					vec2 center = (uSquareMin + uSquareMax) * 0.5;
-					vec2 dir = newPos - center;
-					float len = length(dir);
-					if (len > 0.001) {
-						dir = dir / len;
-					} else {
-						dir = vec2(1.0, 0.0);
-					}
-					newPos = closest + dir * margin;
-				}
-
-				if (isInsideTriangle(newPos)) {
-					vec2 closest = closestPointOnTriangle(newPos);
-					vec2 center = (uTriangleA + uTriangleB + uTriangleC) / 3.0;
-					vec2 dir = newPos - center;
-					float len = length(dir);
-					if (len > 0.001) {
-						dir = dir / len;
-					} else {
-						dir = vec2(1.0, 0.0);
-					}
-					newPos = closest + dir * margin;
-				}
-
-				// Mouse collision
-				if (uMouse.x < 1000.0) {
-					float mouseRadius = 0.5;
-					vec2 diff = newPos - uMouse.xy;
-					float dist = length(diff);
-					if (dist < mouseRadius && dist > 0.001) {
-						newPos = uMouse.xy + (diff / dist) * mouseRadius;
-					}
-				}
-
-				gl_FragColor = vec4(newPos, 0.0, 1.0);
-			}
-		`
-	}
-
-	getVelocityShader() {
-		return `
-			uniform float uDelta;
-			uniform float uTime;
-			uniform vec4 uBounds;
-			uniform vec2 uSquareMin;
-			uniform vec2 uSquareMax;
-			uniform vec2 uTriangleA;
-			uniform vec2 uTriangleB;
-			uniform vec2 uTriangleC;
-			uniform vec3 uMouse;
-			uniform vec3 uPrevMouse;
-			uniform float uParticleRadius;
-			uniform float uPressureStrength;
-			uniform float uRestDensity;
-
-			float sign2D(vec2 p1, vec2 p2, vec2 p3) {
-				return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
-			}
-
-			bool isInsideTriangle(vec2 pt) {
-				float d1 = sign2D(pt, uTriangleA, uTriangleB);
-				float d2 = sign2D(pt, uTriangleB, uTriangleC);
-				float d3 = sign2D(pt, uTriangleC, uTriangleA);
-				bool hasNeg = (d1 < 0.0) || (d2 < 0.0) || (d3 < 0.0);
-				bool hasPos = (d1 > 0.0) || (d2 > 0.0) || (d3 > 0.0);
-				return !(hasNeg && hasPos);
-			}
-
-			bool isInsideSquare(vec2 pt) {
-				return pt.x >= uSquareMin.x && pt.x <= uSquareMax.x &&
-					   pt.y >= uSquareMin.y && pt.y <= uSquareMax.y;
-			}
-
-			void main() {
-				vec2 uv = gl_FragCoord.xy / resolution.xy;
-				vec4 pos = texture2D(texturePosition, uv);
-				vec4 vel = texture2D(textureVelocity, uv);
-				vec4 densityData = texture2D(textureDensity, uv);
-
-				vec2 p = pos.xy;
-				vec2 v = vel.xy;
-
-				// Get pressure force from density shader
-				float density = densityData.x;
-				vec2 pressureForce = densityData.yz;
-
-				// Apply pressure force (pushes particles apart)
-				float pressure = max(density - uRestDensity, 0.0) * uPressureStrength;
-				v += pressureForce * pressure * uDelta;
-
-				// Oscillating gravity for sloshing effect
-				float t = uTime;
-				float gravityAngle = sin(t * 0.7) * 0.7 + sin(t * 1.3) * 0.35 + sin(t * 2.1) * 0.15;
-				vec2 gravity = vec2(
-					cos(-1.5708 + gravityAngle) * 9.81,
-					sin(-1.5708 + gravityAngle) * 9.81
-				);
-
-				v += gravity * uDelta;
-
-				// Damping
-				v *= 0.985;
-
-				// Predict next position for collision response
-				vec2 nextPos = p + v * uDelta;
-				float margin = uParticleRadius + 0.02;
-				float bounce = 0.3;
-
-				// Boundary velocity response
-				if (nextPos.x < uBounds.x + margin) {
-					v.x = abs(v.x) * bounce;
-				} else if (nextPos.x > uBounds.z - margin) {
-					v.x = -abs(v.x) * bounce;
-				}
-				if (nextPos.y < uBounds.y + margin) {
-					v.y = abs(v.y) * bounce;
-				} else if (nextPos.y > uBounds.w - margin) {
-					v.y = -abs(v.y) * bounce;
-				}
-
-				// Shape collision velocity response
-				if (isInsideSquare(nextPos)) {
-					vec2 center = (uSquareMin + uSquareMax) * 0.5;
-					vec2 pushDir = normalize(p - center);
-					float velIntoShape = -dot(v, pushDir);
-					if (velIntoShape > 0.0) {
-						v += pushDir * velIntoShape * (1.0 + bounce);
-					}
-					v += pushDir * 2.0;
-				}
-
-				if (isInsideTriangle(nextPos)) {
-					vec2 center = (uTriangleA + uTriangleB + uTriangleC) / 3.0;
-					vec2 pushDir = normalize(p - center);
-					float velIntoShape = -dot(v, pushDir);
-					if (velIntoShape > 0.0) {
-						v += pushDir * velIntoShape * (1.0 + bounce);
-					}
-					v += pushDir * 2.0;
-				}
-
-				// Mouse interaction
-				if (uMouse.x < 1000.0) {
-					float mouseRadius = 0.6;
-					vec2 toMouse = p - uMouse.xy;
-					float dist = length(toMouse);
-					if (dist < mouseRadius && dist > 0.001) {
-						vec2 pushDir = toMouse / dist;
-						vec2 mouseVel = (uMouse.xy - uPrevMouse.xy) / max(uDelta, 0.001);
-						v += mouseVel * 0.5;
-						v += pushDir * (mouseRadius - dist) * 12.0;
-					}
-				}
-
-				// Clamp velocity
-				float maxSpeed = 10.0;
-				float speed = length(v);
-				if (speed > maxSpeed) {
-					v = v / speed * maxSpeed;
-				}
-
-				gl_FragColor = vec4(v, 0.0, 1.0);
-			}
-		`
+	getResponsiveParticleSize() {
+		// Scale particle size based on viewport height
+		const baseSize = 0.06
+		const baseHeight = 800
+		const currentHeight = window.innerHeight
+		return baseSize * (currentHeight / baseHeight)
 	}
 
 	createParticleMesh() {
-		// Create geometry with UV references to position texture
 		const geometry = new THREE.BufferGeometry()
-		const references = new Float32Array(this.particleCount * 2)
+		const positions = new Float32Array(this.fluid.maxParticles * 3)
+		const colors = new Float32Array(this.fluid.maxParticles * 3)
 
-		for (let i = 0; i < this.particleCount; i++) {
-			const x = (i % this.textureSize) / this.textureSize
-			const y = Math.floor(i / this.textureSize) / this.textureSize
-			references[i * 2] = x
-			references[i * 2 + 1] = y
-		}
+		geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+		geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 
-		geometry.setAttribute('reference', new THREE.BufferAttribute(references, 2))
-		geometry.setAttribute(
-			'position',
-			new THREE.BufferAttribute(new Float32Array(this.particleCount * 3), 3)
-		)
-
-		// Particle material that samples position texture
 		this.particleMaterial = new THREE.ShaderMaterial({
 			uniforms: {
-				uPositionTexture: { value: null },
-				uColor: { value: new THREE.Color('#ffffff') },
-				uSize: { value: 0.05 },
+				uSize: { value: this.getResponsiveParticleSize() },
 			},
-			vertexShader: `
-				uniform sampler2D uPositionTexture;
+			vertexShader: /* glsl */ `
 				uniform float uSize;
-				attribute vec2 reference;
+				varying vec3 vColor;
 
 				void main() {
-					vec4 posData = texture2D(uPositionTexture, reference);
-					vec3 pos = vec3(posData.xy, 0.0);
-
-					vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+					vColor = color;
+					vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
 					gl_Position = projectionMatrix * mvPosition;
 					gl_PointSize = uSize * (300.0 / -mvPosition.z);
 				}
 			`,
-			fragmentShader: `
-				uniform vec3 uColor;
+			fragmentShader: /* glsl */ `
+				varying vec3 vColor;
 
 				void main() {
 					vec2 center = gl_PointCoord - 0.5;
 					float dist = length(center);
-					if (dist > 0.5) discard;
-
-					// Soft edge
-					float alpha = 1.0 - smoothstep(0.45, 0.5, dist);
-					gl_FragColor = vec4(uColor, alpha);
+					
+					gl_FragColor = vec4(vColor, 1.0);
 				}
 			`,
 			transparent: true,
 			depthWrite: false,
-			blending: THREE.NormalBlending,
+			vertexColors: true,
 		})
 
 		this.particles = new THREE.Points(geometry, this.particleMaterial)
 		this.scene.add(this.particles)
 	}
 
-	createLights() {
-		this.scene.add(new THREE.AmbientLight(0xffffff, 1.0))
-	}
-
-	createScrollTriggers() {}
-
 	createMouseListeners() {
 		this.mouse = new THREE.Vector2(9999, 9999)
 		this.mouse3d = new THREE.Vector3(9999, 9999, 0)
-		this.prevMouse3d = new THREE.Vector3(9999, 9999, 0)
 
 		this.onMouseMove = (event) => {
 			const rect = this.container.getBoundingClientRect()
@@ -563,45 +827,72 @@ class NotFoundScene extends BaseScene {
 				this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
 				this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
 
-				this.prevMouse3d.copy(this.mouse3d)
-
 				const vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 0.5)
 				vector.unproject(this.camera)
 				const dir = vector.sub(this.camera.position).normalize()
 				const dist = -this.camera.position.z / dir.z
 				this.mouse3d.copy(this.camera.position).add(dir.multiplyScalar(dist))
+
+				// Convert to simulation space
+				this.obstacleX = this.mouse3d.x + this.simWidth / 2
+				this.obstacleY = this.mouse3d.y + this.simHeight / 2
 			} else {
-				this.mouse.x = 9999
-				this.mouse3d.set(9999, 9999, 0)
+				this.obstacleX = 9999
+				this.obstacleY = 9999
 			}
 		}
+
+		this.onMouseLeave = () => {
+			this.obstacleX = 9999
+			this.obstacleY = 9999
+		}
+
 		window.addEventListener('mousemove', this.onMouseMove)
+		this.container.addEventListener('mouseleave', this.onMouseLeave)
 	}
 
 	animate(deltaTime) {
-		if (!this.isInitialized || !this.gpuCompute || !this.particles) return
+		if (!this.isInitialized || !this.fluid || !this.particles) return
 
 		this.time += deltaTime
-		const dt = Math.min(deltaTime, 0.12)
+		dt = Math.min(deltaTime, 1 / 30)
 
-		// Update velocity shader uniforms
-		const velUniforms = this.velocityVariable.material.uniforms
-		velUniforms.uDelta.value = dt
-		velUniforms.uTime.value = this.time
-		velUniforms.uMouse.value.set(this.mouse3d.x, this.mouse3d.y, 0)
-		velUniforms.uPrevMouse.value.set(this.prevMouse3d.x, this.prevMouse3d.y, 0)
+		// Run simulation
+		this.fluid.simulate(
+			dt,
+			this.gravity,
+			this.flipRatio,
+			this.numPressureIters,
+			this.numParticleIters,
+			this.overRelaxation,
+			this.compensateDrift,
+			this.separateParticles,
+			this.obstacleX,
+			this.obstacleY,
+			this.obstacleRadius,
+			this.simWidth,
+			this.simHeight
+		)
 
-		// Update position shader uniforms
-		const posUniforms = this.positionVariable.material.uniforms
-		posUniforms.uDelta.value = dt
-		posUniforms.uMouse.value.set(this.mouse3d.x, this.mouse3d.y, 0)
+		// Update particle mesh
+		const positions = this.particles.geometry.attributes.position.array
+		const colors = this.particles.geometry.attributes.color.array
 
-		// Run GPU computation
-		this.gpuCompute.compute()
+		for (let i = 0; i < this.fluid.numParticles; i++) {
+			// Convert from simulation coords to scene coords
+			positions[3 * i] = this.fluid.particlePos[2 * i] - this.simWidth / 2
+			positions[3 * i + 1] =
+				this.fluid.particlePos[2 * i + 1] - this.simHeight / 2
+			positions[3 * i + 2] = 0
 
-		// Update particle material with current position texture (no GPU->CPU readback!)
-		this.particleMaterial.uniforms.uPositionTexture.value =
-			this.gpuCompute.getCurrentRenderTarget(this.positionVariable).texture
+			colors[3 * i] = this.fluid.particleColor[3 * i]
+			colors[3 * i + 1] = this.fluid.particleColor[3 * i + 1]
+			colors[3 * i + 2] = this.fluid.particleColor[3 * i + 2]
+		}
+
+		this.particles.geometry.attributes.position.needsUpdate = true
+		this.particles.geometry.attributes.color.needsUpdate = true
+		this.particles.geometry.setDrawRange(0, this.fluid.numParticles)
 	}
 
 	getFrustumDimensions(zDifference = 0) {
@@ -617,24 +908,143 @@ class NotFoundScene extends BaseScene {
 		super.onResize(width, height)
 		this.adjustCamera()
 
-		// Update bounds uniform on position and velocity shaders
-		if (this.velocityVariable && this.positionVariable) {
-			const { width: w, height: h } = this.getFrustumDimensions(0)
-			const bounds = new THREE.Vector4(-w / 2, -h / 2, w / 2, h / 2)
-			this.velocityVariable.material.uniforms.uBounds.value.copy(bounds)
-			this.positionVariable.material.uniforms.uBounds.value.copy(bounds)
+		// Debounce the fluid reinitialization
+		if (this.resizeTimeout) {
+			clearTimeout(this.resizeTimeout)
 		}
+
+		this.resizeTimeout = setTimeout(() => {
+			this.handleResponsiveResize()
+		}, 150)
+	}
+
+	async handleResponsiveResize() {
+		if (!this.fluid) return
+
+		const { width: newWidth, height: newHeight } =
+			this.getFrustumDimensions(-0.25)
+
+		// Skip if dimensions haven't changed significantly
+		if (
+			Math.abs(newWidth - this.simWidth) < 0.1 &&
+			Math.abs(newHeight - this.simHeight) < 0.1
+		) {
+			return
+		}
+
+		// Store old dimensions for remapping
+		const oldWidth = this.simWidth
+		const oldHeight = this.simHeight
+
+		// Store particle positions (normalized 0-1)
+		const normalizedPositions = []
+		const velocities = []
+		const colors = []
+
+		for (let i = 0; i < this.fluid.numParticles; i++) {
+			normalizedPositions.push({
+				x: this.fluid.particlePos[2 * i] / oldWidth,
+				y: this.fluid.particlePos[2 * i + 1] / oldHeight,
+			})
+			velocities.push({
+				x: this.fluid.particleVel[2 * i],
+				y: this.fluid.particleVel[2 * i + 1],
+			})
+			colors.push({
+				r: this.fluid.particleColor[3 * i],
+				g: this.fluid.particleColor[3 * i + 1],
+				b: this.fluid.particleColor[3 * i + 2],
+			})
+		}
+
+		const oldParticleCount = this.fluid.numParticles
+
+		// Update simulation dimensions
+		this.simWidth = newWidth
+		this.simHeight = newHeight
+
+		// Reinitialize fluid with new dimensions
+		const res = 30
+		const spacing = newHeight / res
+		const particleRadius = 0.065 * spacing
+		const maxParticles = 100000
+
+		this.fluid = new FlipFluid(
+			1000,
+			newWidth,
+			newHeight,
+			spacing,
+			particleRadius,
+			maxParticles
+		)
+
+		// Recreate text mask for new dimensions
+		const textMask = await this.createTextMask('404', newWidth, newHeight)
+		this.fluid.setTextMask(
+			textMask.data,
+			textMask.width,
+			textMask.height,
+			newWidth,
+			newHeight
+		)
+
+		this.fluid.setupGrid(newWidth, newHeight)
+
+		// Restore particles at remapped positions
+		const h = this.fluid.h
+		let count = 0
+
+		for (let i = 0; i < oldParticleCount && count < maxParticles; i++) {
+			// Remap to new dimensions
+			let x = normalizedPositions[i].x * newWidth
+			let y = normalizedPositions[i].y * newHeight
+
+			// Clamp to valid bounds
+			const minBound = h + this.fluid.particleRadius
+			const maxBoundX = newWidth - h - this.fluid.particleRadius
+			const maxBoundY = newHeight - h - this.fluid.particleRadius
+
+			x = Math.max(minBound, Math.min(maxBoundX, x))
+			y = Math.max(minBound, Math.min(maxBoundY, y))
+
+			// Skip if inside obstacle
+			if (this.fluid.isInsideObstacle(x, y)) continue
+
+			this.fluid.particlePos[2 * count] = x
+			this.fluid.particlePos[2 * count + 1] = y
+			this.fluid.particleVel[2 * count] = velocities[i].x
+			this.fluid.particleVel[2 * count + 1] = velocities[i].y
+			this.fluid.particleColor[3 * count] = colors[i].r
+			this.fluid.particleColor[3 * count + 1] = colors[i].g
+			this.fluid.particleColor[3 * count + 2] = colors[i].b
+
+			count++
+		}
+
+		this.fluid.numParticles = count
+
+		// Update particle size for new viewport
+		if (this.particleMaterial) {
+			this.particleMaterial.uniforms.uSize.value =
+				this.getResponsiveParticleSize()
+		}
+
+		// Update mouse interaction radius
+		this.updateObstacleRadius()
 	}
 
 	dispose() {
+		if (this.resizeTimeout) {
+			clearTimeout(this.resizeTimeout)
+		}
 		if (this.onMouseMove) {
 			window.removeEventListener('mousemove', this.onMouseMove)
 		}
+		if (this.onMouseLeave) {
+			this.container?.removeEventListener('mouseleave', this.onMouseLeave)
+		}
 		if (this.particleMaterial) this.particleMaterial.dispose()
 		if (this.particles) this.particles.geometry.dispose()
-		if (this.gpuCompute) {
-			this.gpuCompute.dispose()
-		}
 		super.dispose()
 	}
 }

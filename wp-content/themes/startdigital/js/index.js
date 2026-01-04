@@ -10,9 +10,7 @@ import initHeaderOnScroll, {
 	destroyHeaderOnScroll,
 } from './utils/headerOnScroll'
 import initSmoothScrolling from './utils/smooth-scroll'
-import homeAnimationBootstrap, {
-	destroyHomeAnimations,
-} from './animations/home/bootstrap'
+
 import buttonAnimations, {
 	destroyButtonAnimations,
 } from './animations/buttonAnimation'
@@ -34,6 +32,9 @@ import initNewsScroller, {
 	destroyNewsScroller,
 } from './components/news-scroller'
 import { initPageLoader, getPageLoader } from './components/page-loader'
+import splitTextAnimation, {
+	destroySplitTextAnimation,
+} from './animations/splitTextAnimation'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -54,7 +55,7 @@ async function initPage() {
 	initSmoothScrolling()
 	initMenus()
 	initHeaderOnScroll()
-	homeAnimationBootstrap()
+
 	buttonAnimations()
 
 	// Wait for Three.js to fully load
@@ -70,6 +71,7 @@ async function initPage() {
 	initCapabilityScroller()
 	initProjectScroller()
 	initNewsScroller()
+	splitTextAnimation()
 }
 
 function destroyPage() {
@@ -80,18 +82,18 @@ function destroyPage() {
 	destroyThree()
 
 	destroyHeaderOnScroll()
-	destroyHomeAnimations()
+
 	destroyButtonAnimations()
 	destroyNewsSwiper()
 	destroyMouseFollower()
 	destroyCapabilityScroller()
 	destroyProjectScroller()
 	destroyNewsScroller()
+	destroySplitTextAnimation()
 }
 
 async function reinitPage() {
 	initHeaderOnScroll()
-	homeAnimationBootstrap()
 	buttonAnimations()
 
 	// Wait for Three.js to fully load
@@ -102,6 +104,7 @@ async function reinitPage() {
 	initCapabilityScroller()
 	initProjectScroller()
 	initNewsScroller()
+	splitTextAnimation()
 
 	// Refresh ScrollTrigger after new content
 	ScrollTrigger.refresh()
