@@ -1,5 +1,7 @@
 import Swiper from 'swiper/bundle'
 
+let swiperInstance = null
+
 function initNewsSwiper() {
 	const swiperContainer = document.querySelector('#news-swiper-container')
 	if (!swiperContainer) return
@@ -7,7 +9,7 @@ function initNewsSwiper() {
 	const nextBtn = document.querySelector('#news-swiper-next')
 	const prevBtn = document.querySelector('#news-swiper-prev')
 
-	const swiper = new Swiper(swiperContainer, {
+	swiperInstance = new Swiper(swiperContainer, {
 		slidesPerView: 1,
 		spaceBetween: 16,
 		breakpoints: {
@@ -30,6 +32,13 @@ function initNewsSwiper() {
 			prevEl: prevBtn,
 		},
 	})
+}
+
+export function destroyNewsSwiper() {
+	if (swiperInstance) {
+		swiperInstance.destroy(true, true)
+		swiperInstance = null
+	}
 }
 
 export default initNewsSwiper

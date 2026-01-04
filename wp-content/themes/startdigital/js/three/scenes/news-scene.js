@@ -288,9 +288,9 @@ class NewsScene extends BaseScene {
 
 		this.tl.fromTo(
 			this.ringsContainer.position,
-			{ y: -totalRingHeight * 0.25 },
+			{ y: -totalRingHeight * 0.325 },
 			{
-				y: totalRingHeight * 0.25,
+				y: totalRingHeight * 0.175,
 				ease: 'none',
 
 				onUpdate: function () {
@@ -310,6 +310,10 @@ class NewsScene extends BaseScene {
 
 		this.onClick = () => {
 			if (this.hoveredNews && this.hoveredNews.link) {
+				if (window.swup) {
+					window.swup.navigate(this.hoveredNews.link)
+					return
+				}
 				window.location.href = this.hoveredNews.link
 			}
 		}
@@ -425,10 +429,10 @@ class NewsScene extends BaseScene {
 
 	dispose() {
 		if (this.onMouseMove) {
-			window.removeEventListener('mousemove', this.onMouseMove)
+			window?.removeEventListener('mousemove', this.onMouseMove)
 		}
 		if (this.onClick) {
-			this.container.removeEventListener('click', this.onClick)
+			this.container?.removeEventListener('click', this.onClick)
 		}
 
 		document.body.style.cursor = ''

@@ -1,7 +1,10 @@
 import gsap from 'gsap'
 import { isTouchDevice } from '../utils/device-capability'
 
+let cleanupFns = []
+
 export default function initMouseFollower() {
+	cleanupFns = []
 	const mouseEl = document.querySelector('#mouse-follower')
 
 	if (!mouseEl) return
@@ -30,7 +33,7 @@ export default function initMouseFollower() {
 	// Magnetic strength (how much the follower is pulled toward button center)
 	const magnetStrength = 0.6
 
-	window.addEventListener('mousemove', (e) => {
+	const mouseMoveHandler = (e) => {
 		mouseX = e.clientX
 		mouseY = e.clientY
 
@@ -54,7 +57,9 @@ export default function initMouseFollower() {
 			dataSpan.textContent = `${
 				Math.round((e.clientX / window.innerWidth) * 100) / 100
 			}, ${Math.round((e.clientY / window.innerHeight) * 100) / 100}`
-	})
+	}
+	window.addEventListener('mousemove', mouseMoveHandler)
+	cleanupFns.push(() => window.removeEventListener('mousemove', mouseMoveHandler))
 
 	// Click animation timeline
 	const clickTl = gsap
@@ -276,4 +281,9 @@ export default function initMouseFollower() {
 			}
 		})
 	})
+}
+
+export function destroyMouseFollower() {
+	cleanupFns.forEach(fn => fn())
+	cleanupFns = []
 }

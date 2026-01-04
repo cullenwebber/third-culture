@@ -1,5 +1,44 @@
 <section id="home-capabilities-section" class="text-white !py-0 bg-navy">
 	<div id="home-capabilities-container" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></div>
+	<div id="capability-scroller" class="sticky -mt-[100lvh] top-0 pointer-events-none h-lvh left-0 w-full z-[45]">
+		<div class="w-full h-dvh flex flex-row justify-center sm:justify-between items-end py-6 md:py-8 xl:py-12 md:px-8 2xl:px-12 px-4">
+			{# <div class="absolute w-full h-24 xl:h-48 left-0 bottom-0 from-navy to-navy/0 bg-gradient-to-t pointer-events-none"></div> #}
+			<div class="bg-[#0D0B25] text-white max-w-[350px] rounded-sm relative w-full">
+				<div class="rounded-tl-sm border-l border-t size-2 border-paragraphLight absolute -top-2 -left-2"></div>
+				<div class="rounded-tr-sm border-r border-t size-2 border-paragraphLight absolute -top-2 -right-2"></div>
+				<div class="rounded-br-sm border-r border-b size-2 border-paragraphLight absolute -bottom-2 -right-2"></div>
+				<div class="rounded-bl-sm border-l border-b size-2 border-paragraphLight absolute -bottom-2 -left-2"></div>
+
+				<div class="capability-scroller-container relative overflow-hidden w-full h-[40px]">
+					{% for service in post.capabilities.services %}
+						<div class="capability-scroller flex flex-row items-center absolute left-0 w-full h-full {{
+							loop.first
+								? 'top-0'
+								: 'top-full'
+							}}"
+							data-capability-index="{{ loop.index0 }}">
+							{% for _ in 1..2 %}
+								<div class="flex flex-row items-center infinite-scroll">
+									{% for subservice in service.subservice %}
+										<div class="subservice shrink-0 is-supertitle whitespace-nowrap ml-8">
+											{{ subservice.title }}
+										</div>
+										<div class="size-2.5 bg-paragraphLight shrink-0 ml-8"></div>
+									{% endfor %}
+								</div>
+							{% endfor %}
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+			{% include 'partials/button.twig' with {
+				title: 'View all capabilities',
+				link: '/capabilities',
+				target: '_self',
+				class: 'pointer-events-auto max-sm:hidden border-button'
+			} %}
+		</div>
+	</div>
 	<div class="container flex flex-col gap-8 lg:gap-16 xl:gap-32 relative items-center -mt-[100lvh]">
 		<section class="flex flex-col gap-6 sm:gap-12 2xl:gap-24 z-40 relative w-full">
 			<div class="block-content relative w-fit max-w-[700px] 2xl:max-w-[1000px] 4xl:max-w-[1200px]">
@@ -49,44 +88,5 @@
 			{% endfor %}
 		</div>
 		<div class="h-[10lvh]"></div>
-	</div>
-	<div id="capability-scroller" class="absolute top-0 pointer-events-none h-lvh left-0 w-full z-40">
-		<div class="w-full h-dvh flex flex-row justify-center sm:justify-between items-end py-6 md:py-8 xl:py-12 md:px-8 2xl:px-12 px-4">
-			{# <div class="absolute w-full h-24 xl:h-48 left-0 bottom-0 from-navy to-navy/0 bg-gradient-to-t pointer-events-none"></div> #}
-			<div class="bg-[#0D0B25] text-white max-w-[350px] rounded-sm relative w-full">
-				<div class="rounded-tl-sm border-l border-t size-2 border-paragraphLight absolute -top-2 -left-2"></div>
-				<div class="rounded-tr-sm border-r border-t size-2 border-paragraphLight absolute -top-2 -right-2"></div>
-				<div class="rounded-br-sm border-r border-b size-2 border-paragraphLight absolute -bottom-2 -right-2"></div>
-				<div class="rounded-bl-sm border-l border-b size-2 border-paragraphLight absolute -bottom-2 -left-2"></div>
-
-				<div class="capability-scroller-container relative overflow-hidden w-full h-[40px]">
-					{% for service in post.capabilities.services %}
-						<div class="capability-scroller flex flex-row items-center absolute left-0 w-full h-full {{
-							loop.first
-								? 'top-0'
-								: 'top-full'
-							}}"
-							data-capability-index="{{ loop.index0 }}">
-							{% for _ in 1..2 %}
-								<div class="flex flex-row items-center infinite-scroll">
-									{% for subservice in service.subservice %}
-										<div class="subservice shrink-0 is-supertitle whitespace-nowrap ml-8">
-											{{ subservice.title }}
-										</div>
-										<div class="size-2.5 bg-paragraphLight shrink-0 ml-8"></div>
-									{% endfor %}
-								</div>
-							{% endfor %}
-						</div>
-					{% endfor %}
-				</div>
-			</div>
-			{% include 'partials/button.twig' with {
-				title: 'View all capabilities',
-				link: '/capabilities',
-				target: '_self',
-				class: 'pointer-events-auto max-sm:hidden border-button'
-			} %}
-		</div>
 	</div>
 </section>

@@ -147,7 +147,6 @@ class HomeCapabilitiesScene extends BaseScene {
 		shapes.forEach((shape, index) => {
 			const element = document.querySelector(`#service-text-${index}`)
 			if (!element) {
-				console.warn(`Trigger element #service-text-${index} not found`)
 				return
 			}
 

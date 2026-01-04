@@ -3,6 +3,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
+export function destroyCapabilityScroller() {
+	// ScrollTriggers are cleaned up globally by app-lifecycle
+}
+
 export default function initCapabilityScroller() {
 	const container = document.querySelector('#home-capabilities-section')
 	const capabilityScroller = document.querySelector('#capability-scroller')
@@ -32,8 +36,7 @@ export default function initCapabilityScroller() {
 		end: 'bottom bottom',
 		scrub: true,
 		ease: 'none',
-		pin: capabilityScroller,
-		pinSpacing: false,
+		pin: false,
 	})
 
 	const transitionTo = (newIndex) => {

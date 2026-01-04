@@ -3,6 +3,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
+export function destroyNewsScroller() {
+	// ScrollTriggers are cleaned up globally by app-lifecycle
+}
+
 export default function initNewsScroller() {
 	const container = document.querySelector('#news-scene-wrapper')
 	const newsScroller = document.querySelector('#news-scroller')
@@ -26,8 +30,7 @@ export default function initNewsScroller() {
 			end: 'bottom bottom',
 			scrub: true,
 			ease: 'none',
-			pin: newsScroller,
-			pinSpacing: false,
+			pin: false,
 		},
 	})
 

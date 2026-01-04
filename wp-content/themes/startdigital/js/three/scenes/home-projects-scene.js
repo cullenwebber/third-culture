@@ -405,6 +405,10 @@ class HomeProjectsScene extends BaseScene {
 
 		this.onClick = (event) => {
 			if (this.hoveredProject && this.hoveredProject.link) {
+				if (window.swup) {
+					window.swup.navigate(this.hoveredProject.link)
+					return
+				}
 				window.location.href = this.hoveredProject.link
 			}
 		}
@@ -560,10 +564,10 @@ class HomeProjectsScene extends BaseScene {
 	dispose() {
 		// Remove mouse listeners
 		if (this.onMouseMove) {
-			window.removeEventListener('mousemove', this.onMouseMove)
+			window?.removeEventListener('mousemove', this.onMouseMove)
 		}
 		if (this.onClick) {
-			this.container.removeEventListener('click', this.onClick)
+			this.container?.removeEventListener('click', this.onClick)
 		}
 
 		// Reset cursor

@@ -9,3 +9,7 @@ export default function homeAnimationBootstrap() {
 	capabilitiesAnimation()
 	newsAnimation()
 }
+
+export function destroyHomeAnimations() {
+	// GSAP animations and ScrollTriggers are cleaned up globally by app-lifecycle
+}

@@ -68,6 +68,20 @@ class SceneManager {
 		this.scenes.forEach((scene) => scene.updateVisibility?.())
 	}
 
+	// Only update visibility for scenes in the initial viewport (no scroll)
+	handleInitialVisibility() {
+		this.webglManager.updateCanvasRect()
+		const viewportHeight = window.innerHeight
+
+		this.scenes.forEach((scene) => {
+			const rect = scene.container.getBoundingClientRect()
+			// Only update scenes that start within the viewport
+			if (rect.top < viewportHeight) {
+				scene.updateVisibility?.()
+			}
+		})
+	}
+
 	handleResize() {
 		this.webglManager.resize()
 	}
@@ -77,6 +91,12 @@ class SceneManager {
 		this.lenis?.on('scroll', this.scrollHandler)
 		this.resizeObserver = new ResizeObserver(this.handleResize.bind(this))
 		this.resizeObserver.observe(document.body)
+
+		// Listen for page transition start to update visibility for initial viewport only
+		this.pageTransitionHandler = () => {
+			this.handleInitialVisibility()
+		}
+		window.addEventListener('pageTransitionStart', this.pageTransitionHandler)
 	}
 
 	eventCleanup() {
@@ -84,6 +104,13 @@ class SceneManager {
 		// Remove lenis scroll handler
 		if (this.lenis && this.scrollHandler) {
 			this.lenis.off('scroll', this.scrollHandler)
+		}
+		// Remove page transition handler
+		if (this.pageTransitionHandler) {
+			window.removeEventListener(
+				'pageTransitionStart',
+				this.pageTransitionHandler
+			)
 		}
 	}
 

@@ -3,32 +3,8 @@
 <section id="news-scene-wrapper"
 	class="flex flex-col gap-8 justify-center !py-0 relative z-40 text-navy dark-mouse dark-header">
 	<div id="news-scene" class="sticky top-0 left-0 h-lvh w-full"></div>
-	<section class="pointer-events-none">
-		<div class="container flex flex-col relative z-40 gap-20 w-full -mt-[100lvh]">
-			<div class="block-content relative w-full items-center text-center">
-				<div class="supertitle text-paragraphDark flex flex-row items-center gap-2">
-					<div class="size-2.5 bg-paragraphDark blink"></div>Whats been happening
-				</div>
-				{{ post.news.title }}
-				<div class="block-content max-w-[400px] 2xl:max-w-[600px] text-paragraphDark text-pretty">
-					{{ post.news.content }}
-				</div>
-			</div>
-		</div>
-	</section>
-	<div style="height: 100lvh;" class="pointer-events-none"></div>
-	<div class="flex-col gap-8 hidden pointer-events-none">
-		{% for news in news_posts %}
-			{% include 'partials/posts/post-tease.twig' with {
-				news: news
-			} %}
-		{% endfor %}
-	</div>
-	<div id="news-scroller" class="absolute top-0 pointer-events-none h-lvh left-0 w-full z-40 dark-mouse">
+	<div id="news-scroller" class="sticky -mt-[100lvh] top-0 pointer-events-none h-lvh left-0 w-full z-[45] dark-mouse">
 		<div class="w-full h-dvh flex flex-row justify-center sm:justify-between items-end py-6 md:py-8 xl:py-12 md:px-8 2xl:px-12 px-4">
-			{# <div style="background: radial-gradient(circle at center, #fff 63%, transparent 65%),#00000000; background-size: 3px 3px;  -webkit-mask: linear-gradient(to topa, #000, transparent);
-    mask: linear-gradient(to top, #000, transparent);"
-				class="absolute w-full left-0 bottom-0 h-24 xl:h-32 pointer-events-none"></div> #}
 			<div class="relative">
 				<div data-project-slider class="absolute aspect-3/4 h-[120%] -translate-x-[9%] -translate-y-[9%] z-10">
 					<div class="rounded-tl-sm border-l border-t size-2 border-paragraphDark absolute top-0 left-0"></div>
@@ -58,5 +34,26 @@
 				class: 'dark pointer-events-auto max-sm:hidden border-button'
 			} %}
 		</div>
+	</div>
+	<section class="pointer-events-none">
+		<div class="container flex flex-col relative z-40 gap-20 w-full -mt-[100lvh]">
+			<div class="block-content relative w-full items-center text-center">
+				<div class="supertitle text-paragraphDark flex flex-row items-center gap-2">
+					<div class="size-2.5 bg-paragraphDark blink"></div>Whats been happening
+				</div>
+				{{ post.news.title }}
+				<div class="block-content max-w-[400px] 2xl:max-w-[600px] text-paragraphDark text-pretty">
+					{{ post.news.content }}
+				</div>
+			</div>
+		</div>
+	</section>
+	<div style="height: 100lvh;" class="pointer-events-none"></div>
+	<div class="flex-col gap-8 hidden pointer-events-none">
+		{% for news in news_posts %}
+			{% include 'partials/posts/post-tease.twig' with {
+				news: news
+			} %}
+		{% endfor %}
 	</div>
 </section>

@@ -1,25 +1,53 @@
-import initMenus from './components/menus'
-import initHeaderOnScroll from './utils/headerOnScroll'
+import Swup from 'swup'
+import SwupHeadPlugin from '@swup/head-plugin'
+import SwupPreloadPlugin from '@swup/preload-plugin'
+import SwupScriptsPlugin from '@swup/scripts-plugin'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+import initMenus, { closeMenu } from './components/menus'
+import initHeaderOnScroll, {
+	destroyHeaderOnScroll,
+} from './utils/headerOnScroll'
 import initSmoothScrolling from './utils/smooth-scroll'
-import homeAnimationBootstrap from './animations/home/bootstrap'
-import buttonAnimations from './animations/buttonAnimation'
-import initThree, { setLoadingProgressCallback } from './three/init-three'
-import initNewsSwiper from './components/news-slider'
-import initMouseFollower from './components/mouse-follower'
-import initCapabilityScroller from './components/capability-scroller'
-import initProjectScroller from './components/project-scroller'
-import initNewsScroller from './components/news-scroller'
-import ScrollProgress from './components/scroll-progress'
+import homeAnimationBootstrap, {
+	destroyHomeAnimations,
+} from './animations/home/bootstrap'
+import buttonAnimations, {
+	destroyButtonAnimations,
+} from './animations/buttonAnimation'
+import initThree, {
+	destroyThree,
+	setLoadingProgressCallback,
+} from './three/init-three'
+import initNewsSwiper, { destroyNewsSwiper } from './components/news-slider'
+import initMouseFollower, {
+	destroyMouseFollower,
+} from './components/mouse-follower'
+import initCapabilityScroller, {
+	destroyCapabilityScroller,
+} from './components/capability-scroller'
+import initProjectScroller, {
+	destroyProjectScroller,
+} from './components/project-scroller'
+import initNewsScroller, {
+	destroyNewsScroller,
+} from './components/news-scroller'
 import { initPageLoader, getPageLoader } from './components/page-loader'
 
-document.addEventListener('DOMContentLoaded', async () => {
-	// Initialize loader first (only on homepage)
-	const loader = initPageLoader()
+gsap.registerPlugin(ScrollTrigger)
+
+let swup = null
+let pageLoader = null
+
+async function initPage() {
+	// Initialize loader
+	pageLoader = initPageLoader()
 
 	// Set up progress callback for Three.js loading
-	if (loader) {
+	if (pageLoader) {
 		setLoadingProgressCallback((progress) => {
-			loader.setProgress(progress)
+			pageLoader.setProgress(progress)
 		})
 	}
 
@@ -32,9 +60,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	// Wait for Three.js to fully load
 	await initThree()
 
-	// Complete the loader after Three.js is ready
-	if (loader) {
-		loader.complete()
+	// Complete the loader after Three.js is ready (only on first load)
+	if (pageLoader && pageLoader.isFirstLoad) {
+		await pageLoader.complete()
 	}
 
 	initNewsSwiper()
@@ -42,4 +70,86 @@ document.addEventListener('DOMContentLoaded', async () => {
 	initCapabilityScroller()
 	initProjectScroller()
 	initNewsScroller()
+}
+
+function destroyPage() {
+	// Kill all GSAP animations and ScrollTriggers
+	ScrollTrigger.getAll().forEach((st) => st.kill())
+
+	// Destroy Three.js and WebGL context
+	destroyThree()
+
+	destroyHeaderOnScroll()
+	destroyHomeAnimations()
+	destroyButtonAnimations()
+	destroyNewsSwiper()
+	destroyMouseFollower()
+	destroyCapabilityScroller()
+	destroyProjectScroller()
+	destroyNewsScroller()
+}
+
+async function reinitPage() {
+	initHeaderOnScroll()
+	homeAnimationBootstrap()
+	buttonAnimations()
+
+	// Wait for Three.js to fully load
+	await initThree()
+
+	initNewsSwiper()
+	initMouseFollower()
+	initCapabilityScroller()
+	initProjectScroller()
+	initNewsScroller()
+
+	// Refresh ScrollTrigger after new content
+	ScrollTrigger.refresh()
+}
+
+function initSwup() {
+	swup = new Swup({
+		containers: ['#page-content'],
+		animationSelector: false, // We handle animations manually
+		plugins: [
+			new SwupHeadPlugin(),
+			new SwupPreloadPlugin(),
+			new SwupScriptsPlugin({
+				head: false,
+				body: false,
+			}),
+		],
+	})
+
+	window.swup = swup
+
+	// Leave animation - animate loader IN (cover the page)
+	swup.hooks.on('animation:out:await', async () => {
+		closeMenu()
+		if (pageLoader) {
+			await pageLoader.animateIn()
+		}
+	})
+
+	// After leave animation, before content replace - cleanup
+	swup.hooks.on('content:replace', () => {
+		destroyPage()
+	})
+
+	// After content is replaced - reinitialize
+	swup.hooks.on('content:replace', async () => {
+		await reinitPage()
+	})
+
+	// Enter animation - animate loader OUT (reveal the page)
+	swup.hooks.on('animation:in:await', async () => {
+		if (pageLoader) {
+			await pageLoader.animateOut()
+		}
+	})
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+	await initPage()
+	initSwup()
 })

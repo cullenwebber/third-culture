@@ -3,13 +3,16 @@ import { SplitText } from 'gsap/SplitText'
 
 gsap.registerPlugin(SplitText)
 
-export default function initMenus() {
-	toggleMenu()
-}
-
 // Initialize menu state
 let isMenuOpen = false
 let tl = null
+let clickHandler = null
+let documentClickHandler = null
+let buttonEl = null
+
+export default function initMenus() {
+	toggleMenu()
+}
 
 function toggleMenu() {
 	const menu = document.querySelector('[data-menu]')
@@ -116,17 +119,20 @@ function toggleMenu() {
 		},
 	})
 
-	button.addEventListener('click', (e) => {
+	buttonEl = button
+	clickHandler = (e) => {
 		e.stopPropagation()
 		handleMenuToggle()
-	})
+	}
+	button.addEventListener('click', clickHandler)
 
 	// Close menu when clicking outside
-	document.addEventListener('click', (e) => {
+	documentClickHandler = (e) => {
 		if (isMenuOpen && !menu.contains(e.target) && !button.contains(e.target)) {
 			handleMenuToggle()
 		}
-	})
+	}
+	document.addEventListener('click', documentClickHandler)
 }
 
 const handleMenuToggle = () => {
@@ -135,5 +141,14 @@ const handleMenuToggle = () => {
 	} else {
 		tl.reverse()
 	}
+	isMenuOpen = !isMenuOpen
+}
+
+export function closeMenu() {
+	if (!isMenuOpen) return
+
+	if (!tl) return
+
+	tl.reverse()
 	isMenuOpen = !isMenuOpen
 }
