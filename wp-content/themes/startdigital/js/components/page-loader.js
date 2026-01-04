@@ -161,7 +161,7 @@ class PageLoader {
 					},
 					{
 						'clip-path': 'polygon(50% 50%, 50% 50%, 55% 50%, 45% 50%)',
-						duration: 0.65,
+						duration: 0.85,
 						ease: 'power3.inOut',
 					}
 				)
@@ -170,16 +170,16 @@ class PageLoader {
 					this.third,
 					{
 						xPercent: 0,
-						duration: 0.55,
+						duration: 0.65,
 						ease: 'power4.inOut',
 					},
-					'<=50%'
+					'<=80%'
 				)
 				.to(
 					this.culture,
 					{
 						xPercent: 0,
-						duration: 0.55,
+						duration: 0.65,
 						ease: 'power4.inOut',
 					},
 					'<='
@@ -215,7 +215,7 @@ class PageLoader {
 					this.third,
 					{
 						xPercent: -50,
-						duration: 0.55,
+						duration: 0.65,
 						ease: 'power4.inOut',
 					},
 					'<='
@@ -224,7 +224,7 @@ class PageLoader {
 					this.culture,
 					{
 						xPercent: 50,
-						duration: 0.55,
+						duration: 0.65,
 						ease: 'power4.inOut',
 					},
 					'<='
@@ -234,7 +234,7 @@ class PageLoader {
 					{ 'clip-path': 'polygon(45% 50%, 55% 50%, 50% 50%, 50% 50%)' },
 					{
 						'clip-path': 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
-						duration: 0.75,
+						duration: 0.95,
 						ease: 'power3.inOut',
 					},
 					'<=30%'
