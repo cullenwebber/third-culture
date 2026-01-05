@@ -256,7 +256,7 @@ class NewsScene extends BaseScene {
 
 		this.setupScrollAnimation()
 		this.createMouseListeners()
-		this.setupPostProcessing()
+		// this.setupPostProcessing()
 	}
 
 	setupPostProcessing() {

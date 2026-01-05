@@ -9,15 +9,15 @@ class NewsPostProcessor {
 		this.time = 0
 		// Create render target at full resolution
 		const size = renderer.getSize(new THREE.Vector2())
-		const width = size.x * this.pixelRatio
-		const height = size.y * this.pixelRatio
+		const width = size.x
+		const height = size.y
 
 		this.renderTarget = new THREE.WebGLRenderTarget(width, height, {
 			minFilter: THREE.LinearFilter,
 			magFilter: THREE.LinearFilter,
 			format: THREE.RGBAFormat,
 			colorSpace: THREE.SRGBColorSpace,
-			samples: 4, // MSAA anti-aliasing
+			samples: 0, // MSAA anti-aliasing
 		})
 
 		// Create full-screen quad

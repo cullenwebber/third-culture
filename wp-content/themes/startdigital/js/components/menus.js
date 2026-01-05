@@ -152,3 +152,25 @@ export function closeMenu() {
 	tl.reverse()
 	isMenuOpen = !isMenuOpen
 }
+
+export function destroyMenus() {
+	// Remove event listeners
+	if (buttonEl && clickHandler) {
+		buttonEl.removeEventListener('click', clickHandler)
+	}
+	if (documentClickHandler) {
+		document.removeEventListener('click', documentClickHandler)
+	}
+
+	// Kill timeline
+	if (tl) {
+		tl.kill()
+		tl = null
+	}
+
+	// Reset state
+	isMenuOpen = false
+	clickHandler = null
+	documentClickHandler = null
+	buttonEl = null
+}

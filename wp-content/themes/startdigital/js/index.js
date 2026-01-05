@@ -5,7 +5,7 @@ import SwupScriptsPlugin from '@swup/scripts-plugin'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-import initMenus, { closeMenu } from './components/menus'
+import initMenus, { closeMenu, destroyMenus } from './components/menus'
 import initHeaderOnScroll, {
 	destroyHeaderOnScroll,
 } from './utils/headerOnScroll'
@@ -82,6 +82,7 @@ function destroyPage() {
 	destroyThree()
 
 	destroyHeaderOnScroll()
+	destroyMenus()
 
 	destroyButtonAnimations()
 	destroyNewsSwiper()
@@ -94,6 +95,7 @@ function destroyPage() {
 
 async function reinitPage() {
 	initHeaderOnScroll()
+	initMenus()
 	buttonAnimations()
 
 	// Wait for Three.js to fully load
