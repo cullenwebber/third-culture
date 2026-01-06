@@ -80,45 +80,6 @@ class HomeScene extends BaseScene {
 		)
 	}
 
-	setupScrollAnimation() {
-		const heroSection = document.querySelector('#hero-section-wrapper')
-
-		if (!heroSection) return
-
-		this.tl = gsap.timeline({
-			scrollTrigger: {
-				trigger: heroSection,
-				start: 'top top',
-				end: 'bottom bottom',
-				scrub: true,
-				ease: 'none',
-			},
-		})
-
-		// Animate h1 to top left using ScrollTrigger
-		this.tl
-
-			.fromTo(
-				this.gradientMaterial.uniforms.progress,
-				{
-					value: 0.5,
-				},
-				{
-					value: 1,
-					ease: 'none',
-				},
-				'<='
-			)
-			.to(
-				this.gradientMaterial.uniforms.uScroll,
-				{
-					value: -0.5,
-					ease: 'none',
-				},
-				'<='
-			)
-	}
-
 	async createObjects() {
 		const { width, height } = this.getFrustumDimensions(0)
 
@@ -145,9 +106,6 @@ class HomeScene extends BaseScene {
 		this.loadWordmark()
 
 		this.scene.add(this.background)
-
-		// Setup scroll animation after everything is created
-		this.setupScrollAnimation()
 	}
 
 	async loadLogo() {
