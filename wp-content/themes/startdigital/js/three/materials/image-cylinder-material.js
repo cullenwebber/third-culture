@@ -74,7 +74,7 @@ class ImageCylinderMaterial extends THREE.ShaderMaterial {
                 vUv = uv;
                 vUvCover = getCoverUvVert(uv, uTextureSize, uQuadSize);
 
-                vec3 deformedPosition = deformationCurve(position, vUvCover);
+                vec3 deformedPosition = deformationCurve(position, vUv);
 
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(deformedPosition, 1.0);
             }
