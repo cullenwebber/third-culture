@@ -82,7 +82,6 @@ function destroyPage() {
 	destroyThree()
 
 	destroyHeaderOnScroll()
-	destroyMenus()
 
 	destroyButtonAnimations()
 	destroyNewsSwiper()
@@ -95,7 +94,6 @@ function destroyPage() {
 
 async function reinitPage() {
 	initHeaderOnScroll()
-	initMenus()
 	buttonAnimations()
 
 	// Wait for Three.js to fully load
