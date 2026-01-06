@@ -27,4 +27,4 @@ jobs:
           username: thirdcul
           password: ${{ secrets.PROD_FTP_PASS }}
           server-dir: public_html/ # Make sure it ends in a trailing slash.
-          # protocol: ftps # Required for some hosts.
+          protocol: ftps # Required for some hosts.
