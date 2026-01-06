@@ -124,7 +124,7 @@ class NewsScene extends BaseScene {
 					uTexture: texture,
 					uTextureSize: new THREE.Vector2(img.naturalWidth, img.naturalHeight),
 					uQuadSize: new THREE.Vector2(planeWidth, planeHeight),
-					uRadius: -3.8,
+					uRadius: -1.0,
 					uScrollVelocity: 0,
 					side: THREE.DoubleSide,
 					uBackColor: new THREE.Color('#EAEAEA'),
