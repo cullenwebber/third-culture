@@ -3,6 +3,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
+export function destroyProjectScroller() {
+	// ScrollTriggers are cleaned up globally by app-lifecycle
+}
+
 export default function initProjectScroller() {
 	const container = document.querySelector('#home-projects-inner')
 	const projectScroller = document.querySelector('#project-scroller')
@@ -20,8 +24,7 @@ export default function initProjectScroller() {
 			end: 'bottom bottom',
 			scrub: true,
 			ease: 'none',
-			pin: projectScroller,
-			pinSpacing: false,
+			pin: false,
 		},
 	})
 

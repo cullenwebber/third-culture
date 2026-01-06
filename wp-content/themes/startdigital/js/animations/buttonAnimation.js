@@ -3,7 +3,10 @@ import { SplitText } from 'gsap/SplitText'
 
 gsap.registerPlugin(SplitText)
 
+let buttonData = []
+
 export default function buttonAnimations() {
+	buttonData = []
 	const buttons = document.querySelectorAll('.button__large, .button__small')
 
 	if (buttons.length === 0) return
@@ -11,8 +14,7 @@ export default function buttonAnimations() {
 	buttons.forEach((button) => {
 		const texts = button.querySelectorAll('.button__text')
 
-		let tl
-		tl = gsap.timeline({ paused: true })
+		let tl = gsap.timeline({ paused: true })
 
 		let topSplit = SplitText.create(texts[0], {
 			type: 'chars',
@@ -47,7 +49,23 @@ export default function buttonAnimations() {
 			},
 		})
 
-		button.addEventListener('mouseenter', () => tl.play())
-		button.addEventListener('mouseleave', () => tl.reverse())
+		const enterHandler = () => tl.play()
+		const leaveHandler = () => tl.reverse()
+
+		button.addEventListener('mouseenter', enterHandler)
+		button.addEventListener('mouseleave', leaveHandler)
+
+		buttonData.push({ button, tl, topSplit, bottomSplit, enterHandler, leaveHandler })
 	})
+}
+
+export function destroyButtonAnimations() {
+	buttonData.forEach(({ button, tl, topSplit, bottomSplit, enterHandler, leaveHandler }) => {
+		button.removeEventListener('mouseenter', enterHandler)
+		button.removeEventListener('mouseleave', leaveHandler)
+		tl.kill()
+		topSplit?.revert()
+		bottomSplit?.revert()
+	})
+	buttonData = []
 }

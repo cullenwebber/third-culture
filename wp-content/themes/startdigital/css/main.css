@@ -87,3 +87,12 @@ header.header-inverted nav {
 header.header-inverted .nav-menu-items-wrapper:last-child .nav-menu-items {
 	@apply bg-navy text-white border-navy hover:bg-transparent hover:text-navy;
 }
+
+/* body,
+#page-parent {
+	scrollbar-gutter: stable;
+	will-change: overflow, height;
+} */
+html {
+	overflow-y: scroll; /* Forces scrollbar gutter always */
+}

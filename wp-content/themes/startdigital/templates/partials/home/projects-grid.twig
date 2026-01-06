@@ -4,6 +4,40 @@
 	class="text-navy relative z-40 !py-0 flex flex-col dark-mouse dark-header"
 	style="height: {{ 100 * length ~ 'lvh' }}">
 	<div id="home-projects-container" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></div>
+	<div id="project-scroller"
+		class="sticky top-0 pointer-events-none h-lvh left-0 w-full z-[45] dark-mouse -mt-[100lvh]">
+		<div class="w-full h-dvh flex flex-row justify-center sm:justify-between items-end py-6 md:py-8 xl:py-12 md:px-8 2xl:px-12 px-4">
+			{# <div class="bg-gradient-to-t from-white to-white/0 absolute w-full left-0 bottom-0 h-24 xl:h-48 pointer-events-none"></div> #}
+			<div class="relative">
+				<div data-project-slider class="absolute aspect-3/4 h-[120%] -translate-x-[9%] -translate-y-[9%] z-10">
+					<div class="rounded-tl-sm border-l border-t size-2 border-paragraphDark absolute top-0 left-0"></div>
+					<div class="rounded-tr-sm border-r border-t size-2 border-paragraphDark absolute top-0 right-0"></div>
+					<div class="rounded-br-sm border-r border-b size-2 border-paragraphDark absolute bottom-0 right-0"></div>
+					<div class="rounded-bl-sm border-l border-b size-2 border-paragraphDark absolute bottom-0 left-0"></div>
+				</div>
+				{% include 'icons/mask.twig' with {
+					id: 'project-mask'
+				} %}
+				<div class="relative flex flex-row-reverse w-full gap-1">
+					{% for project in post.projects.projects %}
+						<div data-project-thumb="{{ loop.index0 }}"
+							class="aspect-3/4 overflow-hidden relative h-[54px]"
+							style="clip-path: url(#project-mask);">
+							<img src="{{ get_image(project.project_thumbnail) }}"
+								alt=""
+								class="absolute top-0 left-0 object-cover w-full h-full" />
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+			{% include 'partials/button.twig' with {
+				title: 'View all projects',
+				link: '/projects',
+				target: '_self',
+				class: 'dark pointer-events-auto max-sm:hidden border-button'
+			} %}
+		</div>
+	</div>
 	<div class="container flex flex-col items-center relative z-40 max-sm:py-12 sm:h-[50lvh] justify-center -mt-[100lvh]">
 		<div class="project-title relative max-w-[250px] md:max-w-[300px] xl:max-w-[500px] 2xl:max-w-[600px] 4xl:max-w-[700px] text-center items-center flex flex-col block-content">
 			<div class="supertitle text-paragraphDark flex flex-row items-center gap-2">
@@ -37,38 +71,5 @@
 				</div>
 			</a>
 		{% endfor %}
-	</div>
-	<div id="project-scroller" class="absolute top-0 pointer-events-none h-lvh left-0 w-full z-40 dark-mouse">
-		<div class="w-full h-dvh flex flex-row justify-center sm:justify-between items-end py-6 md:py-8 xl:py-12 md:px-8 2xl:px-12 px-4">
-			{# <div class="bg-gradient-to-t from-white to-white/0 absolute w-full left-0 bottom-0 h-24 xl:h-48 pointer-events-none"></div> #}
-			<div class="relative">
-				<div data-project-slider class="absolute aspect-3/4 h-[120%] -translate-x-[9%] -translate-y-[9%] z-10">
-					<div class="rounded-tl-sm border-l border-t size-2 border-paragraphDark absolute top-0 left-0"></div>
-					<div class="rounded-tr-sm border-r border-t size-2 border-paragraphDark absolute top-0 right-0"></div>
-					<div class="rounded-br-sm border-r border-b size-2 border-paragraphDark absolute bottom-0 right-0"></div>
-					<div class="rounded-bl-sm border-l border-b size-2 border-paragraphDark absolute bottom-0 left-0"></div>
-				</div>
-				{% include 'icons/mask.twig' with {
-					id: 'project-mask'
-				} %}
-				<div class="relative flex flex-row-reverse w-full gap-1">
-					{% for project in post.projects.projects %}
-						<div data-project-thumb="{{ loop.index0 }}"
-							class="aspect-3/4 overflow-hidden relative h-[54px]"
-							style="clip-path: url(#project-mask);">
-							<img src="{{ get_image(project.project_thumbnail) }}"
-								alt=""
-								class="absolute top-0 left-0 object-cover w-full h-full" />
-						</div>
-					{% endfor %}
-				</div>
-			</div>
-			{% include 'partials/button.twig' with {
-				title: 'View all projects',
-				link: '/projects',
-				target: '_self',
-				class: 'dark pointer-events-auto max-sm:hidden border-button'
-			} %}
-		</div>
 	</div>
 </section>

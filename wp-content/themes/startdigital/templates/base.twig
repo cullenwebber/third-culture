@@ -11,19 +11,26 @@
 	<body class="{{ body_class }} min-h-screen" data-template="base.twig">
 		<a class="sr-only skip-link screen-reader-text" href="#page-content">{{ _e('Skip to content') }}</a>
 
-		{% block header %}
-			{% include 'partials/header.twig' %}
-		{% endblock %}
-
+		{% include 'partials/page-loader.twig' %}
 		{% include 'partials/mouse-follower.twig' %}
-		<main id="page-content" class="text-black">
-			{% block content %}
+		<div id="page-parent"
+			class="overflow-hidden h-lvh w-full"
+			style="clip-path: polygon(45% 50%, 55% 50%, 50% 50%, 50% 50%);">
+			{% block header %}
+				{% include 'partials/header.twig' %}
 			{% endblock %}
-		</main>
+			<div id="inner-parent" class="">
+				<main id="page-content" class="text-navy">
+					{% block content %}
 
-		{% block footer %}
-			{% include 'footer.twig' %}
-			{{ function('wp_footer') }}
-		{% endblock %}
+					{% endblock %}
+				</main>
+
+				{% block footer %}
+					{% include 'footer.twig' %}
+					{{ function('wp_footer') }}
+				{% endblock %}
+			</div>
+		</div>
 	</body>
 </html>

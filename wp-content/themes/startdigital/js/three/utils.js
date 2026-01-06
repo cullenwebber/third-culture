@@ -8,8 +8,8 @@ export function createCanvas() {
 	canvas.style.top = '0'
 	canvas.style.zIndex = '35'
 	canvas.style.pointerEvents = 'none'
-
-	document.body.appendChild(canvas)
+	canvas.id = 'three-scroll-canvas'
+	document.querySelector('#inner-parent').appendChild(canvas)
 
 	return canvas
 }

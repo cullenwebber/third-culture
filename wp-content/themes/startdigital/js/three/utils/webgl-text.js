@@ -24,6 +24,13 @@ class WebGLText {
 		this.enabled = true
 		this.computedStyle = window.getComputedStyle(this.element)
 		this.isReady = false
+		this.layoutTransitioning = false
+
+		// Listen for layout transitions to avoid flash during reflow
+		this.layoutTransitionHandler = (e) => {
+			this.layoutTransitioning = e.detail.active
+		}
+		window.addEventListener('layoutTransition', this.layoutTransitionHandler)
 
 		// Create group to hold text mesh
 		this.mesh = new THREE.Group()
@@ -47,6 +54,9 @@ class WebGLText {
 	}
 
 	async updateTextGeometry() {
+		// Skip during layout transitions to avoid flash
+		if (this.layoutTransitioning) return
+
 		// Clear existing text meshes
 		while (this.mesh.children.length > 0) {
 			const child = this.mesh.children[0]
@@ -179,6 +189,11 @@ class WebGLText {
 			return
 		}
 
+		// Skip position updates during layout transitions to avoid flash
+		if (this.layoutTransitioning) {
+			return
+		}
+
 		this.mesh.visible = true
 
 		// Update text content if changed
@@ -247,6 +262,9 @@ class WebGLText {
 
 	async resize() {
 		if (!this.isReady || !this.element) return
+
+		// Skip resize during layout transitions to avoid flash
+		if (this.layoutTransitioning) return
 
 		// Refresh computed styles (font size may have changed)
 		this.computedStyle = window.getComputedStyle(this.element)
@@ -387,6 +405,9 @@ class WebGLText {
 		}
 		if (this.resizeHandler) {
 			window.removeEventListener('resize', this.resizeHandler)
+		}
+		if (this.layoutTransitionHandler) {
+			window.removeEventListener('layoutTransition', this.layoutTransitionHandler)
 		}
 
 		// Disconnect observer

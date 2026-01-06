@@ -9,15 +9,15 @@ class NewsPostProcessor {
 		this.time = 0
 		// Create render target at full resolution
 		const size = renderer.getSize(new THREE.Vector2())
-		const width = size.x * this.pixelRatio
-		const height = size.y * this.pixelRatio
+		const width = size.x
+		const height = size.y
 
 		this.renderTarget = new THREE.WebGLRenderTarget(width, height, {
 			minFilter: THREE.LinearFilter,
 			magFilter: THREE.LinearFilter,
 			format: THREE.RGBAFormat,
 			colorSpace: THREE.SRGBColorSpace,
-			samples: 4, // MSAA anti-aliasing
+			samples: 0, // MSAA anti-aliasing
 		})
 
 		// Create full-screen quad
@@ -151,16 +151,31 @@ class NewsPostProcessor {
 		// Update time uniform using performance.now()
 		this.quadMaterial.uniforms.uTime.value = performance.now() * 0.001
 
-		// Store current render target
+		// Store current state
 		const currentRenderTarget = this.renderer.getRenderTarget()
+		const currentViewport = new THREE.Vector4()
+		const currentScissor = new THREE.Vector4()
+		this.renderer.getViewport(currentViewport)
+		this.renderer.getScissor(currentScissor)
+		const scissorTestEnabled = this.renderer.getScissorTest()
 
-		// Render scene to our render target
+		// Disable scissor and set full viewport for render target
+		this.renderer.setScissorTest(false)
 		this.renderer.setRenderTarget(this.renderTarget)
+		this.renderer.setViewport(
+			0,
+			0,
+			this.renderTarget.width,
+			this.renderTarget.height
+		)
 		this.renderer.clear()
 		this.renderer.render(this.scene, this.camera)
 
-		// Render the quad with shader to screen
+		// Restore viewport/scissor and render quad to screen
 		this.renderer.setRenderTarget(currentRenderTarget)
+		this.renderer.setViewport(currentViewport)
+		this.renderer.setScissor(currentScissor)
+		this.renderer.setScissorTest(scissorTestEnabled)
 		this.renderer.render(this.quadScene, this.quadCamera)
 	}
 

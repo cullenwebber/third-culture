@@ -1,5 +1,14 @@
-<div id="page-loader" class="fixed inset-0 z-[9999] bg-navy flex items-center justify-center pointer-events-none">
-	<div class="loader-percentage text-navy text-[20vw] leading-none flex overflow-hidden relative z-20">
+<div id="page-loader"
+	class="fixed inset-0 bg-darkBlue text-white flex items-center justify-center pointer-events-none overflow-hidden">
+	<div class="relative flex flex-row gap-1">
+		{% include 'icons/third.twig' with {
+			class: 'h-10 sm:h-12 lg:h-24 third'
+		} %}
+		{% include 'icons/culture.twig' with {
+			class: 'h-10 sm:h-12 lg:h-24 culture'
+		} %}
+	</div>
+	<div class="loader-percentage text-3xl leading-none flex overflow-hidden absolute bottom-12 left-1/2 -translate-x-1/2 z-20">
 		{# Hundreds: just 0 and 1 #}
 		<div class="digit-container h-[1.1em] overflow-hidden">
 			<div class="digit-track flex flex-col items-end">
@@ -23,12 +32,5 @@
 				{% endfor %}
 			</div>
 		</div>
-	</div>
-
-	{# Pixel grid for block-out effect #}
-	<div data-loader class="absolute inset-0 grid grid-cols-5 grid-rows-1">
-		{% for i in 0..25 %}
-			<div class="pixel bg-white"></div>
-		{% endfor %}
 	</div>
 </div>
