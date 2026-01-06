@@ -181,20 +181,6 @@ class CapabilityHeaderScene extends BaseScene {
 		this.mouse3d.lerp(this.targetMouse3d, 0.08)
 	}
 
-	createScrollTriggers() {
-		ScrollTrigger.create({
-			trigger: this.container,
-			start: 'top bottom',
-			end: 'bottom top',
-			scrub: true,
-			onUpdate: (self) => {
-				if (this.gradientMaterial) {
-					this.gradientMaterial.uniforms.progress.value = self.progress
-				}
-			},
-		})
-	}
-
 	animate(deltaTime) {
 		if (!this.isInitialized) return
 

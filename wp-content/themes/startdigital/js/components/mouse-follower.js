@@ -13,6 +13,8 @@ export default function initMouseFollower() {
 	if (isTouchDevice()) {
 		mouseEl.remove()
 		return
+	} else {
+		mouseEl.style.opacity = 1
 	}
 
 	const dataSpan = document.querySelector('[data-mouse-coordinates]')
@@ -31,7 +33,7 @@ export default function initMouseFollower() {
 	let mouseY = 0
 
 	// Magnetic strength (how much the follower is pulled toward button center)
-	const magnetStrength = 0.6
+	const magnetStrength = 0.7
 
 	const mouseMoveHandler = (e) => {
 		mouseX = e.clientX
@@ -59,7 +61,9 @@ export default function initMouseFollower() {
 			}, ${Math.round((e.clientY / window.innerHeight) * 100) / 100}`
 	}
 	window.addEventListener('mousemove', mouseMoveHandler)
-	cleanupFns.push(() => window.removeEventListener('mousemove', mouseMoveHandler))
+	cleanupFns.push(() =>
+		window.removeEventListener('mousemove', mouseMoveHandler)
+	)
 
 	// Click animation timeline
 	const clickTl = gsap
@@ -121,29 +125,34 @@ export default function initMouseFollower() {
 			const halfHeight = rect.height / 2
 
 			// Expand corners to match button dimensions
+			// Expand corners to match button dimensions
 			gsap.to(innerEls[0], {
 				top: -halfHeight,
 				left: -halfWidth,
 				duration: 0.3,
 				ease: 'power2.out',
+				overwrite: true,
 			})
 			gsap.to(innerEls[1], {
 				top: -halfHeight,
 				right: -halfWidth,
 				duration: 0.3,
 				ease: 'power2.out',
+				overwrite: true,
 			})
 			gsap.to(innerEls[2], {
 				bottom: -halfHeight,
 				right: -halfWidth,
 				duration: 0.3,
 				ease: 'power2.out',
+				overwrite: true,
 			})
 			gsap.to(innerEls[3], {
 				bottom: -halfHeight,
 				left: -halfWidth,
 				duration: 0.3,
 				ease: 'power2.out',
+				overwrite: true,
 			})
 
 			// Move coordinates out
@@ -152,6 +161,7 @@ export default function initMouseFollower() {
 					y: halfHeight + 16,
 					duration: 0.3,
 					ease: 'power2.out',
+					overwrite: true,
 				})
 			}
 		}
@@ -166,24 +176,32 @@ export default function initMouseFollower() {
 				left: 0,
 				duration: 0.3,
 				ease: 'power2.out',
+				overwrite: false,
+				delay: 0.1,
 			})
 			gsap.to(innerEls[1], {
 				top: 0,
 				right: 0,
 				duration: 0.3,
 				ease: 'power2.out',
+				overwrite: false,
+				delay: 0.1,
 			})
 			gsap.to(innerEls[2], {
 				bottom: 0,
 				right: 0,
 				duration: 0.3,
 				ease: 'power2.out',
+				overwrite: false,
+				delay: 0.1,
 			})
 			gsap.to(innerEls[3], {
 				bottom: 0,
 				left: 0,
 				duration: 0.3,
 				ease: 'power2.out',
+				overwrite: false,
+				delay: 0.1,
 			})
 
 			// Reset coordinates position
@@ -192,6 +210,8 @@ export default function initMouseFollower() {
 					y: 0,
 					duration: 0.3,
 					ease: 'power2.out',
+					overwrite: false,
+					delay: 0.1,
 				})
 			}
 		}
@@ -313,6 +333,6 @@ export default function initMouseFollower() {
 }
 
 export function destroyMouseFollower() {
-	cleanupFns.forEach(fn => fn())
+	cleanupFns.forEach((fn) => fn())
 	cleanupFns = []
 }
