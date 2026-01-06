@@ -23,7 +23,7 @@ jobs:
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
-          server: ftp.perth.agency
+          server: 110.232.143.27
           username: perthage
           password: ${{ secrets.DEV_FTP_PASS }}
           server-dir: server-folder-name/ # Make sure it ends in a trailing slash.
