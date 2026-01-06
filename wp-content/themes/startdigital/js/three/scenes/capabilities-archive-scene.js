@@ -18,6 +18,7 @@ class CapabilitiesArchiveScene extends BaseScene {
 
 		this.lenis = getLenis()
 		this.direction = 1
+		this.isTransitioning = false
 
 		// Mouse tracking
 		this.mouse = new THREE.Vector2(9999, 9999)
@@ -26,6 +27,12 @@ class CapabilitiesArchiveScene extends BaseScene {
 		this.mouse3dLocal = new THREE.Vector3(9999, 9999, 9999)
 		this.mouseVelocity = 0
 		this.inverseMatrix = new THREE.Matrix4()
+
+		// Listen for page transition to suppress velocity
+		this.onPageTransitionOut = (e) => {
+			this.isTransitioning = e.detail?.active ?? false
+		}
+		window.addEventListener('pageTransitionOut', this.onPageTransitionOut)
 	}
 
 	setupScene() {
@@ -289,8 +296,8 @@ class CapabilitiesArchiveScene extends BaseScene {
 				this.mouseVelocity * 0.85 + velocityPerSecond * 0.15 * 0.016
 		}
 
-		// Rotate particles container
-		const velocity = this.lenis.velocity || 0
+		// Rotate particles container (suppress velocity during page transition)
+		const velocity = this.isTransitioning ? 0 : this.lenis.velocity || 0
 		this.direction = velocity < 0 ? -1 : velocity > 0 ? 1 : this.direction
 		this.particles.container.rotation.y +=
 			this.direction * deltaTime * 0.3 + velocity * 0.0045
@@ -351,6 +358,11 @@ class CapabilitiesArchiveScene extends BaseScene {
 		// Remove mouse listener
 		if (this.onMouseMove) {
 			window.removeEventListener('mousemove', this.onMouseMove)
+		}
+
+		// Remove page transition listener
+		if (this.onPageTransitionOut) {
+			window.removeEventListener('pageTransitionOut', this.onPageTransitionOut)
 		}
 
 		// Clean up pinned particles

@@ -1,17 +1,12 @@
 {% extends 'base.twig' %}
 
 {% block content %}
-	<section id="not-found-scene" class="h-lvh bg-navy text-white">
-		<div class="container">
-			<div class="block-content">
-				<h1>
-					Page not found
-				</h1>
-				<p>
-					Please navigate to another page or return home.
-				</p>
-				<a href="/" class="button">Go home</a>
-			</div>
+	<section id="not-found-scene" class="h-lvh bg-navy text-white relative">
+		<div class="absolute bottom-16 left-1/2 -translate-x-1/2 z-40">
+			{% include 'partials/button.twig' with {
+				title: 'Return home',
+				link: '/'
+			} %}
 		</div>
 	</section>
 {% endblock %}

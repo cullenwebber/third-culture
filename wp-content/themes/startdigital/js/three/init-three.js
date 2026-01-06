@@ -49,31 +49,96 @@ async function initThree() {
 	const scenesToLoad = []
 
 	if (heroContainer)
-		scenesToLoad.push({ Scene: HeroScene, id: 'hero', container: heroContainer, priority: 0 })
+		scenesToLoad.push({
+			Scene: HeroScene,
+			id: 'hero',
+			container: heroContainer,
+			priority: 0,
+		})
 	if (projectsContainer)
-		scenesToLoad.push({ Scene: HomeProjectsScene, id: 'home-projects', container: projectsContainer, priority: 1 })
+		scenesToLoad.push({
+			Scene: HomeProjectsScene,
+			id: 'home-projects',
+			container: projectsContainer,
+			priority: 1,
+		})
 	if (capabilitiesContainer)
-		scenesToLoad.push({ Scene: HomeCapabilitiesScene, id: 'home-capabilities', container: capabilitiesContainer, priority: 2 })
+		scenesToLoad.push({
+			Scene: HomeCapabilitiesScene,
+			id: 'home-capabilities',
+			container: capabilitiesContainer,
+			priority: 2,
+		})
 	if (newsContainer)
-		scenesToLoad.push({ Scene: NewsScene, id: 'news', container: newsContainer, priority: 3 })
+		scenesToLoad.push({
+			Scene: NewsScene,
+			id: 'news',
+			container: newsContainer,
+			priority: 3,
+		})
 	if (footerContainer)
-		scenesToLoad.push({ Scene: FooterScene, id: 'footer', container: footerContainer, priority: 7 })
+		scenesToLoad.push({
+			Scene: FooterScene,
+			id: 'footer',
+			container: footerContainer,
+			priority: 7,
+		})
 	if (contactContainer)
-		scenesToLoad.push({ Scene: ContactScene, id: 'contact', container: contactContainer, priority: 5 })
+		scenesToLoad.push({
+			Scene: ContactScene,
+			id: 'contact',
+			container: contactContainer,
+			priority: 5,
+		})
 	if (pageInnerContainer)
-		scenesToLoad.push({ Scene: PageInnerScene, id: 'page-inner', container: pageInnerContainer, priority: 1 })
+		scenesToLoad.push({
+			Scene: PageInnerScene,
+			id: 'page-inner',
+			container: pageInnerContainer,
+			priority: 1,
+		})
 	if (pageInnerAltContainer)
-		scenesToLoad.push({ Scene: PageInnerSceneAlt, id: 'page-inner-alt', container: pageInnerAltContainer, priority: 1 })
+		scenesToLoad.push({
+			Scene: PageInnerSceneAlt,
+			id: 'page-inner-alt',
+			container: pageInnerAltContainer,
+			priority: 1,
+		})
 	if (aboutContainer)
-		scenesToLoad.push({ Scene: AboutScene, id: 'about', container: aboutContainer, priority: 2 })
+		scenesToLoad.push({
+			Scene: AboutScene,
+			id: 'about',
+			container: aboutContainer,
+			priority: 2,
+		})
 	if (projectContainer)
-		scenesToLoad.push({ Scene: ProjectScene, id: 'project', container: projectContainer, priority: 2 })
+		scenesToLoad.push({
+			Scene: ProjectScene,
+			id: 'project',
+			container: projectContainer,
+			priority: 2,
+		})
 	if (capabilitiesHeaderContainer)
-		scenesToLoad.push({ Scene: CapabilityHeaderScene, id: 'capability-header', container: capabilitiesHeaderContainer, priority: 3 })
+		scenesToLoad.push({
+			Scene: CapabilityHeaderScene,
+			id: 'capability-header',
+			container: capabilitiesHeaderContainer,
+			priority: 3,
+		})
 	if (capabilitiesArchiveContainer)
-		scenesToLoad.push({ Scene: CapabilitiesArchiveScene, id: 'capabilities-archive', container: capabilitiesArchiveContainer, priority: 2 })
+		scenesToLoad.push({
+			Scene: CapabilitiesArchiveScene,
+			id: 'capabilities-archive',
+			container: capabilitiesArchiveContainer,
+			priority: 2,
+		})
 	if (notFoundContainer)
-		scenesToLoad.push({ Scene: NotFoundScene, id: '404', container: notFoundContainer, priority: 1 })
+		scenesToLoad.push({
+			Scene: NotFoundScene,
+			id: '404',
+			container: notFoundContainer,
+			priority: 1,
+		})
 
 	// Load scenes with progress tracking
 	const totalScenes = scenesToLoad.length
@@ -99,9 +164,9 @@ export function destroyThree() {
 		sceneManager = null
 	}
 	// Remove existing canvas
-	const existingCanvas = document.querySelector('#webgl-canvas')
-	if (existingCanvas) {
-		existingCanvas.remove()
+	const existingCanvas = document.querySelectorAll('canvas')
+	if (existingCanvas.length > 0) {
+		existingCanvas.forEach((c) => c.remove())
 	}
 }
 

@@ -90,9 +90,8 @@ class WebGLManager {
 	}
 
 	addPostProcessing(sceneId, postProcessor) {
-		if (this.scenes.has(sceneId)) {
-			this.postProcessing.set(sceneId, postProcessor)
-		}
+		// Don't check if scene exists - it may not be registered yet during init
+		this.postProcessing.set(sceneId, postProcessor)
 	}
 
 	removePostProcessing(sceneId) {
@@ -201,7 +200,11 @@ class WebGLManager {
 		this.updateCanvasRect()
 
 		this.scenes.forEach(({ scene }) => {
-			const rect = scene.container.getBoundingClientRect()
+			const sceneContainer = scene?.container
+
+			if (!sceneContainer) return
+
+			const rect = sceneContainer.getBoundingClientRect()
 			scene.updateCameraForViewport(rect.width, rect.height)
 			scene.onResize?.()
 		})

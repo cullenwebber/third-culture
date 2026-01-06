@@ -1,12 +1,12 @@
 {% extends 'base.twig' %}
 
 {% block content %}
-	<div id="entire-page" class="relative z-40">
-		<section id="no-grid-white-page" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></section>
-		<div class="-mt-[100lvh]">
+	<div id="entire-page" class="">
+		<div class="bg-navy">
 			{% include 'partials/capability/capability-banner.twig' %}
 		</div>
-		<div class="dark-header dark-mouse">
+		<section id="no-grid-white-page" class="sticky top-0 left-0 h-lvh w-full pointer-events-none"></section>
+		<div class="dark-header dark-mouse relative z-40 -mt-[100lvh]">
 			{% for block in post.meta('page_builder') %}
 				<div data-block="{{ block.acf_fc_layout }}">
 					{{ include('blocks/' ~ block.acf_fc_layout ~ '.twig', ignore_missing = true) }}

@@ -3,6 +3,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
+let scrollTriggers = []
+
 /**
  * Adds 'header-scrolling' class to header element when user scrolls past 100px from top
  * Removes class when scrolling back up
@@ -14,16 +16,27 @@ gsap.registerPlugin(ScrollTrigger)
  *
  */
 export default function initHeaderOnScroll() {
+	scrollTriggers = []
 	const header = document.querySelector('header')
 	if (!header) return
 
-	ScrollTrigger.create({
+	const st = ScrollTrigger.create({
 		start: '100px top',
 		onEnter: () => header.classList.add('header-scrolling'),
 		onLeaveBack: () => header.classList.remove('header-scrolling'),
 	})
+	scrollTriggers.push(st)
 
 	initDarkHeaderTriggers(header)
+}
+
+export function destroyHeaderOnScroll() {
+	scrollTriggers.forEach(st => st.kill())
+	scrollTriggers = []
+	const header = document.querySelector('header')
+	if (header) {
+		header.classList.remove('header-scrolling', 'header-inverted', 'dark-mouse')
+	}
 }
 
 function initDarkHeaderTriggers(header) {
@@ -42,7 +55,7 @@ function initDarkHeaderTriggers(header) {
 	}
 
 	darkSections.forEach((section) => {
-		ScrollTrigger.create({
+		const st = ScrollTrigger.create({
 			trigger: section,
 			start: 'top top+=64px',
 			end: 'bottom top+=64px',
@@ -51,5 +64,6 @@ function initDarkHeaderTriggers(header) {
 			onEnterBack: () => setDarkHeader(true),
 			onLeaveBack: () => setDarkHeader(false),
 		})
+		scrollTriggers.push(st)
 	})
 }

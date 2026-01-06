@@ -1,7 +1,10 @@
 import gsap from 'gsap'
 import { isTouchDevice } from '../utils/device-capability'
 
+let cleanupFns = []
+
 export default function initMouseFollower() {
+	cleanupFns = []
 	const mouseEl = document.querySelector('#mouse-follower')
 
 	if (!mouseEl) return
@@ -30,7 +33,7 @@ export default function initMouseFollower() {
 	// Magnetic strength (how much the follower is pulled toward button center)
 	const magnetStrength = 0.6
 
-	window.addEventListener('mousemove', (e) => {
+	const mouseMoveHandler = (e) => {
 		mouseX = e.clientX
 		mouseY = e.clientY
 
@@ -54,7 +57,9 @@ export default function initMouseFollower() {
 			dataSpan.textContent = `${
 				Math.round((e.clientX / window.innerWidth) * 100) / 100
 			}, ${Math.round((e.clientY / window.innerHeight) * 100) / 100}`
-	})
+	}
+	window.addEventListener('mousemove', mouseMoveHandler)
+	cleanupFns.push(() => window.removeEventListener('mousemove', mouseMoveHandler))
 
 	// Click animation timeline
 	const clickTl = gsap
@@ -107,7 +112,7 @@ export default function initMouseFollower() {
 	)
 
 	buttons.forEach((button) => {
-		button.addEventListener('mouseenter', () => {
+		const enterHandler = () => {
 			isOnButton = true
 			currentButton = button
 
@@ -149,9 +154,9 @@ export default function initMouseFollower() {
 					ease: 'power2.out',
 				})
 			}
-		})
+		}
 
-		button.addEventListener('mouseleave', () => {
+		const leaveHandler = () => {
 			isOnButton = false
 			currentButton = null
 
@@ -189,6 +194,13 @@ export default function initMouseFollower() {
 					ease: 'power2.out',
 				})
 			}
+		}
+
+		button.addEventListener('mouseenter', enterHandler)
+		button.addEventListener('mouseleave', leaveHandler)
+		cleanupFns.push(() => {
+			button.removeEventListener('mouseenter', enterHandler)
+			button.removeEventListener('mouseleave', leaveHandler)
 		})
 	})
 
@@ -213,8 +225,14 @@ export default function initMouseFollower() {
 	}
 
 	darkMouseEls.forEach((el) => {
-		el.addEventListener('mouseenter', () => setMouseColor(true))
-		el.addEventListener('mouseleave', () => setMouseColor(false))
+		const darkEnter = () => setMouseColor(true)
+		const darkLeave = () => setMouseColor(false)
+		el.addEventListener('mouseenter', darkEnter)
+		el.addEventListener('mouseleave', darkLeave)
+		cleanupFns.push(() => {
+			el.removeEventListener('mouseenter', darkEnter)
+			el.removeEventListener('mouseleave', darkLeave)
+		})
 	})
 
 	// Listen for header dark state changes
@@ -222,23 +240,32 @@ export default function initMouseFollower() {
 	let isMouseOverHeader = false
 
 	if (header) {
-		header.addEventListener('mouseenter', () => {
+		const headerEnter = () => {
 			isMouseOverHeader = true
 			if (header.classList.contains('dark-mouse')) {
 				setMouseColor(true)
 			}
-		})
-		header.addEventListener('mouseleave', () => {
+		}
+		const headerLeave = () => {
 			isMouseOverHeader = false
 			if (header.classList.contains('dark-mouse')) {
 				setMouseColor(false)
 			}
-		})
-
-		window.addEventListener('headerDarkChange', (e) => {
+		}
+		const headerDarkHandler = (e) => {
 			if (isMouseOverHeader) {
 				setMouseColor(e.detail.isDark)
 			}
+		}
+
+		header.addEventListener('mouseenter', headerEnter)
+		header.addEventListener('mouseleave', headerLeave)
+		window.addEventListener('headerDarkChange', headerDarkHandler)
+
+		cleanupFns.push(() => {
+			header.removeEventListener('mouseenter', headerEnter)
+			header.removeEventListener('mouseleave', headerLeave)
+			window.removeEventListener('headerDarkChange', headerDarkHandler)
 		})
 	}
 
@@ -246,7 +273,7 @@ export default function initMouseFollower() {
 	const postTeaseEls = document.querySelectorAll('.post-tease')
 
 	postTeaseEls.forEach((el) => {
-		el.addEventListener('mouseenter', () => {
+		const postEnter = () => {
 			gsap.to(innerEls, {
 				borderColor: defaultColor,
 				duration: 0.3,
@@ -259,9 +286,9 @@ export default function initMouseFollower() {
 					ease: 'power2.out',
 				})
 			}
-		})
+		}
 
-		el.addEventListener('mouseleave', () => {
+		const postLeave = () => {
 			gsap.to(innerEls, {
 				borderColor: darkColor,
 				duration: 0.3,
@@ -274,6 +301,18 @@ export default function initMouseFollower() {
 					ease: 'power2.out',
 				})
 			}
+		}
+
+		el.addEventListener('mouseenter', postEnter)
+		el.addEventListener('mouseleave', postLeave)
+		cleanupFns.push(() => {
+			el.removeEventListener('mouseenter', postEnter)
+			el.removeEventListener('mouseleave', postLeave)
 		})
 	})
+}
+
+export function destroyMouseFollower() {
+	cleanupFns.forEach(fn => fn())
+	cleanupFns = []
 }
