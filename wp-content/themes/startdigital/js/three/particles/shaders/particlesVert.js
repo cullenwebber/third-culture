@@ -30,7 +30,7 @@ void main() {
     vLife = positionInfo.w;
     vHit = hitInfo;
     vMorphProgress = morphProgress;
-    gl_PointSize = 650.0 / length( mvPosition.xyz ) * smoothstep(0.0, 0.2, positionInfo.w);
+    gl_PointSize = 1050.0 / length( mvPosition.xyz ) * smoothstep(0.0, 0.2, positionInfo.w);
 
     gl_Position = projectionMatrix * mvPosition;
 }

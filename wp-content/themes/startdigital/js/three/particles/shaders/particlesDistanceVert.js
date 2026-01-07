@@ -11,7 +11,7 @@ void main() {
     vec4 worldPosition = modelMatrix * vec4( positionInfo.xyz, 1.0 );
     vec4 mvPosition = viewMatrix * worldPosition;
 
-    gl_PointSize = 650.0 / length( mvPosition.xyz ) * smoothstep(0.0, 0.2, positionInfo.w);
+    gl_PointSize = 1050.0 / length( mvPosition.xyz ) * smoothstep(0.0, 0.2, positionInfo.w);
 
     vWorldPosition = worldPosition;
 

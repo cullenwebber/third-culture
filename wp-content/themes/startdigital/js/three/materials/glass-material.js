@@ -28,7 +28,7 @@ class GlassMaterial extends THREE.ShaderMaterial {
 				value: new THREE.Vector2(
 					window.innerWidth,
 					window.innerHeight
-				).multiplyScalar(Math.min(1.2)),
+				).multiplyScalar(Math.min(2.0)),
 			},
 		}
 
