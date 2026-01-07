@@ -9,6 +9,7 @@ import BentTextMaterial from '../materials/bent-text-material'
 import NewsPostProcessor from '../post-processing/news-post-processor'
 import { getLenis } from '../../utils/smooth-scroll'
 import { createText, createTextMesh } from '../utils/text-factory'
+import ContainerTracker from '../utils/container-tracker'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -283,29 +284,38 @@ class NewsScene extends BaseScene {
 		const phase2Duration = containerHeight - viewportHeight
 		const phase3Duration = viewportHeight
 
-		this.tl = gsap.timeline({
-			scrollTrigger: {
-				trigger: container,
-				start: 'top top',
-				end: 'bottom bottom',
-				scrub: true,
-				ease: 'none',
-			},
+		// this.tl = gsap.timeline({
+		// 	scrollTrigger: {
+		// 		trigger: container,
+		// 		start: 'top top',
+		// 		end: 'bottom bottom',
+		// 		scrub: true,
+		// 		ease: 'none',
+		// 	},
+		// })
+
+		// this.tl.fromTo(
+		// 	this.ringsContainer.position,
+		// 	{ y: -totalRingHeight * 0.325 },
+		// 	{
+		// 		y: totalRingHeight * 0.35,
+		// 		ease: 'none',
+
+		// 		onUpdate: function () {
+		// 			const progress = this.progress()
+		// 			that.backgroundMaterial.uniforms.uScroll.value = -progress * 1.0
+		// 		},
+		// 	}
+		// )
+
+		const ct = new ContainerTracker(this.scene, this.camera, this.container)
+
+		ct.addTrackedObject('rings', {
+			object3D: this.ringsContainer,
+			htmlContainer: document.querySelector('#news-scroller-container'),
+			scalingMode: 'none',
+			offsetZ: this.ringsContainer.position.z,
 		})
-
-		this.tl.fromTo(
-			this.ringsContainer.position,
-			{ y: -totalRingHeight * 0.325 },
-			{
-				y: totalRingHeight * 0.175,
-				ease: 'none',
-
-				onUpdate: function () {
-					const progress = this.progress()
-					that.backgroundMaterial.uniforms.uScroll.value = -progress * 1.0
-				},
-			}
-		)
 	}
 
 	createMouseListeners() {

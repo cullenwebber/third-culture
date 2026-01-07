@@ -5,11 +5,13 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import BaseScene from '../base-scene'
 import ImageCylinderMaterial from '../materials/image-cylinder-material'
 import WhiteBackgroundMaterial from '../materials/white-background-material'
-import MeshTransmissionMaterial from '../materials/MeshTransmissionMaterial'
+
 import { isLowPowerDevice } from '../../utils/device-capability'
 import WebGLText from '../utils/webgl-text'
 import BentTextMaterial from '../materials/bent-text-material'
 import { createText, createTextMesh } from '../utils/text-factory'
+import GlassMaterial from '../materials/glass-material'
+import WebGLManager from '../context-manager'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -28,35 +30,13 @@ class HomeProjectsScene extends BaseScene {
 		this.mouse = new THREE.Vector2(9999, 9999)
 		this.raycaster = new THREE.Raycaster()
 		this.hoveredProject = null
+
+		this.context = new WebGLManager()
 	}
 
 	createMaterials() {
-		// Use simpler material on low-power devices for performance
-		if (isLowPowerDevice()) {
-			this.cubeMaterial = new THREE.MeshPhysicalMaterial({
-				color: '#ffffff',
-				transmission: 1.0,
-				roughness: 0.1,
-				thickness: 1.4,
-				ior: 1.4,
-				reflectivity: 0.2,
-			})
-		} else {
-			this.cubeMaterial = Object.assign(new MeshTransmissionMaterial(1), {
-				_transmission: 1.0,
-				chromaticAberration: 0.05,
-				roughness: 0.1,
-				thickness: 1.4,
-				ior: 1.4,
-				distortion: 0.5,
-				distortionScale: 0.8,
-				temporalDistortion: 0.1,
-				reflectivity: 0.2,
-			})
-			this.cubeMaterial.gritAmount = 0.1
-			this.cubeMaterial.gritScale = 100.0
-		}
-
+		this.cubeMaterial = new GlassMaterial({ color: 0xffffff, refraction: 0.4 })
+		this
 		this.backgroundMaterial = new WhiteBackgroundMaterial()
 	}
 
@@ -87,7 +67,10 @@ class HomeProjectsScene extends BaseScene {
 			this.scene,
 			this.camera,
 			this.projectTitleElement,
-			this.container
+			this.container,
+			{
+				zPosition: -2,
+			}
 		)
 
 		// Get project containers from DOM
@@ -499,6 +482,15 @@ class HomeProjectsScene extends BaseScene {
 
 		// Update hover effect
 		this.updateHover()
+
+		if (this.cubeMaterial)
+			this.cubeMaterial.renderPasses(
+				this.context.renderer,
+				this.scene,
+				this.camera,
+				[this.centerCube],
+				true
+			)
 
 		// Rotate center cube
 		if (this.centerCube) {

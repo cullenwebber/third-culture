@@ -1,7 +1,7 @@
 {% set news_posts = fn('get_news_posts', 6) %}
 
 <section id="news-scene-wrapper"
-	class="flex flex-col gap-8 justify-center !py-0 relative z-40 text-navy dark-mouse dark-header">
+	class="flex flex-col justify-center !py-0 relative z-40 text-navy dark-mouse dark-header">
 	<div id="news-scene" class="sticky top-0 left-0 h-lvh w-full"></div>
 	<div id="news-scroller" class="sticky -mt-[100lvh] top-0 pointer-events-none h-lvh left-0 w-full z-[45] dark-mouse">
 		<div class="w-full h-dvh flex flex-row justify-center sm:justify-between items-end py-6 md:py-8 xl:py-12 md:px-8 2xl:px-12 px-4">
@@ -35,8 +35,8 @@
 			} %}
 		</div>
 	</div>
-	<section class="pointer-events-none">
-		<div class="container flex flex-col relative z-40 gap-20 w-full -mt-[100lvh]">
+	<section class="-mt-[100lvh]">
+		<div class="container flex flex-col relative z-40 gap-20 w-full">
 			<div class="block-content relative w-full items-center text-center split-text-trigger">
 				<div class="supertitle-wrapper supertitle text-paragraphDark flex flex-row items-center gap-2">
 					<div class="size-2.5 bg-paragraphDark blink"></div>Whats been happening
@@ -48,7 +48,7 @@
 			</div>
 		</div>
 	</section>
-	<div style="height: 100lvh;" class="pointer-events-none"></div>
+	<div id="news-scroller-container" class="pointer-events-none h-[90lvh] mb-[20lvh] lg:mb-[30lvh]"></div>
 	<div class="flex-col gap-8 hidden pointer-events-none">
 		{% for news in news_posts %}
 			{% include 'partials/posts/post-tease.twig' with {

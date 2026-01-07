@@ -12,8 +12,8 @@ import GradientMaterial from '../materials/gradient-material'
 import WebGLText from '../utils/webgl-text'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import WebGLManager from '../context-manager'
-import MeshTransmissionMaterial from '../materials/MeshTransmissionMaterial'
 import { isLowPowerDevice } from '../../utils/device-capability'
+import GlassMaterial from '../materials/glass-material'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -38,38 +38,14 @@ class HomeScene extends BaseScene {
 			canvasHeight
 		)
 
-		// Use simpler material on low-power devices for performance
-		if (isLowPowerDevice()) {
-			this.transmissionMaterial = new THREE.MeshPhysicalMaterial({
-				color: '#999999',
-				transmission: 1.0,
-				roughness: 0.1,
-				thickness: 1.4,
-				ior: 1.4,
-				reflectivity: 0.1,
-			})
-		} else {
-			this.transmissionMaterial = Object.assign(
-				new MeshTransmissionMaterial(1),
-				{
-					_transmission: 1.0,
-					chromaticAberration: 0.05,
-					roughness: 0.0,
-					thickness: 1.4,
-					ior: 1.4,
-					distortion: 1.75,
-					distortionScale: 0.4,
-					temporalDistortion: 0.1,
-					reflectivity: 0.1,
-					flatShading: false,
-				}
-			)
-			this.transmissionMaterial.color.set('#999999')
-			this.transmissionMaterial.gritAmount = 0.1
-			this.transmissionMaterial.gritScale = 75.0
-			this.transmissionMaterial.gritScale = 75.0
-			this.transmissionMaterial.depthWrite = true
-		}
+		this.transmissionMaterial = new GlassMaterial({
+			color: 0x030030,
+			refraction: 0.9,
+			chromaticAberration: 0.15,
+			shininess: 40,
+			fresnelPower: 1.4,
+			envMap: this.envMap,
+		})
 	}
 
 	setupContainerTracking() {
@@ -431,8 +407,13 @@ class HomeScene extends BaseScene {
 		}
 
 		// Update transmission material time uniform
-		if (this.transmissionMaterial && this.transmissionMaterial.uniforms) {
-			this.transmissionMaterial.uniforms.time.value += deltaTime
+		if (this.transmissionMaterial) {
+			this.transmissionMaterial.renderPasses(
+				this.context.renderer,
+				this.scene,
+				this.camera,
+				this.logoFragments
+			)
 		}
 
 		// Animate logo children (fragment groups)
